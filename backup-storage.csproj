@@ -74,6 +74,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Shared\BackupTableStorage.cs" />
     <Compile Include="Shared\BackupBlobStorage.cs" />
     <Compile Include="Shared\CreateBlobStorage.cs" />
     <Compile Include="Shared\CreateTableStorage.cs" />
