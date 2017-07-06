@@ -28,7 +28,8 @@ namespace backup_storage
             //Copy and backup table storage
             Console.WriteLine($"{Environment.NewLine}TABLE STORAGE");
             Console.WriteLine("Start copying table storage to new destination storage");
-            BackupTableStorage.CopyTableStorage(storageAccount, destStorageAccount);
+            //BackupTableStorage.CopyTableStorage(storageAccount, destStorageAccount);
+            BackupTableStorage.CopyAndBackUpTableStorage(storageAccount, destStorageAccount).Wait();
             Console.WriteLine("Finished copying table storage to new destination storage");
 
             Console.WriteLine($"{Environment.NewLine}BLOB STORAGE");
