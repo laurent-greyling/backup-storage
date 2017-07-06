@@ -42,18 +42,8 @@ namespace backup_storage.Shared
             Parallel.ForEach(srcBlobList, async src =>
             {
                 var srcBlob = (CloudBlob) src;
-
-                // Create appropriate destination blob type to match the source blob
-                CloudBlob destBlob;
-                if (srcBlob.GetType() == typeof(CloudBlockBlob))
-                {
-                    srcBlob = (CloudBlockBlob) src;
-                    destBlob = destContainer.GetBlockBlobReference(srcBlob.Name);
-                }
-                else
-                {
-                    destBlob = destContainer.GetPageBlobReference(srcBlob.Name);
-                }
+                
+                CloudBlob destBlob = destContainer.GetBlockBlobReference(srcBlob.Name);
 
                 var srcBlockBlobSasUri = $"{srcBlob.Uri}{sas}";
                 // copy using src blob as SAS

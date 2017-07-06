@@ -20,6 +20,15 @@ namespace backup_storage.Shared
                 var tbl = tableClientDest.GetTableReference(table.Name);
                 tbl.CreateIfNotExists();
 
+                //var batchOp = new TableBatchOperation();
+
+                //Parallel.ForEach(tblData, (dtaEntity) =>
+                //{
+                //    batchOp.Add(TableOperation.InsertOrMerge(dtaEntity));
+                //});
+
+                //tbl.ExecuteBatch(batchOp);
+
                 Parallel.ForEach(tblData, async dtaEntity =>
                 {
                     var insertDta = TableOperation.InsertOrMerge(dtaEntity);
