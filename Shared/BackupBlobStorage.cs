@@ -7,7 +7,7 @@ namespace backup_storage.Shared
 {
     public class BackupBlobStorage
     {
-        public static void ContainerCopyAndBackUp(CloudStorageAccount storageAccount, CloudStorageAccount destStorageAccount)
+        public static void CopyBlobStorage(CloudStorageAccount storageAccount, CloudStorageAccount destStorageAccount)
         {
             var blobClient = storageAccount.CreateCloudBlobClient();
             var containers = blobClient.ListContainers();

@@ -34,7 +34,7 @@ namespace backup_storage
             Console.WriteLine($"{Environment.NewLine}BLOB STORAGE");
             //Copy and backup blob
             Console.WriteLine("Start copying blob to new destination storage");
-            BackupBlobStorage.ContainerCopyAndBackUp(storageAccount, destStorageAccount);
+            BackupBlobStorage.CopyBlobStorage(storageAccount, destStorageAccount);
             Console.WriteLine("Finished copying blob to new destination storage");
 
             Console.ReadKey();

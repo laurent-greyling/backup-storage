@@ -22,7 +22,7 @@ namespace backup_storage.Shared
 
                 foreach (var dataEntity in tblData)
                 {
-                    var insertData = TableOperation.Insert(dataEntity);
+                    var insertData = TableOperation.InsertOrMerge(dataEntity);
                     await tbl.ExecuteAsync(insertData);
                 }
             });
