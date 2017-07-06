@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using backup_storage.Entity;
@@ -56,6 +57,7 @@ namespace backup_storage.Shared
         public static async Task CopyAndBackUpTableStorage(CloudStorageAccount storageAccount,
             CloudStorageAccount destStorageAccount)
         {
+            CloudTable tble = null;
             var fromAccountToTables = new TransformManyBlock<CloudStorageAccount, CloudTable>(
                 account =>
                 {
@@ -66,63 +68,77 @@ namespace backup_storage.Shared
                 },
                 new ExecutionDataflowBlockOptions
                 {
-                    MaxDegreeOfParallelism = 4,
-                    BoundedCapacity = 16
+                    MaxDegreeOfParallelism = 10,
+                    BoundedCapacity = 40
                 });
 
-            var processTables = new TransformBlock<CloudTable, ProcessingOutCome>(
+            var batchTables = new TransformBlock<CloudTable, TableBatchOperation>(
                 tbl =>
                 {
-                    try
-                    {
-                        var query = new TableQuery();
-                        var tblData = tbl.ExecuteQuery(query);
+                    var query = new TableQuery();
+                    var tblData = tbl.ExecuteQuery(query);
 
-                        var tableClientDest = destStorageAccount.CreateCloudTableClient();
-                        var tble = tableClientDest.GetTableReference(tbl.Name);
-                        tble.CreateIfNotExists();
-                        
-                        Parallel.ForEach(tblData, async dtaEntity =>
-                        {
-                            var insertDta = TableOperation.InsertOrMerge(dtaEntity);
-                            await tble.ExecuteAsync(insertDta);
-                        });
+                    var tableClientDest = destStorageAccount.CreateCloudTableClient();
+                    tble = tableClientDest.GetTableReference(tbl.Name);
+                    tble.CreateIfNotExists();
 
-                        return new ProcessingOutCome { Table = $"{tbl.Name}", Success = true };
-                    }
-                    catch (Exception e)
+                    var batchOp = new TableBatchOperation();
+
+                    Parallel.ForEach(tblData, dtaEntity =>
                     {
-                        return new ProcessingOutCome { Table = $"{tbl.Name}", Success = false, Exception = e };
-                    }
+                        batchOp.Add(TableOperation.InsertOrMerge(dtaEntity));
+                    });
+
+                    return batchOp;
                 }, new ExecutionDataflowBlockOptions
                 {
-                    MaxDegreeOfParallelism = 4,
-                    BoundedCapacity = 16
+                    MaxDegreeOfParallelism = 10,
+                    BoundedCapacity = 40
                 });
 
-            var printOutcome = new ActionBlock<ProcessingOutCome>(
-                outcome =>
+
+            var batchData = new BatchBlock<TableBatchOperation>(20);
+
+            var copyTables = new ActionBlock<TableBatchOperation[]>(prc =>
+            {
+                foreach (var pr in prc)
                 {
-                    if (outcome.Success)
-                    {
-                        Console.WriteLine($"Processed {outcome.Table}");
-                    }
-                    else
-                    {
-                        Console.Error.WriteLine($"Error while processing {outcome.Table}: {outcome.Exception}");
-                    }
-                });
+                    tble.ExecuteBatch(pr);
+                }
+            });
+            //var printOutcome = new ActionBlock<ProcessingOutCome>(
+            //    outcome =>
+            //    {
+            //        if (outcome.Success)
+            //        {
+            //            Console.WriteLine($"Processed {outcome.Table}");
+            //        }
+            //        else
+            //        {
+            //            Console.Error.WriteLine($"Error while processing {outcome.Table}: {outcome.Exception}");
+            //        }
+            //    });
 
-            fromAccountToTables.LinkTo(processTables);
-            processTables.LinkTo(printOutcome);
+            fromAccountToTables.LinkTo(batchTables);
+            batchTables.LinkTo(batchData);
+            batchData.LinkTo(copyTables);
+
+
+            //processTables.LinkTo(printOutcome);
 
             await fromAccountToTables.SendAsync(storageAccount);
+
             fromAccountToTables.Complete();
             await fromAccountToTables.Completion;
-            processTables.Complete();
-            await processTables.Completion;
-            printOutcome.Complete();
-            await printOutcome.Completion;
+            batchTables.Complete();
+            await batchTables.Completion;
+
+            await batchData.Completion.ContinueWith(delegate { copyTables.Complete(); });
+            batchData.Complete();
+            
+            
+            //printOutcome.Complete();
+            //await printOutcome.Completion;
         }
     }
 }
