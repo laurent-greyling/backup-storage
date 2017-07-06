@@ -28,7 +28,7 @@ namespace backup_storage
             Console.WriteLine("Creating and populating some more dummy blobs....");
             CreateBlobStorage.CreateAndPopulateBlob(storageAccount);
             Console.WriteLine("Finished Creating and populating some more dummy blobs....");
-            
+
             //Copy and backup table storage
             Console.WriteLine($"{Environment.NewLine}TABLE STORAGE");
             Console.WriteLine("Start copying table storage to new destination storage");

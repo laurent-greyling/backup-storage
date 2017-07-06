@@ -103,42 +103,27 @@ namespace backup_storage.Shared
             {
                 foreach (var pr in prc)
                 {
-                    tble.ExecuteBatch(pr);
+                    if (pr.Count > 0)
+                    {
+                        tble.ExecuteBatch(pr);
+                    }
                 }
+                    
             });
-            //var printOutcome = new ActionBlock<ProcessingOutCome>(
-            //    outcome =>
-            //    {
-            //        if (outcome.Success)
-            //        {
-            //            Console.WriteLine($"Processed {outcome.Table}");
-            //        }
-            //        else
-            //        {
-            //            Console.Error.WriteLine($"Error while processing {outcome.Table}: {outcome.Exception}");
-            //        }
-            //    });
 
             fromAccountToTables.LinkTo(batchTables);
             batchTables.LinkTo(batchData);
             batchData.LinkTo(copyTables);
-
-
-            //processTables.LinkTo(printOutcome);
-
+            
             await fromAccountToTables.SendAsync(storageAccount);
 
             fromAccountToTables.Complete();
             await fromAccountToTables.Completion;
             batchTables.Complete();
             await batchTables.Completion;
-
-            await batchData.Completion.ContinueWith(delegate { copyTables.Complete(); });
+            
             batchData.Complete();
-            
-            
-            //printOutcome.Complete();
-            //await printOutcome.Completion;
+            await batchData.Completion.ContinueWith(delegate { copyTables.Complete(); });
         }
     }
 }
