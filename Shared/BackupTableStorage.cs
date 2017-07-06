@@ -11,6 +11,11 @@ namespace backup_storage.Shared
 {
     public class BackupTableStorage
     {
+        /// <summary>
+        /// Copy and backup table storage one at a time in parallel
+        /// </summary>
+        /// <param name="storageAccount"></param>
+        /// <param name="destStorageAccount"></param>
         public static void CopyTableStorage(CloudStorageAccount storageAccount, CloudStorageAccount destStorageAccount)
         {
             var tableClient = storageAccount.CreateCloudTableClient();
@@ -42,6 +47,12 @@ namespace backup_storage.Shared
             });
         }
 
+        /// <summary>
+        /// Copy and backup with dataflow
+        /// </summary>
+        /// <param name="storageAccount"></param>
+        /// <param name="destStorageAccount"></param>
+        /// <returns></returns>
         public static async Task CopyAndBackUpTableStorage(CloudStorageAccount storageAccount,
             CloudStorageAccount destStorageAccount)
         {
@@ -70,13 +81,7 @@ namespace backup_storage.Shared
                         var tableClientDest = destStorageAccount.CreateCloudTableClient();
                         var tble = tableClientDest.GetTableReference(tbl.Name);
                         tble.CreateIfNotExists();
-
-                        //foreach (var dtaEntity in tblData)
-                        //{
-                        //    var insertDta = TableOperation.InsertOrMerge(dtaEntity);
-                        //    await tble.ExecuteAsync(insertDta);
-                        //}
-
+                        
                         Parallel.ForEach(tblData, async dtaEntity =>
                         {
                             var insertDta = TableOperation.InsertOrMerge(dtaEntity);
