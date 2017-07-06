@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using backup_storage.Entity;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Core;
 using Microsoft.WindowsAzure.Storage.RetryPolicies;
@@ -118,11 +119,5 @@ namespace backup_storage.Shared
             printOutcome.Complete();
             await printOutcome.Completion;
         }
-    }
-    public class ProcessingOutCome
-    {
-        public string Table { get; set; }
-        public bool Success { get; set; }
-        public Exception Exception { get; set; }
     }
 }
