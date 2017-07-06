@@ -11,7 +11,7 @@ namespace backup_storage.Shared
             var tableClient = storageAccount.CreateCloudTableClient();
             var tables = tableClient.ListTables();
 
-            Parallel.ForEach(tables, async table =>
+            Parallel.ForEach(tables, (table) =>
             {
                 var query = new TableQuery();
                 var tblData = table.ExecuteQuery(query);
@@ -20,11 +20,11 @@ namespace backup_storage.Shared
                 var tbl = tableClientDest.GetTableReference(table.Name);
                 tbl.CreateIfNotExists();
 
-                foreach (var dataEntity in tblData)
+                Parallel.ForEach(tblData, async dtaEntity =>
                 {
-                    var insertData = TableOperation.InsertOrMerge(dataEntity);
-                    await tbl.ExecuteAsync(insertData);
-                }
+                    var insertDta = TableOperation.InsertOrMerge(dtaEntity);
+                    await tbl.ExecuteAsync(insertDta);
+                });
             });
         }
     }
