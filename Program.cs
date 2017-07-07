@@ -17,7 +17,7 @@ namespace backup_storage
             var swblob = new Stopwatch();
 
             //Run this to n to create n tables and blobs, comment the for loop in if want to create bunch op info for copy
-            //for (var i = 0; i < 50; i++)
+            //for (var i = 0; i < 10; i++)
             //{
                 //Create and populate stuff
                 Console.WriteLine("Creating and populating some more dummy tables....");
@@ -28,7 +28,7 @@ namespace backup_storage
                 CreateBlobStorage.CreateAndPopulateBlob(storageAccount);
                 Console.WriteLine("Finished Creating and populating some more dummy blobs....");
             //}
-            
+
             //Copy and backup table storage
             Console.WriteLine($"{Environment.NewLine}TABLE STORAGE");
             Console.WriteLine("Start copying table storage to new destination storage");
@@ -42,7 +42,8 @@ namespace backup_storage
             //Copy and backup blob
             Console.WriteLine("Start copying blob to new destination storage");
             swblob.Start();
-            BackupBlobStorage.CopyBlobStorage(storageAccount, destStorageAccount);
+            //BackupBlobStorage.CopyBlobStorage(storageAccount, destStorageAccount); //This is only in paralell
+            BackupBlobStorage.BackupBlobToStorage(storageAccount, destStorageAccount).Wait(); //This is only in DataFlow - somewhat faster, but currently by not much
             Console.WriteLine($"Finished copying blob to new destination storage - {swblob.Elapsed}");
             swblob.Stop();
 
