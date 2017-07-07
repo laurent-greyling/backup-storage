@@ -36,16 +36,20 @@ The table class also have a method to delete all tables. This is only here as yo
 After your storage have been populated the copy and backup sections will move your data to the destination storage.
 
 ### Copy Table Storage
-Currently there are two methods for copying data over to your destination storage
+Currently there are two methods for copying data over to your destination storage.
 
 - __CopyTableStorage__ : This will copy tables to the destination storage via paralellism. This is the most basic copy action to move tables to backup storage. Depending on the size of your storage this will be a bit slow, yet faster than doing copy actions without paralallism.
 
-- __CopyAndBackUpTableStorage__ : Of the two methods, this is the faster option to copy tables over. It uses dataflow to setup a pipeline for the data to be moved. Every pipeline is based on blocks linked together. For more info on DataFlow see Stephen Cleary's blog on [dataflow](https://blog.stephencleary.com/2012/09/introduction-to-dataflow-part-1.html)
+- __CopyAndBackUpTableStorage__: Of the two methods, this is the faster option to copy tables over. It uses dataflow to setup a pipeline for the data to be moved. Every pipeline is based on blocks linked together. For more info on DataFlow see Stephen Cleary's blog on [dataflow](https://blog.stephencleary.com/2012/09/introduction-to-dataflow-part-1.html)
 
 First I do a ```TransformManyBlock``` whichg is a one-to-n mapping for data items. After this we do an ```ActionBlock``` which is an input buffer combined with a processing task, which executes a delegate for each input item. In this ```ActionBlock``` I nest and do a ```BatchBlock``` to bact operations together in order to enhance the amount of operations that will be done once executed. This batchoperation is then executed in another nested ```ActionBlock``` and linked to the ```BatchBlock``` and waited to complete.
 
 The reason these blocks were nested was in order not to loose the reference to the table you are currently busy with. First I had these blocks outside and linked, but this lost my table reference and data was copied into incorrect tables.
 
 ### Copy Blob Storage
-Currently there is only one method to copy blobs over and this is the paralell method. An attempt will be made to also introduce dataflow for this as dataflow does seem to be the more efficient way for copying data over.
+Currently there is two methods to copy blob storage over to your destination storage.
+
+- __CopyBlobStorage__: This will copy your blob storage over to a backup destination. This is a basic copy method in a paralell form. This method as well as the dataflow method also show way to exclude containers you are not interested in copying.
+
+- __BackupBlobToStorage__: This is a dataflow method that sets up a pipeline for the data to be moved. Every pipeline is based on blocks linked together (Same as table storage).
 
