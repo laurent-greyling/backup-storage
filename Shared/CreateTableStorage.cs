@@ -25,7 +25,7 @@ namespace backup_storage.Shared
 
                 var id = Guid.NewGuid();
 
-                var run = new TableStorageEntity("ll", $"myTable {id}")
+                var run = new TableStorageEntity($"{i}", $"myTable {id}")
                 {
                     DateOfCreation = DateTime.UtcNow
                 };
