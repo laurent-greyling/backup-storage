@@ -23,7 +23,7 @@ namespace backup_storage.Shared
             });
         }
 
-        public static void CopyBlobsAndBackup(
+        private static void CopyBlobsAndBackup(
             CloudBlobContainer srcContainer,
             CloudBlobContainer destContainer)
         {
