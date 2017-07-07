@@ -12,8 +12,7 @@ namespace backup_storage.Shared
             var blobClient = storageAccount.CreateCloudBlobClient();
 
             var container = blobClient.GetContainerReference("mycontainer");
-
-            // Create the container if it doesn't already exist.
+            
             container.CreateIfNotExists();
 
             var containers = blobClient.ListContainers();

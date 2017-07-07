@@ -1,10 +1,7 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
-using backup_storage.Entity;
 using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Core;
 using Microsoft.WindowsAzure.Storage.RetryPolicies;
 using Microsoft.WindowsAzure.Storage.Table;
 
@@ -31,15 +28,6 @@ namespace backup_storage.Shared
                 var tbl = tableClientDest.GetTableReference(table.Name);
                 tbl.CreateIfNotExists();
 
-                //var batchOp = new TableBatchOperation();
-
-                //Parallel.ForEach(tblData, (dtaEntity) =>
-                //{
-                //    batchOp.Add(TableOperation.InsertOrMerge(dtaEntity));
-                //});
-
-                //tbl.ExecuteBatch(batchOp);
-
                 Parallel.ForEach(tblData, async dtaEntity =>
                 {
                     var insertDta = TableOperation.InsertOrMerge(dtaEntity);
@@ -49,7 +37,7 @@ namespace backup_storage.Shared
         }
 
         /// <summary>
-        /// Copy and backup with dataflow
+        /// Copy and backup with dataflow - fastest option to copy tables over
         /// </summary>
         /// <param name="storageAccount"></param>
         /// <param name="destStorageAccount"></param>
@@ -57,7 +45,6 @@ namespace backup_storage.Shared
         public static async Task CopyAndBackUpTableStorage(CloudStorageAccount storageAccount,
             CloudStorageAccount destStorageAccount)
         {
-            CloudTable tble = null;
             var fromAccountToTables = new TransformManyBlock<CloudStorageAccount, CloudTable>(
                 account =>
                 {
@@ -72,48 +59,49 @@ namespace backup_storage.Shared
                     BoundedCapacity = 40
                 });
 
-            var batchTables = new TransformBlock<CloudTable, TableBatchOperation>(
-                tbl =>
+            var batchTables = new ActionBlock<CloudTable>(
+                async tbl =>
                 {
                     var query = new TableQuery();
                     var tblData = tbl.ExecuteQuery(query);
 
                     var tableClientDest = destStorageAccount.CreateCloudTableClient();
-                    tble = tableClientDest.GetTableReference(tbl.Name);
+                    var tble = tableClientDest.GetTableReference(tbl.Name);
                     tble.CreateIfNotExists();
-
-                    var batchOp = new TableBatchOperation();
-
-                    Parallel.ForEach(tblData, dtaEntity =>
+                    
+                    var batchData = new BatchBlock<TableOperation>(20);
+                    foreach (var dtaEntity in tblData)
                     {
-                        batchOp.Add(TableOperation.InsertOrMerge(dtaEntity));
+                        await batchData.SendAsync(TableOperation.InsertOrMerge(dtaEntity));
+                    }
+
+                    var copyTables = new ActionBlock<TableOperation[]>(prc =>
+                    {
+                        var batchOp = new TableBatchOperation();
+
+                        foreach (var pr in prc)
+                        {
+                            batchOp.Add(pr);
+                        }
+
+                        tble.ExecuteBatch(batchOp);
                     });
 
-                    return batchOp;
+                    batchData.LinkTo(copyTables);
+
+                    batchData.Complete();
+                    await batchData.Completion;
+                    copyTables.Complete();
+                    await copyTables.Completion;
+
+                    //return batchOp;
                 }, new ExecutionDataflowBlockOptions
                 {
                     MaxDegreeOfParallelism = 10,
                     BoundedCapacity = 40
                 });
 
-
-            var batchData = new BatchBlock<TableBatchOperation>(20);
-
-            var copyTables = new ActionBlock<TableBatchOperation[]>(prc =>
-            {
-                foreach (var pr in prc)
-                {
-                    if (pr.Count > 0)
-                    {
-                        tble.ExecuteBatch(pr);
-                    }
-                }
-                    
-            });
-
             fromAccountToTables.LinkTo(batchTables);
-            batchTables.LinkTo(batchData);
-            batchData.LinkTo(copyTables);
             
             await fromAccountToTables.SendAsync(storageAccount);
 
@@ -121,9 +109,6 @@ namespace backup_storage.Shared
             await fromAccountToTables.Completion;
             batchTables.Complete();
             await batchTables.Completion;
-            
-            batchData.Complete();
-            await batchData.Completion.ContinueWith(delegate { copyTables.Complete(); });
         }
     }
 }

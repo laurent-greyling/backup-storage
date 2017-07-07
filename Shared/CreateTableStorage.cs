@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using backup_storage.Entity;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
