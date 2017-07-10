@@ -36,7 +36,7 @@ namespace backup_storage
                 //}
             }
 
-            if (options.Backup)
+            if (options.BackUp)
             {
                 //Copy and backup table storage
                 Console.WriteLine($"{Environment.NewLine}TABLE STORAGE");
@@ -59,6 +59,7 @@ namespace backup_storage
 
             if (options.Restore)
             {
+                var x = "";
                 //do stuff
             }
             Console.ReadKey();

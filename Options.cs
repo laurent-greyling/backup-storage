@@ -5,8 +5,8 @@ namespace backup_storage
 {
     internal class Options
     {
-        [Option('b', "backup", HelpText = "backups up table and blob storage", Required = false, DefaultValue = true)]
-        public bool Backup { get; set; }
+        [Option('b', "backup", HelpText = "backup table and blob storage", Required = false, DefaultValue = false)]
+        public bool BackUp { get; set; }
 
         [Option('r', "restore", HelpText = "restore table and blob storage", Required = false, DefaultValue = false)]
         public bool Restore { get; set; }
