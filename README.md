@@ -3,13 +3,25 @@
 ## Create storage accounts
 For this app to work you need storage accounts for where your storage is and where it need to be backedup. For myself I created a storage in West-Europe and in North-Europe to see that I can copy data over correctly and into different azure storage facilities.
 
-Once you have created these, copy the storage account name and key into the App.config (or adapt the console app so you can feed the strings in).
+Once you have created these, copy the storage account name and key into the App.config and run it same as web job
 
 ```
   <appSettings>
     <add key="StorageConnectionString" value="DefaultEndpointsProtocol=https;AccountName=??;AccountKey=??;EndpointSuffix=core.windows.net" />
     <add key="DestStorageConnectionString" value="DefaultEndpointsProtocol=https;AccountName=??;AccountKey=??;EndpointSuffix=core.windows.net" />
   </appSettings>
+```
+
+__OR__ run the command line options (can be debugged in project>properties>debug>command line arguments)
+
+```
+<bool> -b : "backup", "backups up table and blob storage"
+<bool> -r : "restore","restore table and blob storage"
+<bool> -f : "fillstorage", "indicate if storage should be filled with dummy info"
+<string> -t: "tables", "list of tables to restore"
+<string> -c: "containers", "list of containers to restore"
+<string> -s: "storageconnectionstring","connectionstring to storage that need to be backedup or restored"
+<string> -d: "deststorageconnectionstring","destination connectionstring of storage where storage need to be backedup or restored to"
 ```
 
 ## Create Table and Blob Storage
