@@ -49,6 +49,11 @@ First I do a ```TransformManyBlock``` whichg is a one-to-n mapping for data item
 
 The reason these blocks were nested was in order not to loose the reference to the table you are currently busy with. First I had these blocks outside and linked, but this lost my table reference and data was copied into incorrect tables.
 
+### Restore Table Storage
+To restore table storage we only use the dataflow method as this seems to be the faster and better option for now.
+
+- __CopyAndRestoreTableStorage__ : This will copy the specified tables from your backup account and restore them into the specified storage account, be it your original source or a new storage account.
+
 ### Copy Blob Storage
 Currently there is two methods to copy blob storage over to your destination storage.
 
