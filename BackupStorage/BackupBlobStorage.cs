@@ -7,7 +7,7 @@ using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.RetryPolicies;
 
-namespace backup_storage.Shared
+namespace backup_storage.BackupStorage
 {
     public class BackupBlobStorage
     {

@@ -3,7 +3,7 @@ using backup_storage.Entity;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Table;
 
-namespace backup_storage.Shared
+namespace backup_storage.CreateStorage
 {
     public class CreateTableStorage
     {

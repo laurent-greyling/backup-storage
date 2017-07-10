@@ -3,7 +3,7 @@ using System.IO;
 using System.Text;
 using Microsoft.WindowsAzure.Storage;
 
-namespace backup_storage.Shared
+namespace backup_storage.CreateStorage
 {
     public class CreateBlobStorage
     {

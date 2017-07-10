@@ -80,13 +80,15 @@
     <Compile Include="Entity\BlobItem.cs" />
     <Compile Include="Entity\ProcessingOutCome.cs" />
     <Compile Include="Options.cs" />
-    <Compile Include="Shared\BackupTableStorage.cs" />
-    <Compile Include="Shared\BackupBlobStorage.cs" />
-    <Compile Include="Shared\CreateBlobStorage.cs" />
-    <Compile Include="Shared\CreateTableStorage.cs" />
+    <Compile Include="Shared\BackupAndRestoreTableStorage.cs" />
+    <Compile Include="BackupStorage\BackupTableStorage.cs" />
+    <Compile Include="BackupStorage\BackupBlobStorage.cs" />
+    <Compile Include="CreateStorage\CreateBlobStorage.cs" />
+    <Compile Include="CreateStorage\CreateTableStorage.cs" />
     <Compile Include="Entity\TableStorageEntity.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RestoreStorage\RestoreTableStorage.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

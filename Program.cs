@@ -1,8 +1,14 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
+using backup_storage.BackupStorage;
+using backup_storage.CreateStorage;
+using backup_storage.RestoreStorage;
 using backup_storage.Shared;
 using CommandLine;
 using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Table;
 
 namespace backup_storage
 {
@@ -18,6 +24,7 @@ namespace backup_storage
             var destStorageAccount = CloudStorageAccount.Parse(options.DestStorageConnectionString); //CloudStorageAccount.Parse(CloudConfigurationManager.GetSetting("DestStorageConnectionString"));
             
             var swTable = new Stopwatch();
+            var restoreTable = new Stopwatch();
             var swblob = new Stopwatch();
 
             if (options.FillStorage)
@@ -39,7 +46,7 @@ namespace backup_storage
             if (options.BackUp)
             {
                 //Copy and backup table storage
-                Console.WriteLine($"{Environment.NewLine}TABLE STORAGE");
+                Console.WriteLine($"{Environment.NewLine}TABLE STORAGE BACKUP");
                 Console.WriteLine("Start copying table storage to new destination storage");
                 swTable.Start();
                 //BackupTableStorage.CopyTableStorage(storageAccount, destStorageAccount); //This is only in paralell
@@ -47,7 +54,7 @@ namespace backup_storage
                 Console.WriteLine($"Finished copying table storage to new destination storage - {swTable.Elapsed}");
                 swTable.Stop();
 
-                Console.WriteLine($"{Environment.NewLine}BLOB STORAGE");
+                Console.WriteLine($"{Environment.NewLine}BLOB STORAGE BACKUP");
                 //Copy and backup blob
                 Console.WriteLine("Start copying blob to new destination storage");
                 swblob.Start();
@@ -59,8 +66,12 @@ namespace backup_storage
 
             if (options.Restore)
             {
-                var x = "";
-                //do stuff
+                Console.WriteLine($"{Environment.NewLine}TABLE STORAGE RESTORE");
+                Console.WriteLine("Start restoring table storage");
+                restoreTable.Start();
+                RestoreTableStorage.CopyAndRestoreTableStorage(options.Tables, storageAccount, destStorageAccount).Wait(); //This is with dataflow - this is the quicker copy method
+                Console.WriteLine($"Finished restoring table storage - {restoreTable.Elapsed}");
+                restoreTable.Stop();
             }
             Console.ReadKey();
         }
