@@ -77,6 +77,7 @@ namespace backup_storage.BackupStorage
                    var blobClient = storageAccount.CreateCloudBlobClient();
                    blobClient.DefaultRequestOptions.RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(5), 5);
 
+                   //only return the wanted containers to be backedup as not all system containers need to be backedup
                    return blobClient.ListContainers().Where(c =>
                    {
                        var acceptedContainer = c.Name.ToLowerInvariant();

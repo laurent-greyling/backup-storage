@@ -14,6 +14,7 @@ namespace backup_storage.RestoreStorage
         public static async Task CopyAndRestoreTableStorage(string tablesToRestore, CloudStorageAccount storageAccount,
             CloudStorageAccount destStorageAccount)
         {
+            //Specified tables to be restored
             var tables = tablesToRestore.Split(',').ToList();
 
             if (tables.Count > 0)
@@ -24,6 +25,7 @@ namespace backup_storage.RestoreStorage
                      var tableClient = storageAccount.CreateCloudTableClient();
                      tableClient.DefaultRequestOptions.RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(5), 5);
 
+                     //Return only the CloudTables that are specified to be restored as per -t in commandline arguments
                      return (from tbl in tables
                                 from stbl in tableClient.ListTables()
                                 where stbl.Name == tbl

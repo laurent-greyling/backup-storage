@@ -7,6 +7,13 @@ namespace backup_storage.Shared
 {
     public class BackupAndRestoreTableStorage
     {
+        /// <summary>
+        /// Bacth and move the tables for both restore and backup code
+        /// </summary>
+        /// <param name="storageAccount"></param>
+        /// <param name="destStorageAccount"></param>
+        /// <param name="fromAccountToTables"></param>
+        /// <returns></returns>
         public static async Task BatchAndMoveTables(CloudStorageAccount storageAccount, CloudStorageAccount destStorageAccount,
             TransformManyBlock<CloudStorageAccount, CloudTable> fromAccountToTables)
         {
