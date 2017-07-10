@@ -32,6 +32,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="CommandLine, Version=1.9.71.2, Culture=neutral, PublicKeyToken=de6f01bd326f8c32, processorArchitecture=MSIL">
+      <HintPath>packages\CommandLineParser.1.9.71\lib\net45\CommandLine.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Azure.KeyVault.Core, Version=1.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>packages\Microsoft.Azure.KeyVault.Core.1.0.0\lib\net40\Microsoft.Azure.KeyVault.Core.dll</HintPath>
     </Reference>
@@ -76,6 +79,7 @@
   <ItemGroup>
     <Compile Include="Entity\BlobItem.cs" />
     <Compile Include="Entity\ProcessingOutCome.cs" />
+    <Compile Include="Options.cs" />
     <Compile Include="Shared\BackupTableStorage.cs" />
     <Compile Include="Shared\BackupBlobStorage.cs" />
     <Compile Include="Shared\CreateBlobStorage.cs" />
