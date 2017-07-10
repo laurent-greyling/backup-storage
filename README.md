@@ -35,7 +35,7 @@ There is also commented code that will allow you to first run a large number of 
 
 The table class also have a method to delete all tables. This is only here as you cannot at time of writing this, delete tables easily from the azure portal. You can also download the [Microsoft Azure Storage Explorer](http://storageexplorer.com/) to view your data.
 
-## Copy and BackUp
+## Copy/BackUp and Restore
 After your storage have been populated the copy and backup sections will move your data to the destination storage.
 
 ### Copy Table Storage
