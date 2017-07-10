@@ -9,8 +9,8 @@ Once you have created these run the command line options (can be debugged in pro
 <bool> -b : "backup", "backups up table and blob storage"
 <bool> -r : "restore","restore table and blob storage"
 <bool> -f : "fillstorage", "indicate if storage should be filled with dummy info"
-<string> -t: "tables", "list of tables to restore"
-<string> -c: "containers", "list of containers to restore"
+<string> -t: "tables", "comma seperated string of tables to restore"
+<string> -c: "containers", "comma seperated string of containers to restore"
 <string> -s: "storageconnectionstring","connectionstring to storage that need to be backedup or restored"
 <string> -d: "deststorageconnectionstring","destination connectionstring of storage where storage need to be backedup or restored to"
 ```
