@@ -66,7 +66,8 @@ namespace backup_storage
                 Console.WriteLine($"{Environment.NewLine}TABLE STORAGE RESTORE");
                 Console.WriteLine("Start restoring table storage");
                 restoreTable.Start();
-                RestoreTableStorage.CopyAndRestoreTableStorageAsync(options.Tables, storageAccount, destStorageAccount).Wait(); //This is with dataflow - this is the quicker copy method
+                //RestoreTableStorage.CopyAndRestoreTableStorageAsync(options.Tables, storageAccount, destStorageAccount).Wait(); //This is with dataflow - this is the quicker copy method
+                RestoreTableStorage.RestoreTableStorageFromBlobAsync(options.Tables, storageAccount, destStorageAccount).Wait();
                 Console.WriteLine($"Finished restoring table storage - {restoreTable.Elapsed}");
                 restoreTable.Stop();
             }
