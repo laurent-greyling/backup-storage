@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -8,6 +9,7 @@ using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.RetryPolicies;
 using Microsoft.WindowsAzure.Storage.Table;
+using Newtonsoft.Json;
 
 namespace backup_storage.RestoreStorage
 {
@@ -49,6 +51,13 @@ namespace backup_storage.RestoreStorage
             }
         }
 
+        /// <summary>
+        /// restore table storage from blob
+        /// </summary>
+        /// <param name="tablesToRestore"></param>
+        /// <param name="storageAccount"></param>
+        /// <param name="destStorageAccount"></param>
+        /// <returns></returns>
         public static async Task RestoreTableStorageFromBlobAsync(string tablesToRestore, CloudStorageAccount storageAccount,
             CloudStorageAccount destStorageAccount)
         {
@@ -78,16 +87,28 @@ namespace backup_storage.RestoreStorage
 
                 var fromContainerToBlob = new ActionBlock<CloudBlobContainer>(cntr =>
                 {
-                    foreach (var table in tables)
+                    foreach (var tableToRestore in tables)
                     {
                         var lBlobItems = cntr.ListBlobs(useFlatBlobListing: true).Cast<CloudBlob>()
-                        .Where(b=>b.Name==table).ToArray();
-                    }
-                    
+                        .Where(b=>b.Name== tableToRestore).ToArray();
+                        var tableClient = destStorageAccount.CreateCloudTableClient();
+                        var table = tableClient.GetTableReference(lBlobItems[0].Name);
+                        
+                        table.CreateIfNotExists();
 
-                    //var tableClient = storageAccount.CreateCloudTableClient();
-                    //var table = tableClient.GetTableReference("myTable");
-                });
+                        //using (var reader = new StreamReader(lBlobItems[0].OpenRead()))
+                        //{
+                        //    var bakupData = reader.ReadToEnd();
+                        //    var insertData = TODO: Deserialise data correctly and insert into table
+                        //    table.Execute(insertData);
+                        //}
+                    }
+                },
+                    new ExecutionDataflowBlockOptions
+                    {
+                        MaxDegreeOfParallelism = 10,
+                        BoundedCapacity = 40
+                    });
 
                 fromAccountToContainers.LinkTo(fromContainerToBlob);
 
