@@ -11,7 +11,7 @@ namespace backup_storage.RestoreStorage
 {
     public class RestoreTableStorage
     {
-        public static async Task CopyAndRestoreTableStorage(string tablesToRestore, CloudStorageAccount storageAccount,
+        public static async Task CopyAndRestoreTableStorageAsync(string tablesToRestore, CloudStorageAccount storageAccount,
             CloudStorageAccount destStorageAccount)
         {
             //Specified tables to be restored

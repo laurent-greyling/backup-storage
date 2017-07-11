@@ -68,7 +68,7 @@ namespace backup_storage.BackupStorage
         /// Copy and backup blob in dataflow manner
         /// </summary>
         /// <returns></returns>
-        public static async Task BackupBlobToStorage(CloudStorageAccount storageAccount,
+        public static async Task BackupBlobToStorageAsync(CloudStorageAccount storageAccount,
             CloudStorageAccount destStorageAccount)
         {
             var fromAccountToContainers = new TransformManyBlock<CloudStorageAccount, CloudBlobContainer>(

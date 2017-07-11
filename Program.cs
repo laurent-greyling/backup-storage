@@ -56,7 +56,7 @@ namespace backup_storage
                 Console.WriteLine("Start copying blob to new destination storage");
                 swblob.Start();
                 //BackupBlobStorage.CopyBlobStorage(storageAccount, destStorageAccount); //This is only in paralell
-                BackupBlobStorage.BackupBlobToStorage(storageAccount, destStorageAccount).Wait(); //This is only in DataFlow - somewhat faster, but currently by not much
+                BackupBlobStorage.BackupBlobToStorageAsync(storageAccount, destStorageAccount).Wait(); //This is only in DataFlow - somewhat faster, but currently by not much
                 Console.WriteLine($"Finished copying blob to new destination storage - {swblob.Elapsed}");
                 swblob.Stop();
             }
@@ -66,7 +66,7 @@ namespace backup_storage
                 Console.WriteLine($"{Environment.NewLine}TABLE STORAGE RESTORE");
                 Console.WriteLine("Start restoring table storage");
                 restoreTable.Start();
-                RestoreTableStorage.CopyAndRestoreTableStorage(options.Tables, storageAccount, destStorageAccount).Wait(); //This is with dataflow - this is the quicker copy method
+                RestoreTableStorage.CopyAndRestoreTableStorageAsync(options.Tables, storageAccount, destStorageAccount).Wait(); //This is with dataflow - this is the quicker copy method
                 Console.WriteLine($"Finished restoring table storage - {restoreTable.Elapsed}");
                 restoreTable.Stop();
             }
