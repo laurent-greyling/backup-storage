@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
 using backup_storage.BackupStorage;
 using backup_storage.CreateStorage;
 using backup_storage.RestoreStorage;
-using backup_storage.Shared;
 using CommandLine;
 using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Table;
 
 namespace backup_storage
 {
@@ -50,7 +46,8 @@ namespace backup_storage
                 Console.WriteLine("Start copying table storage to new destination storage");
                 swTable.Start();
                 //BackupTableStorage.CopyTableStorage(storageAccount, destStorageAccount); //This is only in paralell
-                BackupTableStorage.CopyAndBackUpTableStorage(storageAccount, destStorageAccount).Wait(); //This is with dataflow - this is the quicker copy method
+                //BackupTableStorage.CopyAndBackUpTableStorageAsync(storageAccount, destStorageAccount).Wait(); //This is with dataflow - this is the quicker copy method
+                BackupTableStorage.CopyTableStorageIntoBlobAsync(storageAccount, destStorageAccount).Wait(); //With Dataflow model save tables into blob as json. 
                 Console.WriteLine($"Finished copying table storage to new destination storage - {swTable.Elapsed}");
                 swTable.Stop();
 
