@@ -88,7 +88,7 @@ namespace backup_storage.RestoreStorage
                         BoundedCapacity = 40
                     });
 
-                var fromContainerToBlob = new ActionBlock<CloudBlobContainer>(cntr =>
+                var fromContainerToBlob = new ActionBlock<CloudBlobContainer>(async cntr =>
                     {
                         var blobItems = cntr.ListBlobs().Cast<CloudBlob>().Where(c=>tables.Any(n=>n==c.Name)).ToList();
                         foreach (var blobItem in blobItems)
@@ -98,7 +98,7 @@ namespace backup_storage.RestoreStorage
 
                             table.CreateIfNotExists();
 
-                            ReadBlobAndInsertIntoTableStorage(blobItem, table);
+                            await ReadBlobAndInsertIntoTableStorage(blobItem, table);
                         }
                     },
                     new ExecutionDataflowBlockOptions
@@ -118,8 +118,9 @@ namespace backup_storage.RestoreStorage
             }
         }
 
-        private static void ReadBlobAndInsertIntoTableStorage(CloudBlob blobItem, CloudTable table)
+        private static async Task ReadBlobAndInsertIntoTableStorage(CloudBlob blobItem, CloudTable table)
         {
+            var batchData = new BatchBlock<TableOperation>(40);
             using (var reader = new StreamReader(blobItem.OpenRead()))
             {
                 var backupData = reader.ReadToEnd();
@@ -148,9 +149,31 @@ namespace backup_storage.RestoreStorage
                                 break;
                         }
                     }
-                    var insertData = TableOperation.InsertOrMerge(tableEntity);
-                    table.Execute(insertData);
+                    await batchData.SendAsync(TableOperation.InsertOrMerge(tableEntity));
                 }
+
+                var copyTables = new ActionBlock<TableOperation[]>(prc =>
+                {
+                    var batchOp = new TableBatchOperation();
+
+                    foreach (var pr in prc)
+                    {
+                        batchOp.Add(pr);
+                    }
+
+                    table.ExecuteBatch(batchOp);
+                }, new ExecutionDataflowBlockOptions
+                {
+                    MaxDegreeOfParallelism = 10,
+                    BoundedCapacity = 40
+                });
+
+                batchData.LinkTo(copyTables);
+
+                batchData.Complete();
+                await batchData.Completion;
+                copyTables.Complete();
+                await copyTables.Completion;
             }
         }
     }
