@@ -1,4 +1,4 @@
-# backup-storage
+# Backup and Restore Azure Table and Blob Storage
 
 ## Create storage accounts
 For this app to work you need storage accounts for where your storage is and where it need to be backedup. For myself I created a storage in West-Europe and in North-Europe to see that I can copy data over correctly and into different azure storage facilities.
