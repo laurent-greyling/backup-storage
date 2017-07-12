@@ -131,7 +131,7 @@ namespace backup_storage.RestoreStorage
                 var backupData = reader.ReadToEnd();
                 var restoreTableDataEntities =
                     JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(backupData);
-
+                
                 foreach (var entity in restoreTableDataEntities)
                 {
                     var tableEntity = new DynamicTableEntity();
@@ -154,19 +154,22 @@ namespace backup_storage.RestoreStorage
                                 break;
                         }
                     }
+                    
                     await batchData.SendAsync(TableOperation.InsertOrMerge(tableEntity));
                 }
 
                 var copyTables = new ActionBlock<TableOperation[]>(prc =>
                 {
-                    var batchOp = new TableBatchOperation();
-
+                    //cannot do the batch Operation if partition keys are not the same:TODO improve speed of restore based on this
+                    //var batchOp = new TableBatchOperation();
+                    
                     foreach (var pr in prc)
                     {
-                        batchOp.Add(pr);
+                        table.Execute(pr);
+                        //batchOp.Add(pr);
                     }
 
-                    table.ExecuteBatch(batchOp);
+                    //table.ExecuteBatch(batchOp);
                 }, new ExecutionDataflowBlockOptions
                 {
                     MaxDegreeOfParallelism = 10,

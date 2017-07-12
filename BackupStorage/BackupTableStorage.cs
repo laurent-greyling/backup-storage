@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -23,7 +24,12 @@ namespace backup_storage.BackupStorage
         public static void CopyTableStorage(CloudStorageAccount storageAccount, CloudStorageAccount destStorageAccount)
         {
             var tableClient = storageAccount.CreateCloudTableClient();
-            var tables = tableClient.ListTables();
+            var tables = tableClient.ListTables().Where(c =>
+            {
+                var acceptedContainer = c.Name.ToLowerInvariant();
+                return !acceptedContainer.StartsWith("wad".ToLowerInvariant()) &&
+                       !acceptedContainer.StartsWith("waw".ToLowerInvariant());
+            });
 
             Parallel.ForEach(tables, (table) =>
             {
@@ -57,7 +63,12 @@ namespace backup_storage.BackupStorage
                     var tableClient = storageAccount.CreateCloudTableClient();
                     tableClient.DefaultRequestOptions.RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(5), 5);
 
-                    return tableClient.ListTables();
+                    return tableClient.ListTables().Where(c =>
+                    {
+                        var acceptedContainer = c.Name.ToLowerInvariant();
+                        return !acceptedContainer.StartsWith("wad".ToLowerInvariant()) &&
+                               !acceptedContainer.StartsWith("waw".ToLowerInvariant());
+                    });
                 },
                 new ExecutionDataflowBlockOptions
                 {
@@ -86,7 +97,12 @@ namespace backup_storage.BackupStorage
                     var tableClient = storageAccount.CreateCloudTableClient();
                     tableClient.DefaultRequestOptions.RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(5), 5);
 
-                    return tableClient.ListTables();
+                    return tableClient.ListTables().Where(c =>
+                    {
+                        var acceptedContainer = c.Name.ToLowerInvariant();
+                        return !acceptedContainer.StartsWith("wad".ToLowerInvariant()) &&
+                               !acceptedContainer.StartsWith("waw".ToLowerInvariant());
+                    });
                 },
                 new ExecutionDataflowBlockOptions
                 {
