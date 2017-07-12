@@ -1,9 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
-using backup_storage.Entity;
 using backup_storage.Shared;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
@@ -22,7 +22,8 @@ namespace backup_storage.RestoreStorage
         /// <param name="storageAccount"></param>
         /// <param name="destStorageAccount"></param>
         /// <returns></returns>
-        public static async Task CopyAndRestoreTableStorageAsync(string tablesToRestore, CloudStorageAccount storageAccount,
+        public static async Task CopyAndRestoreTableStorageAsync(string tablesToRestore,
+            CloudStorageAccount storageAccount,
             CloudStorageAccount destStorageAccount)
         {
             //Specified tables to be restored
@@ -31,23 +32,24 @@ namespace backup_storage.RestoreStorage
             if (tables.Count > 0)
             {
                 var fromAccountToTables = new TransformManyBlock<CloudStorageAccount, CloudTable>(
-                 account =>
-                 {
-                     var tableClient = storageAccount.CreateCloudTableClient();
-                     tableClient.DefaultRequestOptions.RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(5), 5);
+                    account =>
+                    {
+                        var tableClient = storageAccount.CreateCloudTableClient();
+                        tableClient.DefaultRequestOptions.RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(5), 5);
 
-                     //Return only the CloudTables that are specified to be restored as per -t in commandline arguments
-                     return (from tbl in tables
-                                from stbl in tableClient.ListTables()
-                                where stbl.Name == tbl
-                                select stbl).AsEnumerable();
-                 },
-                 new ExecutionDataflowBlockOptions
-                 {
-                     MaxDegreeOfParallelism = 10,
-                     BoundedCapacity = 40
-                 });
-                await BackupAndRestoreTableStorage.BatchAndMoveTables(storageAccount, destStorageAccount, fromAccountToTables);
+                        //Return only the CloudTables that are specified to be restored as per -t in commandline arguments
+                        return (from tbl in tables
+                            from stbl in tableClient.ListTables()
+                            where stbl.Name == tbl
+                            select stbl).AsEnumerable();
+                    },
+                    new ExecutionDataflowBlockOptions
+                    {
+                        MaxDegreeOfParallelism = 10,
+                        BoundedCapacity = 40
+                    });
+                await BackupAndRestoreTableStorage.BatchAndMoveTables(storageAccount, destStorageAccount,
+                    fromAccountToTables);
             }
         }
 
@@ -58,7 +60,8 @@ namespace backup_storage.RestoreStorage
         /// <param name="storageAccount"></param>
         /// <param name="destStorageAccount"></param>
         /// <returns></returns>
-        public static async Task RestoreTableStorageFromBlobAsync(string tablesToRestore, CloudStorageAccount storageAccount,
+        public static async Task RestoreTableStorageFromBlobAsync(string tablesToRestore,
+            CloudStorageAccount storageAccount,
             CloudStorageAccount destStorageAccount)
         {
             //Specified tables to be restored
@@ -86,24 +89,49 @@ namespace backup_storage.RestoreStorage
                     });
 
                 var fromContainerToBlob = new ActionBlock<CloudBlobContainer>(cntr =>
-                {
-                    foreach (var tableToRestore in tables)
                     {
-                        var lBlobItems = cntr.ListBlobs(useFlatBlobListing: true).Cast<CloudBlob>()
-                        .Where(b=>b.Name== tableToRestore).ToArray();
-                        var tableClient = destStorageAccount.CreateCloudTableClient();
-                        var table = tableClient.GetTableReference(lBlobItems[0].Name);
-                        
-                        table.CreateIfNotExists();
+                        var blobItems = cntr.ListBlobs().Cast<CloudBlob>().Where(c=>tables.Any(n=>n==c.Name)).ToList();
+                        foreach (var blobItem in blobItems)
+                        {
+                            var tableClient = destStorageAccount.CreateCloudTableClient();
+                            var table = tableClient.GetTableReference(blobItem.Name);
 
-                        //using (var reader = new StreamReader(lBlobItems[0].OpenRead()))
-                        //{
-                        //    var bakupData = reader.ReadToEnd();
-                        //    var insertData = TODO: Deserialise data correctly and insert into table
-                        //    table.Execute(insertData);
-                        //}
-                    }
-                },
+                            table.CreateIfNotExists();
+
+                            using (var reader = new StreamReader(blobItem.OpenRead()))
+                            {
+                                var backupData = reader.ReadToEnd();
+                                var restoreTableDataEntities =
+                                    JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(backupData);
+
+                                foreach (var entity in restoreTableDataEntities)
+                                {
+                                    var tableEntity = new DynamicTableEntity();
+                                    foreach (var row in entity)
+                                    {
+                                        switch (row.Key)
+                                        {
+                                            case "PartitionKey":
+                                                tableEntity.PartitionKey = (string)row.Value;
+                                                break;
+                                            case "RowKey":
+                                                tableEntity.RowKey = (string) row.Value;
+                                                break;
+                                            case "TimeStamp":
+                                                tableEntity.Timestamp = DateTimeOffset.Parse((string) row.Value);
+                                                break;
+                                            default:
+                                                dynamic dynamicProperty = Convert.ChangeType(row.Value, row.Value.GetType());
+                                                tableEntity.Properties.Add(row.Key, new EntityProperty(dynamicProperty));
+                                                break;
+                                        }
+                                    }
+                                    var insertData = TableOperation.InsertOrMerge(tableEntity);
+                                    table.Execute(insertData);
+                                }
+                            }
+                        }
+                    },
                     new ExecutionDataflowBlockOptions
                     {
                         MaxDegreeOfParallelism = 10,
