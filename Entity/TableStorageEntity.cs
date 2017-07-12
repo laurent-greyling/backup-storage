@@ -16,5 +16,9 @@ namespace backup_storage.Entity
         }
 
         public DateTime DateOfCreation { get; set; }
+
+        public string Name { get; set; }
+
+        public int Age { get; set; }
     }
 }

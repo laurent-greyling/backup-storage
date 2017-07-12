@@ -32,7 +32,9 @@ namespace backup_storage.CreateStorage
                 //populate the table storage with some data for backing up and restoring
                 var run = new TableStorageEntity($"{i}", $"myTable {id}")
                 {
-                    DateOfCreation = DateTime.UtcNow
+                    DateOfCreation = DateTime.UtcNow,
+                    Name = $"name - {id}",
+                    Age = i
                 };
 
                 var insertData = TableOperation.Insert(run);

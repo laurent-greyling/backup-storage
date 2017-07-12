@@ -38,7 +38,9 @@ namespace backup_storage.RestoreStorage
                         tableClient.DefaultRequestOptions.RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(5), 5);
 
                         //Return only the CloudTables that are specified to be restored as per -t in commandline arguments
-                        return (from tbl in tables
+                        return tablesToRestore == "all" 
+                        ? tableClient.ListTables() 
+                        : (from tbl in tables
                             from stbl in tableClient.ListTables()
                             where stbl.Name == tbl
                             select stbl).AsEnumerable();
@@ -90,7 +92,10 @@ namespace backup_storage.RestoreStorage
 
                 var fromContainerToBlob = new ActionBlock<CloudBlobContainer>(async cntr =>
                     {
-                        var blobItems = cntr.ListBlobs().Cast<CloudBlob>().Where(c=>tables.Any(n=>n==c.Name)).ToList();
+                        var blobItems = tablesToRestore == "all" 
+                        ? cntr.ListBlobs().Cast<CloudBlob>()
+                        : cntr.ListBlobs().Cast<CloudBlob>().Where(c=>tables.Any(n=>n==c.Name)).ToList();
+
                         foreach (var blobItem in blobItems)
                         {
                             var tableClient = destStorageAccount.CreateCloudTableClient();

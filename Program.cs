@@ -26,17 +26,17 @@ namespace backup_storage
             if (options.FillStorage)
             {
                 //Run this to n to create n tables and blobs, comment the for loop in if want to create bunch op info for copy
-                //for (var i = 0; i < 10; i++)
-                //{
-                //Create and populate stuff
-                Console.WriteLine("Creating and populating some more dummy tables....");
-                CreateTableStorage.CreateAndPopulateTable(storageAccount);
-                Console.WriteLine("Finished Creating and populating some more dummy tables....");
+                for (var i = 0; i <= 200; i++)
+                {
+                    //Create and populate stuff
+                    Console.WriteLine("Creating and populating some more dummy tables....");
+                    CreateTableStorage.CreateAndPopulateTable(storageAccount);
+                    Console.WriteLine("Finished Creating and populating some more dummy tables....");
 
-                Console.WriteLine("Creating and populating some more dummy blobs....");
-                CreateBlobStorage.CreateAndPopulateBlob(storageAccount);
-                Console.WriteLine("Finished Creating and populating some more dummy blobs....");
-                //}
+                    Console.WriteLine("Creating and populating some more dummy blobs....");
+                    CreateBlobStorage.CreateAndPopulateBlob(storageAccount);
+                    Console.WriteLine("Finished Creating and populating some more dummy blobs....");
+                }
             }
 
             if (options.BackUp)
