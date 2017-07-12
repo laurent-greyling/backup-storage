@@ -98,38 +98,7 @@ namespace backup_storage.RestoreStorage
 
                             table.CreateIfNotExists();
 
-                            using (var reader = new StreamReader(blobItem.OpenRead()))
-                            {
-                                var backupData = reader.ReadToEnd();
-                                var restoreTableDataEntities =
-                                    JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(backupData);
-
-                                foreach (var entity in restoreTableDataEntities)
-                                {
-                                    var tableEntity = new DynamicTableEntity();
-                                    foreach (var row in entity)
-                                    {
-                                        switch (row.Key)
-                                        {
-                                            case "PartitionKey":
-                                                tableEntity.PartitionKey = (string)row.Value;
-                                                break;
-                                            case "RowKey":
-                                                tableEntity.RowKey = (string) row.Value;
-                                                break;
-                                            case "TimeStamp":
-                                                tableEntity.Timestamp = DateTimeOffset.Parse((string) row.Value);
-                                                break;
-                                            default:
-                                                dynamic dynamicProperty = Convert.ChangeType(row.Value, row.Value.GetType());
-                                                tableEntity.Properties.Add(row.Key, new EntityProperty(dynamicProperty));
-                                                break;
-                                        }
-                                    }
-                                    var insertData = TableOperation.InsertOrMerge(tableEntity);
-                                    table.Execute(insertData);
-                                }
-                            }
+                            ReadBlobAndInsertIntoTableStorage(blobItem, table);
                         }
                     },
                     new ExecutionDataflowBlockOptions
@@ -146,6 +115,42 @@ namespace backup_storage.RestoreStorage
                 await fromAccountToContainers.Completion;
                 fromContainerToBlob.Complete();
                 await fromContainerToBlob.Completion;
+            }
+        }
+
+        private static void ReadBlobAndInsertIntoTableStorage(CloudBlob blobItem, CloudTable table)
+        {
+            using (var reader = new StreamReader(blobItem.OpenRead()))
+            {
+                var backupData = reader.ReadToEnd();
+                var restoreTableDataEntities =
+                    JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(backupData);
+
+                foreach (var entity in restoreTableDataEntities)
+                {
+                    var tableEntity = new DynamicTableEntity();
+                    foreach (var row in entity)
+                    {
+                        switch (row.Key)
+                        {
+                            case "PartitionKey":
+                                tableEntity.PartitionKey = (string) row.Value;
+                                break;
+                            case "RowKey":
+                                tableEntity.RowKey = (string) row.Value;
+                                break;
+                            case "TimeStamp":
+                                tableEntity.Timestamp = DateTimeOffset.Parse((string) row.Value);
+                                break;
+                            default:
+                                dynamic dynamicProperty = Convert.ChangeType(row.Value, row.Value.GetType());
+                                tableEntity.Properties.Add(row.Key, new EntityProperty(dynamicProperty));
+                                break;
+                        }
+                    }
+                    var insertData = TableOperation.InsertOrMerge(tableEntity);
+                    table.Execute(insertData);
+                }
             }
         }
     }
