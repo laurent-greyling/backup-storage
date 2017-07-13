@@ -82,6 +82,7 @@
   <ItemGroup>
     <Compile Include="Entity\BlobItem.cs" />
     <Compile Include="Entity\ProcessingOutCome.cs" />
+    <Compile Include="Entity\TableItem.cs" />
     <Compile Include="Options.cs" />
     <Compile Include="Shared\BackupAndRestoreTableStorage.cs" />
     <Compile Include="BackupStorage\BackupTableStorage.cs" />

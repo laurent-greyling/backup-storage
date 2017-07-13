@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using backup_storage.Entity;
 using backup_storage.Shared;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
@@ -69,119 +71,199 @@ namespace backup_storage.RestoreStorage
             //Specified tables to be restored
             var tables = tablesToRestore.Split(',').ToList();
 
-            if (tables.Count > 0)
-            {
-                var fromAccountToContainers = new TransformManyBlock<CloudStorageAccount, CloudBlobContainer>(
-                    account =>
-                    {
-                        var blobClient = storageAccount.CreateCloudBlobClient();
-                        blobClient.DefaultRequestOptions.RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(5), 5);
+            var fromAccountToContainers = new TransformManyBlock<CloudStorageAccount, CloudBlobContainer>(
+                account =>
+                {
+                    var blobClient = storageAccount.CreateCloudBlobClient();
+                    blobClient.DefaultRequestOptions.RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(5), 5);
 
-                        //only return the wanted containers to be backedup as not all system containers need to be backedup
-                        return blobClient.ListContainers().Where(c =>
-                        {
-                            var acceptedContainer = c.Name.ToLowerInvariant();
-                            return acceptedContainer.Contains("tablestoragecontainer");
-                        });
-                    },
-                    new ExecutionDataflowBlockOptions
+                    //only return the wanted containers to be backedup as not all system containers need to be backedup
+                    return blobClient.ListContainers().Where(c =>
                     {
-                        MaxDegreeOfParallelism = 10,
-                        BoundedCapacity = 40
+                        var acceptedContainer = c.Name.ToLowerInvariant();
+                        return acceptedContainer.Contains("tablestoragecontainer");
                     });
-
-                var fromContainerToBlob = new ActionBlock<CloudBlobContainer>(async cntr =>
-                    {
-                        var blobItems = tablesToRestore == "all" 
-                        ? cntr.ListBlobs().Cast<CloudBlob>()
-                        : cntr.ListBlobs().Cast<CloudBlob>().Where(c=>tables.Any(n=>n==c.Name)).ToList();
-
-                        foreach (var blobItem in blobItems)
-                        {
-                            var tableClient = destStorageAccount.CreateCloudTableClient();
-                            var table = tableClient.GetTableReference(blobItem.Name);
-
-                            table.CreateIfNotExists();
-
-                            await ReadBlobAndInsertIntoTableStorage(blobItem, table);
-                        }
-                    },
-                    new ExecutionDataflowBlockOptions
-                    {
-                        MaxDegreeOfParallelism = 10,
-                        BoundedCapacity = 40
-                    });
-
-                fromAccountToContainers.LinkTo(fromContainerToBlob);
-
-                await fromAccountToContainers.SendAsync(storageAccount);
-
-                fromAccountToContainers.Complete();
-                await fromAccountToContainers.Completion;
-                fromContainerToBlob.Complete();
-                await fromContainerToBlob.Completion;
-            }
-        }
-
-        private static async Task ReadBlobAndInsertIntoTableStorage(CloudBlob blobItem, CloudTable table)
-        {
-            var batchData = new BatchBlock<TableOperation>(40);
-            using (var reader = new StreamReader(blobItem.OpenRead()))
-            {
-                var backupData = reader.ReadToEnd();
-                var restoreTableDataEntities =
-                    JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(backupData);
-                
-                foreach (var entity in restoreTableDataEntities)
+                },
+                new ExecutionDataflowBlockOptions
                 {
-                    var tableEntity = new DynamicTableEntity();
-                    foreach (var row in entity)
-                    {
-                        switch (row.Key)
-                        {
-                            case "PartitionKey":
-                                tableEntity.PartitionKey = (string) row.Value;
-                                break;
-                            case "RowKey":
-                                tableEntity.RowKey = (string) row.Value;
-                                break;
-                            case "TimeStamp":
-                                tableEntity.Timestamp = DateTimeOffset.Parse((string) row.Value);
-                                break;
-                            default:
-                                dynamic dynamicProperty = Convert.ChangeType(row.Value, row.Value.GetType());
-                                tableEntity.Properties.Add(row.Key, new EntityProperty(dynamicProperty));
-                                break;
-                        }
-                    }
-                    
-                    await batchData.SendAsync(TableOperation.InsertOrMerge(tableEntity));
-                }
-
-                var copyTables = new ActionBlock<TableOperation[]>(prc =>
-                {
-                    //cannot do the batch Operation if partition keys are not the same:TODO improve speed of restore based on this
-                    //var batchOp = new TableBatchOperation();
-                    
-                    foreach (var pr in prc)
-                    {
-                        table.Execute(pr);
-                        //batchOp.Add(pr);
-                    }
-
-                    //table.ExecuteBatch(batchOp);
-                }, new ExecutionDataflowBlockOptions
-                {
-                    MaxDegreeOfParallelism = 10,
+                    MaxDegreeOfParallelism = 20,
                     BoundedCapacity = 40
                 });
 
-                batchData.LinkTo(copyTables);
+            var fromContainerToTable = new ActionBlock<CloudBlobContainer>(async cntr =>
+                {
+                    var blobItems = tablesToRestore == "all"
+                        ? cntr.ListBlobs().Cast<CloudBlob>()
+                        : cntr.ListBlobs().Cast<CloudBlob>().Where(c => tables.Any(n => n == c.Name)).ToList();
 
-                batchData.Complete();
-                await batchData.Completion;
-                copyTables.Complete();
-                await copyTables.Completion;
+                    var cloudTableItem = new TransformBlock<CloudBlob, TableItem>(bi =>
+                        {
+                            using (var reader = new StreamReader(bi.OpenRead()))
+                            {
+                                var backupData = reader.ReadToEnd();
+                                var restoreTableDataEntities =
+                                    JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(backupData);
+                                var entities = new List<DynamicTableEntity>();
+                                foreach (var entity in restoreTableDataEntities)
+                                {
+                                    var tableEntity = new DynamicTableEntity();
+                                    foreach (var row in entity)
+                                    {
+                                        switch (row.Key)
+                                        {
+                                            case "PartitionKey":
+                                                tableEntity.PartitionKey = (string) row.Value;
+                                                break;
+                                            case "RowKey":
+                                                tableEntity.RowKey = (string) row.Value;
+                                                break;
+                                            case "TimeStamp":
+                                                tableEntity.Timestamp = DateTimeOffset.Parse((string) row.Value);
+                                                break;
+                                            default:
+                                                dynamic dynamicProperty = Convert.ChangeType(row.Value,
+                                                    row.Value.GetType());
+                                                tableEntity.Properties.Add(row.Key,
+                                                    new EntityProperty(dynamicProperty));
+                                                break;
+                                        }
+                                    }
+
+                                    entities.Add(tableEntity);
+                                }
+
+                                var tableItem = new TableItem
+                                {
+                                    TableName = bi.Name,
+                                    TableEntity = entities.AsEnumerable()
+                                };
+
+                                return tableItem;
+                            }
+                        },
+                        new ExecutionDataflowBlockOptions
+                        {
+                            MaxDegreeOfParallelism = 20,
+                            BoundedCapacity = 40
+                        }
+                    );
+
+                    var batchBlock = new BatchBlock<TableItem>(40);
+                    var cloudTable = new ActionBlock<TableItem[]>(tl =>
+                        {
+                            Parallel.ForEach(tl, async tbl =>
+                            {
+                                var tableClient = destStorageAccount.CreateCloudTableClient();
+                                var table = tableClient.GetTableReference(tbl.TableName);
+
+                                if (table.Name == "stagedfilese703a1c45f99427497ae88d2ec68fec0")
+                                {
+                                    var gggg = "comehere";
+                                }
+                                table.CreateIfNotExists();
+                                var masterList = new List<List<DynamicTableEntity>>();
+
+                                var entities = tbl.TableEntity.ToList();
+
+                                while (entities.Count > 0)
+                                {
+                                    // grab all items with the PartitionKey of the first one in the list
+                                    var listThisPartitionKey = (from item in entities
+                                        where item.PartitionKey == entities[0].PartitionKey
+                                        select item).ToList();
+
+                                    // add that list into masterlist
+                                    masterList.Add(listThisPartitionKey);
+
+                                    // now grab everything else that didn't have the first PartitionKey
+                                    entities = entities.Where(x => x.PartitionKey != entities[0].PartitionKey).ToList();
+                                }
+
+                                // Create the batch operation
+
+                                foreach (var list in masterList)
+                                {
+                                    while (list.Count > 0)
+                                    {
+                                        var batchOperation = new TableBatchOperation();
+
+                                        if (list.Count <= 100)
+                                        {
+                                            foreach (var entity in list)
+                                            {
+                                                batchOperation.InsertOrMerge(entity);
+                                            }
+
+                                            await table.ExecuteBatchAsync(batchOperation);
+
+                                            list.RemoveRange(0, list.Count);
+                                        }
+                                        else
+                                        {
+                                            for (var i = 0; i < 100; i++)
+                                                batchOperation.InsertOrMerge(list[i]);
+
+                                            // execute batch operation
+                                            await table.ExecuteBatchAsync(batchOperation);
+
+                                            //remove those from list
+                                            list.RemoveRange(0, 100);
+                                        }
+                                    }
+                                }
+
+                            });
+                        },
+                        new ExecutionDataflowBlockOptions
+                        {
+                            MaxDegreeOfParallelism = 20,
+                            BoundedCapacity = 40
+                        });
+
+                    foreach (var blobItem in blobItems)
+                    {
+                        await cloudTableItem.SendAsync(blobItem);
+                        cloudTableItem.LinkTo(batchBlock);
+                        batchBlock.LinkTo(cloudTable);
+                    }
+
+                    //await Task.WhenAll(cloudTableItem.Completion)
+                    //    .ContinueWith(_ => cloudTable.Complete());
+                    cloudTableItem.Complete();
+                    await cloudTableItem.Completion;
+                    batchBlock.Complete();
+                    await batchBlock.Completion;
+                    cloudTable.Complete();
+                    await cloudTable.Completion;
+                },
+                new ExecutionDataflowBlockOptions
+                {
+                    MaxDegreeOfParallelism = 20,
+                    BoundedCapacity = 40
+                });
+
+            fromAccountToContainers.LinkTo(fromContainerToTable);
+
+            await fromAccountToContainers.SendAsync(storageAccount);
+
+            fromAccountToContainers.Complete();
+            await fromAccountToContainers.Completion;
+            fromContainerToTable.Complete();
+            await fromContainerToTable.Completion;
+
+            //TODO: Remove this ones the missing tables issue is figured and fixed. - probably need to unnest the dataflow blocks 
+            //TODO: as outer block see it self as finished before inner blocks are actually done
+            var destT = destStorageAccount.CreateCloudTableClient();
+            var tablesRestored = destT.ListTables().Select(c=>c.Name).ToList();
+            Console.WriteLine(tablesRestored.Count);
+            var rt = storageAccount.CreateCloudBlobClient().GetContainerReference("tablestoragecontainer");
+            var tdf = rt.ListBlobs(useFlatBlobListing: true).ToList().OfType<CloudBlockBlob>().Select(c => c.Name).ToList();
+
+            var t = tdf.Except(tablesRestored);
+
+            foreach (var tt in t)
+            {
+                Console.WriteLine(tt);
             }
         }
     }
