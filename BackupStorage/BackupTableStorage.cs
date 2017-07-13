@@ -151,10 +151,6 @@ namespace backup_storage.BackupStorage
                     copyToDestination.Complete();
                     await copyToDestination.Completion;
                     
-                }, new ExecutionDataflowBlockOptions
-                {
-                    MaxDegreeOfParallelism = 10,
-                    BoundedCapacity = 40
                 });
 
             fromAccountToTables.LinkTo(batchTables);

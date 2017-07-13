@@ -53,18 +53,12 @@ namespace backup_storage.CreateStorage
         /// <param name="storageAccount"></param>
         public static void DeleteTable(CloudStorageAccount storageAccount)
         {
-            // Create the table client.
             var tableClient = storageAccount.CreateCloudTableClient();
-            var table = tableClient.GetTableReference("myTable");
-            table.DeleteIfExists();
-
             var tables = tableClient.ListTables();
-            var i = 0;
 
             foreach (var tbl in tables)
             {
-                i++;
-                table = tableClient.GetTableReference($"myTable{i}");
+                var table = tableClient.GetTableReference(tbl.Name);
                 table.DeleteIfExists();
             }
         }

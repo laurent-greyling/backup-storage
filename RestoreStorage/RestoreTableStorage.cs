@@ -155,11 +155,7 @@ namespace backup_storage.RestoreStorage
                             {
                                 var tableClient = destStorageAccount.CreateCloudTableClient();
                                 var table = tableClient.GetTableReference(tbl.TableName);
-
-                                if (table.Name == "stagedfilese703a1c45f99427497ae88d2ec68fec0")
-                                {
-                                    var gggg = "comehere";
-                                }
+                                
                                 table.CreateIfNotExists();
                                 var masterList = new List<List<DynamicTableEntity>>();
 
@@ -213,11 +209,6 @@ namespace backup_storage.RestoreStorage
                                 }
 
                             });
-                        },
-                        new ExecutionDataflowBlockOptions
-                        {
-                            MaxDegreeOfParallelism = 20,
-                            BoundedCapacity = 40
                         });
 
                     foreach (var blobItem in blobItems)
@@ -226,9 +217,7 @@ namespace backup_storage.RestoreStorage
                         cloudTableItem.LinkTo(batchBlock);
                         batchBlock.LinkTo(cloudTable);
                     }
-
-                    //await Task.WhenAll(cloudTableItem.Completion)
-                    //    .ContinueWith(_ => cloudTable.Complete());
+                    
                     cloudTableItem.Complete();
                     await cloudTableItem.Completion;
                     batchBlock.Complete();
