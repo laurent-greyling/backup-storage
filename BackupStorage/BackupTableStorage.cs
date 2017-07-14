@@ -179,6 +179,7 @@ namespace backup_storage.BackupStorage
                 };
 
                 //do this as a dynamic table entity property cannot be serialised.
+                //flatten the structure
                 foreach (var prop in dtaEntity.Properties)
                 {
                     dictionary.Add(prop.Key, prop.Value.PropertyAsObject);

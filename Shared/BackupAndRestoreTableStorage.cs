@@ -9,6 +9,7 @@ namespace backup_storage.Shared
     {
         /// <summary>
         /// Bacth and move the tables for both restore and backup code
+        /// This is only done for restore if you restore from tables to tables, not if you restore from blob
         /// </summary>
         /// <param name="storageAccount"></param>
         /// <param name="destStorageAccount"></param>

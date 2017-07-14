@@ -153,6 +153,13 @@ namespace backup_storage.RestoreStorage
             //}
         }
 
+        /// <summary>
+        /// Batch partition keys that are the same. This is done in order to run batches of partition keys instead of one at a time
+        /// NOTE: If you have a large table with all different partition keys it will be slow and one at a time, this is just to try
+        /// and mitigate this fact. The more of your partition keys are the same the faster the restore will be
+        /// </summary>
+        /// <param name="destStorageAccount"></param>
+        /// <param name="tl"></param>
         private static void BatchPartitionKeys(CloudStorageAccount destStorageAccount, IEnumerable<TableItem> tl)
         {
             Parallel.ForEach(tl, async tbl =>
@@ -180,7 +187,6 @@ namespace backup_storage.RestoreStorage
                 }
 
                 // Create the batch operation
-
                 foreach (var list in masterList)
                 {
                     while (list.Count > 0)
@@ -214,6 +220,11 @@ namespace backup_storage.RestoreStorage
             });
         }
 
+        /// <summary>
+        /// Deserialise Json read from blob into a Dynamic table entity and its properties
+        /// </summary>
+        /// <param name="bi"></param>
+        /// <returns></returns>
         private static TableItem DeserialiseJsonIntoDynamicTableEntity(CloudBlob bi)
         {
             using (var reader = new StreamReader(bi.OpenRead()))
@@ -239,6 +250,7 @@ namespace backup_storage.RestoreStorage
                                 tableEntity.Timestamp = DateTimeOffset.Parse((string) row.Value);
                                 break;
                             default:
+                                //Change the property into the correct type as it was originally saved as
                                 dynamic dynamicProperty = Convert.ChangeType(row.Value,
                                     row.Value.GetType());
                                 tableEntity.Properties.Add(row.Key,
