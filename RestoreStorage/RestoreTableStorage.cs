@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -96,51 +95,7 @@ namespace backup_storage.RestoreStorage
                         ? cntr.ListBlobs().Cast<CloudBlob>()
                         : cntr.ListBlobs().Cast<CloudBlob>().Where(c => tables.Any(n => n == c.Name)).ToList();
 
-                    var cloudTableItem = new TransformBlock<CloudBlob, TableItem>(bi =>
-                        {
-                            using (var reader = new StreamReader(bi.OpenRead()))
-                            {
-                                var backupData = reader.ReadToEnd();
-                                var restoreTableDataEntities =
-                                    JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(backupData);
-                                var entities = new List<DynamicTableEntity>();
-                                foreach (var entity in restoreTableDataEntities)
-                                {
-                                    var tableEntity = new DynamicTableEntity();
-                                    foreach (var row in entity)
-                                    {
-                                        switch (row.Key)
-                                        {
-                                            case "PartitionKey":
-                                                tableEntity.PartitionKey = (string) row.Value;
-                                                break;
-                                            case "RowKey":
-                                                tableEntity.RowKey = (string) row.Value;
-                                                break;
-                                            case "TimeStamp":
-                                                tableEntity.Timestamp = DateTimeOffset.Parse((string) row.Value);
-                                                break;
-                                            default:
-                                                dynamic dynamicProperty = Convert.ChangeType(row.Value,
-                                                    row.Value.GetType());
-                                                tableEntity.Properties.Add(row.Key,
-                                                    new EntityProperty(dynamicProperty));
-                                                break;
-                                        }
-                                    }
-
-                                    entities.Add(tableEntity);
-                                }
-
-                                var tableItem = new TableItem
-                                {
-                                    TableName = bi.Name,
-                                    TableEntity = entities.AsEnumerable()
-                                };
-
-                                return tableItem;
-                            }
-                        },
+                    var cloudTableItem = new TransformBlock<CloudBlob, TableItem>(bi => DeserialiseJsonIntoDynamicTableEntity(bi),
                         new ExecutionDataflowBlockOptions
                         {
                             MaxDegreeOfParallelism = 20,
@@ -151,64 +106,7 @@ namespace backup_storage.RestoreStorage
                     var batchBlock = new BatchBlock<TableItem>(40);
                     var cloudTable = new ActionBlock<TableItem[]>(tl =>
                         {
-                            Parallel.ForEach(tl, async tbl =>
-                            {
-                                var tableClient = destStorageAccount.CreateCloudTableClient();
-                                var table = tableClient.GetTableReference(tbl.TableName);
-                                
-                                table.CreateIfNotExists();
-                                var masterList = new List<List<DynamicTableEntity>>();
-
-                                var entities = tbl.TableEntity.ToList();
-
-                                while (entities.Count > 0)
-                                {
-                                    // grab all items with the PartitionKey of the first one in the list
-                                    var listThisPartitionKey = (from item in entities
-                                        where item.PartitionKey == entities[0].PartitionKey
-                                        select item).ToList();
-
-                                    // add that list into masterlist
-                                    masterList.Add(listThisPartitionKey);
-
-                                    // now grab everything else that didn't have the first PartitionKey
-                                    entities = entities.Where(x => x.PartitionKey != entities[0].PartitionKey).ToList();
-                                }
-
-                                // Create the batch operation
-
-                                foreach (var list in masterList)
-                                {
-                                    while (list.Count > 0)
-                                    {
-                                        var batchOperation = new TableBatchOperation();
-
-                                        if (list.Count <= 100)
-                                        {
-                                            foreach (var entity in list)
-                                            {
-                                                batchOperation.InsertOrMerge(entity);
-                                            }
-
-                                            await table.ExecuteBatchAsync(batchOperation);
-
-                                            list.RemoveRange(0, list.Count);
-                                        }
-                                        else
-                                        {
-                                            for (var i = 0; i < 100; i++)
-                                                batchOperation.InsertOrMerge(list[i]);
-
-                                            // execute batch operation
-                                            await table.ExecuteBatchAsync(batchOperation);
-
-                                            //remove those from list
-                                            list.RemoveRange(0, 100);
-                                        }
-                                    }
-                                }
-
-                            });
+                            BatchPartitionKeys(destStorageAccount, tl);
                         });
 
                     foreach (var blobItem in blobItems)
@@ -240,19 +138,125 @@ namespace backup_storage.RestoreStorage
             fromContainerToTable.Complete();
             await fromContainerToTable.Completion;
 
-            //TODO: Remove this ones the missing tables issue is figured and fixed. - probably need to unnest the dataflow blocks 
-            //TODO: as outer block see it self as finished before inner blocks are actually done
-            var destT = destStorageAccount.CreateCloudTableClient();
-            var tablesRestored = destT.ListTables().Select(c=>c.Name).ToList();
-            Console.WriteLine(tablesRestored.Count);
-            var rt = storageAccount.CreateCloudBlobClient().GetContainerReference("tablestoragecontainer");
-            var tdf = rt.ListBlobs(useFlatBlobListing: true).ToList().OfType<CloudBlockBlob>().Select(c => c.Name).ToList();
+            ////TODO: Comment this code back in if you think you have tables missing, it will litst the missing tables
+            //var destT = destStorageAccount.CreateCloudTableClient();
+            //var tablesRestored = destT.ListTables().Select(c => c.Name).ToList();
+            //Console.WriteLine(tablesRestored.Count);
+            //var rt = storageAccount.CreateCloudBlobClient().GetContainerReference("tablestoragecontainer");
+            //var tdf = rt.ListBlobs(useFlatBlobListing: true).ToList().OfType<CloudBlockBlob>().Select(c => c.Name).ToList();
 
-            var t = tdf.Except(tablesRestored);
+            //var t = tdf.Except(tablesRestored);
 
-            foreach (var tt in t)
+            //foreach (var tt in t)
+            //{
+            //    Console.WriteLine(tt);
+            //}
+        }
+
+        private static void BatchPartitionKeys(CloudStorageAccount destStorageAccount, IEnumerable<TableItem> tl)
+        {
+            Parallel.ForEach(tl, async tbl =>
             {
-                Console.WriteLine(tt);
+                var tableClient = destStorageAccount.CreateCloudTableClient();
+                var table = tableClient.GetTableReference(tbl.TableName);
+
+                table.CreateIfNotExists();
+                var masterList = new List<List<DynamicTableEntity>>();
+
+                var entities = tbl.TableEntity.ToList();
+
+                while (entities.Count > 0)
+                {
+                    // grab all items with the PartitionKey of the first one in the list
+                    var listThisPartitionKey = (from item in entities
+                        where item.PartitionKey == entities[0].PartitionKey
+                        select item).ToList();
+
+                    // add that list into masterlist
+                    masterList.Add(listThisPartitionKey);
+
+                    // now grab everything else that didn't have the first PartitionKey
+                    entities = entities.Where(x => x.PartitionKey != entities[0].PartitionKey).ToList();
+                }
+
+                // Create the batch operation
+
+                foreach (var list in masterList)
+                {
+                    while (list.Count > 0)
+                    {
+                        var batchOperation = new TableBatchOperation();
+
+                        if (list.Count <= 100)
+                        {
+                            foreach (var entity in list)
+                            {
+                                batchOperation.InsertOrMerge(entity);
+                            }
+
+                            await table.ExecuteBatchAsync(batchOperation);
+
+                            list.RemoveRange(0, list.Count);
+                        }
+                        else
+                        {
+                            for (var i = 0; i < 100; i++)
+                                batchOperation.InsertOrMerge(list[i]);
+
+                            // execute batch operation
+                            await table.ExecuteBatchAsync(batchOperation);
+
+                            //remove those from list
+                            list.RemoveRange(0, 100);
+                        }
+                    }
+                }
+            });
+        }
+
+        private static TableItem DeserialiseJsonIntoDynamicTableEntity(CloudBlob bi)
+        {
+            using (var reader = new StreamReader(bi.OpenRead()))
+            {
+                var backupData = reader.ReadToEnd();
+                var restoreTableDataEntities =
+                    JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(backupData);
+                var entities = new List<DynamicTableEntity>();
+                foreach (var entity in restoreTableDataEntities)
+                {
+                    var tableEntity = new DynamicTableEntity();
+                    foreach (var row in entity)
+                    {
+                        switch (row.Key)
+                        {
+                            case "PartitionKey":
+                                tableEntity.PartitionKey = (string) row.Value;
+                                break;
+                            case "RowKey":
+                                tableEntity.RowKey = (string) row.Value;
+                                break;
+                            case "TimeStamp":
+                                tableEntity.Timestamp = DateTimeOffset.Parse((string) row.Value);
+                                break;
+                            default:
+                                dynamic dynamicProperty = Convert.ChangeType(row.Value,
+                                    row.Value.GetType());
+                                tableEntity.Properties.Add(row.Key,
+                                    new EntityProperty(dynamicProperty));
+                                break;
+                        }
+                    }
+
+                    entities.Add(tableEntity);
+                }
+
+                var tableItem = new TableItem
+                {
+                    TableName = bi.Name,
+                    TableEntity = entities.AsEnumerable()
+                };
+
+                return tableItem;
             }
         }
     }

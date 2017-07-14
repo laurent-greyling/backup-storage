@@ -137,11 +137,6 @@ namespace backup_storage.BackupStorage
                                     destBlob.UploadFromStream(memoryStream);
                                 }
                             });
-                        },
-                        new ExecutionDataflowBlockOptions
-                        {
-                            MaxDegreeOfParallelism = 10,
-                            BoundedCapacity = 40
                         });
 
                     batchData.LinkTo(copyToDestination);

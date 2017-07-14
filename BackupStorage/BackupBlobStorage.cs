@@ -120,11 +120,6 @@ namespace backup_storage.BackupStorage
                                 CloudBlob destBlob = ctn.GetBlockBlobReference(blobItem.BlobName);
                                 await destBlob.StartCopyAsync(new Uri(blobItem.Blob));
                             });
-                        },
-                        new ExecutionDataflowBlockOptions
-                        {
-                            MaxDegreeOfParallelism = 20,
-                            BoundedCapacity = 80
                         });
 
                     batchOp.LinkTo(copyToDestination);
@@ -133,11 +128,6 @@ namespace backup_storage.BackupStorage
                     await batchOp.Completion;
                     copyToDestination.Complete();
                     await copyToDestination.Completion;
-                },
-                new ExecutionDataflowBlockOptions
-                {
-                    MaxDegreeOfParallelism = 20,
-                    BoundedCapacity = 80
                 });
 
             fromAccountToContainers.LinkTo(fromContainerToBlob);

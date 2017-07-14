@@ -51,12 +51,6 @@ namespace backup_storage.Shared
                     await batchData.Completion;
                     copyTables.Complete();
                     await copyTables.Completion;
-
-                    //return batchOp;
-                }, new ExecutionDataflowBlockOptions
-                {
-                    MaxDegreeOfParallelism = 10,
-                    BoundedCapacity = 40
                 });
 
             fromAccountToTables.LinkTo(batchTables);
