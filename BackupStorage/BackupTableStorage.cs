@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using backup_storage.Entity;
 using backup_storage.Shared;
 using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.RetryPolicies;
 using Microsoft.WindowsAzure.Storage.Table;
 using Newtonsoft.Json;
@@ -129,13 +132,19 @@ namespace backup_storage.BackupStorage
                     //Copy the json structure of table storage into blob
                     var copyToDestination = new ActionBlock<BlobItem[]>(bli =>
                         {
-                            Parallel.ForEach(bli, blobItem =>
+                            Parallel.ForEach(bli, async blobItem =>
                             {
                                 var destBlob = container.GetBlockBlobReference(blobItem.BlobName);
+                                destBlob.Metadata.Add("TableOriginalBackUp", DateTime.UtcNow.ToString(CultureInfo.InvariantCulture));
+
                                 using (var memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(blobItem.Blob)))
                                 {
-                                    destBlob.UploadFromStream(memoryStream);
+                                    await destBlob.UploadFromStreamAsync(memoryStream);
                                 }
+
+                                destBlob.Metadata["TableSnapShot"] = DateTime.UtcNow.ToString(CultureInfo.InvariantCulture);
+                                destBlob.SetMetadata();
+                                destBlob.CreateSnapshot();
                             });
                         });
 
