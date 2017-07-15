@@ -4,13 +4,11 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using backup_storage.Entity;
 using backup_storage.Shared;
 using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.RetryPolicies;
 using Microsoft.WindowsAzure.Storage.Table;
 using Newtonsoft.Json;
@@ -93,6 +91,8 @@ namespace backup_storage.BackupStorage
             CloudStorageAccount destStorageAccount)
         {
             const string tableStorageContainer = "tablestoragecontainer";
+            //Snapshot time as it will be set in the metadata for consistancy of time stamp for all tables
+            var snapShotTime = DateTime.UtcNow.ToString(CultureInfo.InvariantCulture);
 
             var fromAccountToTables = new TransformManyBlock<CloudStorageAccount, CloudTable>(
                 account =>
@@ -135,14 +135,16 @@ namespace backup_storage.BackupStorage
                             Parallel.ForEach(bli, async blobItem =>
                             {
                                 var destBlob = container.GetBlockBlobReference(blobItem.BlobName);
-                                destBlob.Metadata.Add("TableOriginalBackUp", DateTime.UtcNow.ToString(CultureInfo.InvariantCulture));
 
                                 using (var memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(blobItem.Blob)))
                                 {
                                     await destBlob.UploadFromStreamAsync(memoryStream);
                                 }
 
-                                destBlob.Metadata["TableSnapShot"] = DateTime.UtcNow.ToString(CultureInfo.InvariantCulture);
+                                //Set a snapshot time in metadata as snapshot time stamp can differ over large number of tables
+                                //With snapshot if you start running the backup at 2017-06-01 11:59:50 your first tables will be on the first and your last tables on the 2nd
+                                //this will make restoring all tables for a specific timestamp difficult. With metadata set your time stamp for all tables are 2017-06-01 11:59:50
+                                destBlob.Metadata["TableSnapShot"] = snapShotTime;
                                 destBlob.SetMetadata();
                                 destBlob.CreateSnapshot();
                             });

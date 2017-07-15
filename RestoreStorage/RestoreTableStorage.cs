@@ -62,10 +62,12 @@ namespace backup_storage.RestoreStorage
         /// <param name="tablesToRestore"></param>
         /// <param name="storageAccount"></param>
         /// <param name="destStorageAccount"></param>
+        /// <param name="snapShotTime"></param>
         /// <returns></returns>
         public static async Task RestoreTableStorageFromBlobAsync(string tablesToRestore,
             CloudStorageAccount storageAccount,
-            CloudStorageAccount destStorageAccount)
+            CloudStorageAccount destStorageAccount,
+            string snapShotTime)
         {
             //Specified tables to be restored
             var tables = tablesToRestore.Split(',').ToList();
@@ -91,9 +93,7 @@ namespace backup_storage.RestoreStorage
 
             var fromContainerToTable = new ActionBlock<CloudBlobContainer>(async cntr =>
                 {
-                    var blobItems = tablesToRestore == "all"
-                        ? cntr.ListBlobs().Cast<CloudBlob>()
-                        : cntr.ListBlobs().Cast<CloudBlob>().Where(c => tables.Any(n => n == c.Name)).ToList();
+                    var blobItems = GetBlobItems(tablesToRestore, snapShotTime, cntr, tables);
 
                     var cloudTableItem = new TransformBlock<CloudBlob, TableItem>(bi => DeserialiseJsonIntoDynamicTableEntity(bi),
                         new ExecutionDataflowBlockOptions
@@ -151,6 +151,36 @@ namespace backup_storage.RestoreStorage
             //{
             //    Console.WriteLine(tt);
             //}
+        }
+
+        private static IEnumerable<CloudBlockBlob> GetBlobItems(string tablesToRestore,
+            string snapShotTime,
+            CloudBlobContainer cntr,
+            List<string> tables)
+        {
+            IEnumerable<CloudBlockBlob> blobItems;
+            if (string.IsNullOrEmpty(snapShotTime))
+            {
+                blobItems = tablesToRestore == "all"
+                    ? cntr.ListBlobs().Cast<CloudBlockBlob>().ToList()
+                    : cntr.ListBlobs().Cast<CloudBlockBlob>().Where(c => tables.Any(n => n == c.Name)).ToList();
+            }
+            else
+            {
+                //Restore on time put into the metadata as snapshot time can differ in the same date. e.g. 07/15/2017 19:05:46 for first table and 07/15/2017 19:05:50 for last table
+                //With the metadata one can set the date at start of process and be sure all tables have the exact same time stamp
+                blobItems = tablesToRestore == "all"
+                    ? cntr.ListBlobs(blobListingDetails: BlobListingDetails.All, useFlatBlobListing: true)
+                        .Cast<CloudBlockBlob>()
+                        .Where(c => c.SnapshotTime != null && c.Metadata.Values.Contains(snapShotTime))
+                        .ToList()
+                    : cntr.ListBlobs(blobListingDetails: BlobListingDetails.All, useFlatBlobListing: true)
+                        .Cast<CloudBlockBlob>()
+                        .Where(c => c.SnapshotTime != null && c.Metadata.Values.Contains(snapShotTime) &&
+                                    tables.Any(n => n == c.Name))
+                        .ToList();
+            }
+            return blobItems;
         }
 
         /// <summary>

@@ -51,14 +51,14 @@ namespace backup_storage
                 Console.WriteLine($"Finished copying table storage to new destination storage - {swTable.Elapsed}");
                 swTable.Stop();
 
-                //Console.WriteLine($"{Environment.NewLine}BLOB STORAGE BACKUP");
-                ////Copy and backup blob
-                //Console.WriteLine("Start copying blob to new destination storage");
-                //swblob.Start();
-                ////BackupBlobStorage.CopyBlobStorage(storageAccount, destStorageAccount); //This is only in paralell
-                //BackupBlobStorage.BackupBlobToStorageAsync(storageAccount, destStorageAccount).Wait(); //This is only in DataFlow - somewhat faster, but currently by not much
-                //Console.WriteLine($"Finished copying blob to new destination storage - {swblob.Elapsed}");
-                //swblob.Stop();
+                Console.WriteLine($"{Environment.NewLine}BLOB STORAGE BACKUP");
+                //Copy and backup blob
+                Console.WriteLine("Start copying blob to new destination storage");
+                swblob.Start();
+                //BackupBlobStorage.CopyBlobStorage(storageAccount, destStorageAccount); //This is only in paralell
+                BackupBlobStorage.BackupBlobToStorageAsync(storageAccount, destStorageAccount).Wait(); //This is only in DataFlow - somewhat faster, but currently by not much
+                Console.WriteLine($"Finished copying blob to new destination storage - {swblob.Elapsed}");
+                swblob.Stop();
             }
 
             if (options.Restore)
@@ -67,7 +67,7 @@ namespace backup_storage
                 Console.WriteLine("Start restoring table storage");
                 restoreTable.Start();
                 //RestoreTableStorage.CopyAndRestoreTableStorageAsync(options.Tables, storageAccount, destStorageAccount).Wait(); //This is with dataflow - this is the quicker copy method
-                RestoreTableStorage.RestoreTableStorageFromBlobAsync(options.Tables, storageAccount, destStorageAccount).Wait(); //restore tables from blob
+                RestoreTableStorage.RestoreTableStorageFromBlobAsync(options.Tables, storageAccount, destStorageAccount, options.Momentopname).Wait(); //restore tables from blob
                 Console.WriteLine($"Finished restoring table storage - {restoreTable.Elapsed}");
                 restoreTable.Stop();
             }
