@@ -51,9 +51,9 @@ First I do a ```TransformManyBlock``` which is a one-to-n mapping for data items
 
 The reason these blocks were nested was in order not to loose the reference to the table you are currently busy with. First I had these blocks outside and linked, but this lost my table reference and data was copied into incorrect tables.
 
-- __CopyTableStorageIntoBlobAsync__: This method will serialise your table entity into Json and copy the Json structure into blob as backup for your entire table entity. 
+- __CopyTableStorageIntoBlobAsync__: This method will serialise your table entity into Json and copy the Json structure into blob as backup for your entire table entity. Here we could not just directly serialise the the table entity into a json structure as your table from table storage could be a dynamic table entity which then cannot be serialised. For this we create dictionairies that is then serialised as the entire table and sent to your batchblock - see method __SerialiseAndAddEntityToBatchAsync__.
 
-Here we could not just directly serialise the the table entity into a json structure as your table from table storage could be a dynamic table entity which then cannot be serialised. For this we create dictionairies that is then serialised as the entire table and sent to your batchblock - see method __SerialiseAndAddEntityToBatchAsync__.
+   - __SnapShot__: for backup and restore we need to be able to restore from a point in time. For this we create a snapshot on the blob after we backed up the tables. For the blob snapshot we also add Metadata (in this case called __TableSnapShot__) with a time stamp. We add this Metadata to the snapshot as the actual time stamp of a snapshot my be different for the first and last table. Lets say you start a backup at 1/6/2017 23:59:50, this will mean your first table is on the 1st and your last table will be backed up on the 2nd - when using the snapshot time. Yet with the metadata we ensure that your time stamp is always set for the 1st and all tables for that date can be easily referenced.
 
 ### Restore Table Storage
 To restore table storage we only use the dataflow method as this seems to be the faster and better option for now.
