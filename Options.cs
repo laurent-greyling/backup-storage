@@ -26,7 +26,7 @@ namespace backup_storage
         [Option('d', "deststorageconnectionstring", HelpText = "destination connectionstring of storage where storage need to be backedup or restored to", Required = true)]
         public string DestStorageConnectionString { get; set; }
 
-        [Option('m', "snapshot", HelpText = "snapshot time and date you want to restore from point in time", Required = false)]
+        [Option('m', "snapshot", HelpText = "snapshot time and date you want to restore from point in time - e.g. 07/15/2017 19:05:46", Required = false)]
         public string Momentopname { get; set; }
 
         [HelpOption]
