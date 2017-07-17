@@ -13,6 +13,7 @@ Once you have created these, run the command line options (can be debugged in pr
 <string> -c: "containers", "comma seperated string of containers to restore"
 <string> -s: "storageconnectionstring","connectionstring to storage that need to be backedup or restored"
 <string> -d: "deststorageconnectionstring","destination connectionstring of storage where storage need to be backedup or restored to"
+<string> -m: "snapshot","snapshot time and date you want to restore from point in time - e.g. 07/15/2017 19:05:46" 
 ```
 
 ## Create Table and Blob Storage
