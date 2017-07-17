@@ -126,9 +126,9 @@ namespace backup_storage.RestoreStorage
                         cloudTable.Complete();
                         await cloudTable.Completion;
                     }
-                    catch (Exception)
+                    catch (InvalidOperationException e)
                     {
-                        Console.WriteLine("Set -m or --snapshot to a time stamp of 07/15/2017 19:05:46 to restore");
+                        Console.WriteLine(e);
                     }
                     
                 },
@@ -183,7 +183,7 @@ namespace backup_storage.RestoreStorage
                         .ToList();
             }
 
-            return null;
+            throw new InvalidOperationException("Set -m or --snapshot to a time stamp of 07/15/2017 19:05:46 to restore");
         }
 
         /// <summary>
