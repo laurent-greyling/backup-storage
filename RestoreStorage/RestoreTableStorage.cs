@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -93,35 +94,43 @@ namespace backup_storage.RestoreStorage
 
             var fromContainerToTable = new ActionBlock<CloudBlobContainer>(async cntr =>
                 {
-                    var blobItems = GetBlobItems(tablesToRestore, snapShotTime, cntr, tables);
+                    try
+                    {
+                        var blobItems = GetBlobItems(tablesToRestore, snapShotTime, cntr, tables);
 
-                    var cloudTableItem = new TransformBlock<CloudBlob, TableItem>(bi => DeserialiseJsonIntoDynamicTableEntity(bi),
-                        new ExecutionDataflowBlockOptions
-                        {
-                            MaxDegreeOfParallelism = 20,
-                            BoundedCapacity = 40
-                        }
-                    );
+                        var cloudTableItem = new TransformBlock<CloudBlob, TableItem>(bi => DeserialiseJsonIntoDynamicTableEntity(bi),
+                            new ExecutionDataflowBlockOptions
+                            {
+                                MaxDegreeOfParallelism = 20,
+                                BoundedCapacity = 40
+                            }
+                        );
 
-                    var batchBlock = new BatchBlock<TableItem>(40);
-                    var cloudTable = new ActionBlock<TableItem[]>(tl =>
+                        var batchBlock = new BatchBlock<TableItem>(40);
+                        var cloudTable = new ActionBlock<TableItem[]>(tl =>
                         {
                             BatchPartitionKeys(destStorageAccount, tl);
                         });
 
-                    foreach (var blobItem in blobItems)
+                        foreach (var blobItem in blobItems)
+                        {
+                            await cloudTableItem.SendAsync(blobItem);
+                            cloudTableItem.LinkTo(batchBlock);
+                            batchBlock.LinkTo(cloudTable);
+                        }
+
+                        cloudTableItem.Complete();
+                        await cloudTableItem.Completion;
+                        batchBlock.Complete();
+                        await batchBlock.Completion;
+                        cloudTable.Complete();
+                        await cloudTable.Completion;
+                    }
+                    catch (Exception)
                     {
-                        await cloudTableItem.SendAsync(blobItem);
-                        cloudTableItem.LinkTo(batchBlock);
-                        batchBlock.LinkTo(cloudTable);
+                        Console.WriteLine("Set -m or --snapshot to a time stamp of 07/15/2017 19:05:46 to restore");
                     }
                     
-                    cloudTableItem.Complete();
-                    await cloudTableItem.Completion;
-                    batchBlock.Complete();
-                    await batchBlock.Completion;
-                    cloudTable.Complete();
-                    await cloudTable.Completion;
                 },
                 new ExecutionDataflowBlockOptions
                 {
@@ -158,29 +167,23 @@ namespace backup_storage.RestoreStorage
             CloudBlobContainer cntr,
             List<string> tables)
         {
-            IEnumerable<CloudBlockBlob> blobItems;
-            if (string.IsNullOrEmpty(snapShotTime))
-            {
-                blobItems = tablesToRestore == "all"
-                    ? cntr.ListBlobs().Cast<CloudBlockBlob>().ToList()
-                    : cntr.ListBlobs().Cast<CloudBlockBlob>().Where(c => tables.Any(n => n == c.Name)).ToList();
-            }
-            else
+            if (!string.IsNullOrEmpty(snapShotTime))
             {
                 //Restore on time put into the metadata as snapshot time can differ in the same date. e.g. 07/15/2017 19:05:46 for first table and 07/15/2017 19:05:50 for last table
                 //With the metadata one can set the date at start of process and be sure all tables have the exact same time stamp
-                blobItems = tablesToRestore == "all"
+                //SnapShotTime is a mandatory field and to restore the latest update give it the timestamp of latest backup needed to restore
+                return tablesToRestore == "all"
                     ? cntr.ListBlobs(blobListingDetails: BlobListingDetails.All, useFlatBlobListing: true)
                         .Cast<CloudBlockBlob>()
-                        .Where(c => c.SnapshotTime != null && c.Metadata.Values.Contains(snapShotTime))
+                        .Where(c => c.Metadata.Values.Contains(snapShotTime))
                         .ToList()
                     : cntr.ListBlobs(blobListingDetails: BlobListingDetails.All, useFlatBlobListing: true)
                         .Cast<CloudBlockBlob>()
-                        .Where(c => c.SnapshotTime != null && c.Metadata.Values.Contains(snapShotTime) &&
-                                    tables.Any(n => n == c.Name))
+                        .Where(c => c.Metadata.Values.Contains(snapShotTime) && tables.Any(n => n == c.Name))
                         .ToList();
             }
-            return blobItems;
+
+            return null;
         }
 
         /// <summary>
@@ -257,48 +260,56 @@ namespace backup_storage.RestoreStorage
         /// <returns></returns>
         private static TableItem DeserialiseJsonIntoDynamicTableEntity(CloudBlob bi)
         {
-            using (var reader = new StreamReader(bi.OpenRead()))
+            try
             {
-                var backupData = reader.ReadToEnd();
-                var restoreTableDataEntities =
-                    JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(backupData);
-                var entities = new List<DynamicTableEntity>();
-                foreach (var entity in restoreTableDataEntities)
+                using (var reader = new StreamReader(bi.OpenRead()))
                 {
-                    var tableEntity = new DynamicTableEntity();
-                    foreach (var row in entity)
+                    var backupData = reader.ReadToEnd();
+                    var restoreTableDataEntities =
+                        JsonConvert.DeserializeObject<List<Dictionary<string, object>>>(backupData);
+                    var entities = new List<DynamicTableEntity>();
+                    foreach (var entity in restoreTableDataEntities)
                     {
-                        switch (row.Key)
+                        var tableEntity = new DynamicTableEntity();
+                        foreach (var row in entity)
                         {
-                            case "PartitionKey":
-                                tableEntity.PartitionKey = (string) row.Value;
-                                break;
-                            case "RowKey":
-                                tableEntity.RowKey = (string) row.Value;
-                                break;
-                            case "TimeStamp":
-                                tableEntity.Timestamp = DateTimeOffset.Parse((string) row.Value);
-                                break;
-                            default:
-                                //Change the property into the correct type as it was originally saved as
-                                dynamic dynamicProperty = Convert.ChangeType(row.Value,
-                                    row.Value.GetType());
-                                tableEntity.Properties.Add(row.Key,
-                                    new EntityProperty(dynamicProperty));
-                                break;
+                            switch (row.Key)
+                            {
+                                case "PartitionKey":
+                                    tableEntity.PartitionKey = (string)row.Value;
+                                    break;
+                                case "RowKey":
+                                    tableEntity.RowKey = (string)row.Value;
+                                    break;
+                                case "TimeStamp":
+                                    tableEntity.Timestamp = DateTimeOffset.Parse((string) row.Value, CultureInfo.InvariantCulture);
+                                    break;
+                                default:
+                                    //Change the property into the correct type as it was originally saved as
+                                    dynamic dynamicProperty = Convert.ChangeType(row.Value,
+                                        row.Value.GetType());
+                                    tableEntity.Properties.Add(row.Key,
+                                        new EntityProperty(dynamicProperty));
+                                    break;
+                            }
                         }
+
+                        entities.Add(tableEntity);
                     }
 
-                    entities.Add(tableEntity);
+                    var tableItem = new TableItem
+                    {
+                        TableName = bi.Name,
+                        TableEntity = entities.AsEnumerable()
+                    };
+
+                    return tableItem;
                 }
-
-                var tableItem = new TableItem
-                {
-                    TableName = bi.Name,
-                    TableEntity = entities.AsEnumerable()
-                };
-
-                return tableItem;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
             }
         }
     }
