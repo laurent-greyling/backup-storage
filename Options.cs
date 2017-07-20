@@ -14,7 +14,7 @@ namespace backup_storage
         [Option('f', "fillstorage", HelpText = "indicate if storage should be filled with dummy info", Required = false, DefaultValue = false)]
         public bool FillStorage { get; set; }
 
-        [Option('t', "tables", HelpText = "comma seperated string of tables to restore", Required = false, DefaultValue = "all")]
+        [Option('t', "tables", HelpText = "comma seperated string of tables to restore", Required = false, DefaultValue = "*")]
         public string Tables { get; set; }
 
         [Option('c', "containers", HelpText = "comma seperated string of containers to restore", Required = false, DefaultValue = "all")]

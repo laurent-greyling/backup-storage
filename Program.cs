@@ -26,16 +26,16 @@ namespace backup_storage
             if (options.FillStorage)
             {
                 //Run this to n to create n tables and blobs, comment the for loop in if want to create bunch op info for copy
-                for (var i = 0; i <= 200; i++)
+                for (var i = 0; i <= 5; i++)
                 {
                     //Create and populate stuff
                     Console.WriteLine("Creating and populating some more dummy tables....");
                     CreateTableStorage.CreateAndPopulateTable(storageAccount);
                     Console.WriteLine("Finished Creating and populating some more dummy tables....");
 
-                    Console.WriteLine("Creating and populating some more dummy blobs....");
-                    CreateBlobStorage.CreateAndPopulateBlob(storageAccount);
-                    Console.WriteLine("Finished Creating and populating some more dummy blobs....");
+                    //Console.WriteLine("Creating and populating some more dummy blobs....");
+                    //CreateBlobStorage.CreateAndPopulateBlob(storageAccount);
+                    //Console.WriteLine("Finished Creating and populating some more dummy blobs....");
                 }
             }
 
@@ -51,14 +51,14 @@ namespace backup_storage
                 Console.WriteLine($"Finished copying table storage to new destination storage - {swTable.Elapsed}");
                 swTable.Stop();
 
-                Console.WriteLine($"{Environment.NewLine}BLOB STORAGE BACKUP");
-                //Copy and backup blob
-                Console.WriteLine("Start copying blob to new destination storage");
-                swblob.Start();
-                //BackupBlobStorage.CopyBlobStorage(storageAccount, destStorageAccount); //This is only in paralell
-                BackupBlobStorage.BackupBlobToStorageAsync(storageAccount, destStorageAccount).Wait(); //This is only in DataFlow - somewhat faster, but currently by not much
-                Console.WriteLine($"Finished copying blob to new destination storage - {swblob.Elapsed}");
-                swblob.Stop();
+                //Console.WriteLine($"{Environment.NewLine}BLOB STORAGE BACKUP");
+                ////Copy and backup blob
+                //Console.WriteLine("Start copying blob to new destination storage");
+                //swblob.Start();
+                ////BackupBlobStorage.CopyBlobStorage(storageAccount, destStorageAccount); //This is only in paralell
+                //BackupBlobStorage.BackupBlobToStorageAsync(storageAccount, destStorageAccount).Wait(); //This is only in DataFlow - somewhat faster, but currently by not much
+                //Console.WriteLine($"Finished copying blob to new destination storage - {swblob.Elapsed}");
+                //swblob.Stop();
             }
 
             if (options.Restore)

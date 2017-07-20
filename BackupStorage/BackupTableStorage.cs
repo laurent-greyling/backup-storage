@@ -9,6 +9,7 @@ using System.Threading.Tasks.Dataflow;
 using backup_storage.Entity;
 using backup_storage.Shared;
 using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.RetryPolicies;
 using Microsoft.WindowsAzure.Storage.Table;
 using Newtonsoft.Json;
@@ -130,25 +131,10 @@ namespace backup_storage.BackupStorage
                     await SerialiseAndAddEntityToBatchAsync(tblData, batchData, tbl);
 
                     //Copy the json structure of table storage into blob
-                    var copyToDestination = new ActionBlock<BlobItem[]>(bli =>
-                        {
-                            Parallel.ForEach(bli, async blobItem =>
-                            {
-                                var destBlob = container.GetBlockBlobReference(blobItem.BlobName);
-
-                                using (var memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(blobItem.Blob)))
-                                {
-                                    await destBlob.UploadFromStreamAsync(memoryStream);
-                                }
-
-                                //Set a snapshot time in metadata as snapshot time stamp can differ over large number of tables
-                                //With snapshot if you start running the backup at 2017-06-01 11:59:50 your first tables will be on the first and your last tables on the 2nd
-                                //this will make restoring all tables for a specific timestamp difficult. With metadata set your time stamp for all tables are 2017-06-01 11:59:50
-                                destBlob.Metadata["TableSnapShot"] = snapShotTime;
-                                destBlob.SetMetadata();
-                                destBlob.CreateSnapshot();
-                            });
-                        });
+                    var copyToDestination = new ActionBlock<BlobItem[]>(async blobItems =>
+                    {
+                        await CopyTableToBlobDestination(blobItems, container, snapShotTime);
+                    });
 
                     batchData.LinkTo(copyToDestination);
 
@@ -205,6 +191,40 @@ namespace backup_storage.BackupStorage
                 BlobName = tbl.Name,
                 Blob = JsonConvert.SerializeObject(dictionairyListOfEntities)
             });
+        }
+
+        /// <summary>
+        /// Copy tables to blob storage
+        /// </summary>
+        /// <param name="blobItems"></param>
+        /// <param name="container"></param>
+        /// <param name="snapShotTime"></param>
+        /// <returns></returns>
+        private static async Task CopyTableToBlobDestination(BlobItem[] blobItems, CloudBlobContainer container, string snapShotTime)
+        {
+            try
+            {
+                foreach (var blobItem in blobItems)
+                {
+                    var destBlob = container.GetBlockBlobReference(blobItem.BlobName);
+
+                    using (var memoryStream = new MemoryStream(Encoding.UTF8.GetBytes(blobItem.Blob)))
+                    {
+                        await destBlob.UploadFromStreamAsync(memoryStream);
+                    }
+
+                    //Set a snapshot time in metadata as snapshot time stamp can differ over large number of tables
+                    //With snapshot if you start running the backup at 2017-06-01 11:59:50 your first tables will be on the first and your last tables on the 2nd
+                    //this will make restoring all tables for a specific timestamp difficult. With metadata set your time stamp for all tables are 2017-06-01 11:59:50
+                    destBlob.Metadata["TableSnapShot"] = snapShotTime;
+                    destBlob.SetMetadata();
+                    destBlob.CreateSnapshot();
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
         }
     }
 }

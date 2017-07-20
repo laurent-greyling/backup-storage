@@ -73,18 +73,14 @@ namespace backup_storage.RestoreStorage
             //Specified tables to be restored
             var tables = tablesToRestore.Split(',').ToList();
 
-            var fromAccountToContainers = new TransformManyBlock<CloudStorageAccount, CloudBlobContainer>(
+            var fromAccountToContainers = new TransformBlock<CloudStorageAccount, CloudBlobContainer>(
                 account =>
                 {
                     var blobClient = storageAccount.CreateCloudBlobClient();
                     blobClient.DefaultRequestOptions.RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(5), 5);
 
                     //only return the wanted containers to be backedup as not all system containers need to be backedup
-                    return blobClient.ListContainers().Where(c =>
-                    {
-                        var acceptedContainer = c.Name.ToLowerInvariant();
-                        return acceptedContainer.Contains("tablestoragecontainer");
-                    });
+                    return blobClient.GetContainerReference("tablestoragecontainer");
                 },
                 new ExecutionDataflowBlockOptions
                 {
@@ -96,9 +92,10 @@ namespace backup_storage.RestoreStorage
                 {
                     try
                     {
-                        var blobItems = GetBlobItems(tablesToRestore, snapShotTime, cntr, tables);
+                        var blobItems = GetBlobItems(tablesToRestore, snapShotTime, cntr);
 
-                        var cloudTableItem = new TransformBlock<CloudBlob, TableItem>(bi => DeserialiseJsonIntoDynamicTableEntity(bi),
+                        var cloudTableItem = new TransformBlock<CloudBlob, TableItem>(blobitem 
+                            => DeserialiseJsonIntoDynamicTableEntity(blobitem),
                             new ExecutionDataflowBlockOptions
                             {
                                 MaxDegreeOfParallelism = 20,
@@ -107,9 +104,9 @@ namespace backup_storage.RestoreStorage
                         );
 
                         var batchBlock = new BatchBlock<TableItem>(40);
-                        var cloudTable = new ActionBlock<TableItem[]>(tl =>
+                        var cloudTable = new ActionBlock<TableItem[]>(tableItem =>
                         {
-                            BatchPartitionKeys(destStorageAccount, tl);
+                            BatchPartitionKeys(destStorageAccount, tableItem);
                         });
 
                         foreach (var blobItem in blobItems)
@@ -164,22 +161,24 @@ namespace backup_storage.RestoreStorage
 
         private static IEnumerable<CloudBlockBlob> GetBlobItems(string tablesToRestore,
             string snapShotTime,
-            CloudBlobContainer cntr,
-            List<string> tables)
+            CloudBlobContainer cntr)
         {
+            //Specified tables to be restored
+            var tables = tablesToRestore.Replace(" ", "").Split(',').ToList();
+
             if (!string.IsNullOrEmpty(snapShotTime))
             {
                 //Restore on time put into the metadata as snapshot time can differ in the same date. e.g. 07/15/2017 19:05:46 for first table and 07/15/2017 19:05:50 for last table
                 //With the metadata one can set the date at start of process and be sure all tables have the exact same time stamp
                 //SnapShotTime is a mandatory field and to restore the latest update give it the timestamp of latest backup needed to restore
-                return tablesToRestore == "all"
+                return tables.Contains("*")
                     ? cntr.ListBlobs(blobListingDetails: BlobListingDetails.All, useFlatBlobListing: true)
                         .Cast<CloudBlockBlob>()
-                        .Where(c => c.Metadata.Values.Contains(snapShotTime))
+                        .Where(c => c.IsSnapshot && c.Metadata.Values.Contains(snapShotTime))
                         .ToList()
                     : cntr.ListBlobs(blobListingDetails: BlobListingDetails.All, useFlatBlobListing: true)
                         .Cast<CloudBlockBlob>()
-                        .Where(c => c.Metadata.Values.Contains(snapShotTime) && tables.Any(n => n == c.Name))
+                        .Where(c => c.IsSnapshot && c.Metadata.Values.Contains(snapShotTime) && tables.Any(n => n == c.Name))
                         .ToList();
             }
 
@@ -192,77 +191,47 @@ namespace backup_storage.RestoreStorage
         /// and mitigate this fact. The more of your partition keys are the same the faster the restore will be
         /// </summary>
         /// <param name="destStorageAccount"></param>
-        /// <param name="tl"></param>
-        private static void BatchPartitionKeys(CloudStorageAccount destStorageAccount, IEnumerable<TableItem> tl)
+        /// <param name="tableItem"></param>
+        private static void BatchPartitionKeys(CloudStorageAccount destStorageAccount, IEnumerable<TableItem> tableItem)
         {
-            Parallel.ForEach(tl, async tbl =>
+            try
             {
-                var tableClient = destStorageAccount.CreateCloudTableClient();
-                var table = tableClient.GetTableReference(tbl.TableName);
-
-                table.CreateIfNotExists();
-                var masterList = new List<List<DynamicTableEntity>>();
-
-                var entities = tbl.TableEntity.ToList();
-
-                while (entities.Count > 0)
+                Parallel.ForEach(tableItem, async tbl =>
                 {
-                    // grab all items with the PartitionKey of the first one in the list
-                    var listThisPartitionKey = (from item in entities
-                        where item.PartitionKey == entities[0].PartitionKey
-                        select item).ToList();
+                    var tableClient = destStorageAccount.CreateCloudTableClient();
+                    var table = tableClient.GetTableReference(tbl.TableName);
 
-                    // add that list into masterlist
-                    masterList.Add(listThisPartitionKey);
+                    table.CreateIfNotExists();
 
-                    // now grab everything else that didn't have the first PartitionKey
-                    entities = entities.Where(x => x.PartitionKey != entities[0].PartitionKey).ToList();
-                }
+                    var entities = tbl.TableEntity.GroupBy(partition => partition.PartitionKey).ToList();
 
-                // Create the batch operation
-                foreach (var list in masterList)
-                {
-                    while (list.Count > 0)
+                    foreach (var entity in entities)
                     {
                         var batchOperation = new TableBatchOperation();
-
-                        if (list.Count <= 100)
+                        foreach (var item in entity)
                         {
-                            foreach (var entity in list)
-                            {
-                                batchOperation.InsertOrMerge(entity);
-                            }
-
-                            await table.ExecuteBatchAsync(batchOperation);
-
-                            list.RemoveRange(0, list.Count);
+                            batchOperation.InsertOrMerge(item);
                         }
-                        else
-                        {
-                            for (var i = 0; i < 100; i++)
-                                batchOperation.InsertOrMerge(list[i]);
-
-                            // execute batch operation
-                            await table.ExecuteBatchAsync(batchOperation);
-
-                            //remove those from list
-                            list.RemoveRange(0, 100);
-                        }
+                        await table.ExecuteBatchAsync(batchOperation);
                     }
-                }
-            });
+                });
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
         }
 
         /// <summary>
         /// Deserialise Json read from blob into a Dynamic table entity and its properties
         /// </summary>
-        /// <param name="bi"></param>
+        /// <param name="blobitem"></param>
         /// <returns></returns>
-        private static TableItem DeserialiseJsonIntoDynamicTableEntity(CloudBlob bi)
+        private static TableItem DeserialiseJsonIntoDynamicTableEntity(CloudBlob blobitem)
         {
             try
             {
-                using (var reader = new StreamReader(bi.OpenRead()))
+                using (var reader = new StreamReader(blobitem.OpenRead()))
                 {
                     var backupData = reader.ReadToEnd();
                     var restoreTableDataEntities =
@@ -282,7 +251,7 @@ namespace backup_storage.RestoreStorage
                                     tableEntity.RowKey = (string)row.Value;
                                     break;
                                 case "TimeStamp":
-                                    tableEntity.Timestamp = DateTimeOffset.Parse((string) row.Value, CultureInfo.InvariantCulture);
+                                    tableEntity.Timestamp = DateTimeOffset.Parse((string) row.Value, CultureInfo.CurrentCulture);
                                     break;
                                 default:
                                     //Change the property into the correct type as it was originally saved as
@@ -299,7 +268,7 @@ namespace backup_storage.RestoreStorage
 
                     var tableItem = new TableItem
                     {
-                        TableName = bi.Name,
+                        TableName = blobitem.Name,
                         TableEntity = entities.AsEnumerable()
                     };
 
