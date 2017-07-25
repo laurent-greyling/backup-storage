@@ -29,6 +29,9 @@ namespace backup_storage
         [Option('m', "snapshot", HelpText = "snapshot time and date you want to restore from point in time - e.g. 07/15/2017 19:05:46", Required = false)]
         public string Momentopname { get; set; }
 
+        [Option('e', "endSnapshotTime", HelpText = "snapshot time and date you want to restore to point in time - e.g. 07/15/2017 19:05:46, must be ahead of snapshot time", Required = false)]
+        public string EndSnapShotTime { get; set; }
+
         [HelpOption]
         public string GetUsage()
         {

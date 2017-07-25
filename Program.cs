@@ -33,9 +33,9 @@ namespace backup_storage
                     CreateTableStorage.CreateAndPopulateTable(storageAccount);
                     Console.WriteLine("Finished Creating and populating some more dummy tables....");
 
-                    //Console.WriteLine("Creating and populating some more dummy blobs....");
-                    //CreateBlobStorage.CreateAndPopulateBlob(storageAccount);
-                    //Console.WriteLine("Finished Creating and populating some more dummy blobs....");
+                    Console.WriteLine("Creating and populating some more dummy blobs....");
+                    CreateBlobStorage.CreateAndPopulateBlob(storageAccount);
+                    Console.WriteLine("Finished Creating and populating some more dummy blobs....");
                 }
             }
 
@@ -67,7 +67,8 @@ namespace backup_storage
                 Console.WriteLine("Start restoring table storage");
                 restoreTable.Start();
                 //RestoreTableStorage.CopyAndRestoreTableStorageAsync(options.Tables, storageAccount, destStorageAccount).Wait(); //This is with dataflow - this is the quicker copy method
-                RestoreTableStorage.RestoreTableStorageFromBlobAsync(options.Tables, storageAccount, destStorageAccount, options.Momentopname).Wait(); //restore tables from blob
+                RestoreTableStorage.RestoreTableStorageFromBlobAsync(options.Tables, storageAccount, destStorageAccount,
+                    options.Momentopname, options.EndSnapShotTime).Wait(); //restore tables from blob
                 Console.WriteLine($"Finished restoring table storage - {restoreTable.Elapsed}");
                 restoreTable.Stop();
             }

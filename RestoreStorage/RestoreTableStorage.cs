@@ -64,15 +64,14 @@ namespace backup_storage.RestoreStorage
         /// <param name="storageAccount"></param>
         /// <param name="destStorageAccount"></param>
         /// <param name="snapShotTime"></param>
+        /// <param name="endSnapShotTime"></param>
         /// <returns></returns>
         public static async Task RestoreTableStorageFromBlobAsync(string tablesToRestore,
             CloudStorageAccount storageAccount,
             CloudStorageAccount destStorageAccount,
-            string snapShotTime)
+            string snapShotTime,
+            string endSnapShotTime)
         {
-            //Specified tables to be restored
-            var tables = tablesToRestore.Split(',').ToList();
-
             var fromAccountToContainers = new TransformBlock<CloudStorageAccount, CloudBlobContainer>(
                 account =>
                 {
@@ -92,7 +91,7 @@ namespace backup_storage.RestoreStorage
                 {
                     try
                     {
-                        var blobItems = GetBlobItems(tablesToRestore, snapShotTime, cntr);
+                        var blobItems = GetBlobItems(tablesToRestore, snapShotTime, endSnapShotTime, cntr);
 
                         var cloudTableItem = new TransformBlock<CloudBlob, TableItem>(blobitem 
                             => DeserialiseJsonIntoDynamicTableEntity(blobitem),
@@ -161,6 +160,7 @@ namespace backup_storage.RestoreStorage
 
         private static IEnumerable<CloudBlockBlob> GetBlobItems(string tablesToRestore,
             string snapShotTime,
+            string endSnapShotTime,
             CloudBlobContainer cntr)
         {
             //Specified tables to be restored
@@ -168,18 +168,28 @@ namespace backup_storage.RestoreStorage
 
             if (!string.IsNullOrEmpty(snapShotTime))
             {
-                //Restore on time put into the metadata as snapshot time can differ in the same date. e.g. 07/15/2017 19:05:46 for first table and 07/15/2017 19:05:50 for last table
-                //With the metadata one can set the date at start of process and be sure all tables have the exact same time stamp
-                //SnapShotTime is a mandatory field and to restore the latest update give it the timestamp of latest backup needed to restore
-                return tables.Contains("*")
-                    ? cntr.ListBlobs(blobListingDetails: BlobListingDetails.All, useFlatBlobListing: true)
-                        .Cast<CloudBlockBlob>()
-                        .Where(c => c.IsSnapshot && c.Metadata.Values.Contains(snapShotTime))
-                        .ToList()
-                    : cntr.ListBlobs(blobListingDetails: BlobListingDetails.All, useFlatBlobListing: true)
-                        .Cast<CloudBlockBlob>()
-                        .Where(c => c.IsSnapshot && c.Metadata.Values.Contains(snapShotTime) && tables.Any(n => n == c.Name))
-                        .ToList();
+                try
+                {
+                    var from = DateTimeOffset.ParseExact(snapShotTime, "dd/MM/yyyy hh:mm:ss", CultureInfo.InvariantCulture);
+                    var to = DateTimeOffset.ParseExact(endSnapShotTime, "dd/MM/yyyy hh:mm:ss", CultureInfo.InvariantCulture);
+
+                    return tables.Contains("*")
+                        ? cntr.ListBlobs(blobListingDetails: BlobListingDetails.Snapshots, useFlatBlobListing: true)
+                            .Cast<CloudBlockBlob>()
+                            .Where(c => c.IsSnapshot && c.SnapshotTime.GetValueOrDefault().DateTime >= from.DateTime
+                                        && c.SnapshotTime.GetValueOrDefault().DateTime <= to.DateTime)
+                            .ToList()
+                        : cntr.ListBlobs(blobListingDetails: BlobListingDetails.Snapshots, useFlatBlobListing: true)
+                            .Cast<CloudBlockBlob>()
+                            .Where(c => c.IsSnapshot && c.SnapshotTime.GetValueOrDefault().DateTime >= from.DateTime
+                                        && c.SnapshotTime.GetValueOrDefault().DateTime <= to.DateTime &&
+                                        tables.Any(n => n == c.Name))
+                            .ToList();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
             }
 
             throw new InvalidOperationException("Set -m or --snapshot to a time stamp of 07/15/2017 19:05:46 to restore");
