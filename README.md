@@ -13,7 +13,8 @@ Once you have created these, run the command line options (can be debugged in pr
 <string> -c: "containers", "comma seperated string of containers to restore"
 <string> -s: "storageconnectionstring","connectionstring to storage that need to be backedup or restored"
 <string> -d: "deststorageconnectionstring","destination connectionstring of storage where storage need to be backedup or restored to"
-<string> -m: "snapshot","snapshot time and date you want to restore from point in time - e.g. 07/15/2017 19:05:46" 
+<string> -m: "snapshot","snapshot time and date you want to restore from point in time - e.g. 07/15/2017 19:05:46"
+<string> -e: "endSnapshotTime", "snapshot time and date you want to restore to point in time - e.g. 07/15/2017 19:05:46, must be ahead of snapshot time"
 ```
 
 ## Create Table and Blob Storage
@@ -54,7 +55,7 @@ The reason these blocks were nested was in order not to loose the reference to t
 
 - __CopyTableStorageIntoBlobAsync__: This method will serialise your table entity into Json and copy the Json structure into blob as backup for your entire table entity. Here we could not just directly serialise the the table entity into a json structure as your table from table storage could be a dynamic table entity which then cannot be serialised. For this we create dictionairies that is then serialised as the entire table and sent to your batchblock - see method __SerialiseAndAddEntityToBatchAsync__.
 
-   - __SnapShot__: for backup and restore we need to be able to restore from a point in time. For this we create a snapshot on the blob after we backed up the tables. For the blob snapshot we also add Metadata (in this case called __TableSnapShot__) with a time stamp. We add this Metadata to the snapshot as the actual time stamp of a snapshot my be different for the first and last table. Lets say you start a backup at 1/6/2017 23:59:50, this will mean your first table is on the 1st and your last table will be backed up on the 2nd - when using the snapshot time. Yet with the metadata we ensure that your time stamp is always set for the 1st and all tables for that date can be easily referenced.
+   - __SnapShot__: for backup and restore we need to be able to restore from a point in time. For this we create a snapshot on the blob after we backed up the tables. For restoring the snapshot you need to give a start from and end at time. This is to make sure you restore the exact files you want or need. Initially we used the metadata as we wanted one given date to start restoring from, this lead to you having one date and this would or could end up always being the latest backup, which is not what you always want. For this I introduce the from and to date time. Now you can specify from what time or date you want to restore to when you need to finish. The date format need to be "dd/MM/yyyy hh:mm:ss". So if you want to restore a specific day -m "24/07/2017 00:00:00" -e "25/07/2017 00:00:00", if you want a specific time -m "24/07/2017 07:50:00" -e "24/07/2017 07:55:00". Both these fields are required fields.
 
 ### Restore Table Storage
 To restore table storage we only use the dataflow method as this seems to be the faster and better option for now.
