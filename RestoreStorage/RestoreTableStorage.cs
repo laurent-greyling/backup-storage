@@ -192,7 +192,7 @@ namespace backup_storage.RestoreStorage
                 }
             }
 
-            throw new InvalidOperationException("Set -m or --snapshot to a time stamp of 07/15/2017 19:05:46 to restore");
+            throw new InvalidOperationException("Set -m|--snapshot and -e|--endSnapshotTime to a time stamp of dd/MM/yyyy hh:mm:ss to restore");
         }
 
         /// <summary>
