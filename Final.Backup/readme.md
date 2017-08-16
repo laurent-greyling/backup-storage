@@ -1,4 +1,4 @@
-# Final Backup Tool v0.7
+# Final Backup Tool v0.8
 
 **NOTES:**
 - **New configuration key added**
