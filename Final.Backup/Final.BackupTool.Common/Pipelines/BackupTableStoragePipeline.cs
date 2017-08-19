@@ -32,10 +32,10 @@ namespace Final.BackupTool.Common.Pipelines
             var copyTables = BackupTableBlock.Create(storageConnection, date);
 
             var summary = new Summary();
-            var summarize = SummaryBlock.CreateTableSummary(summary);
+            var summarize = SummaryBlock.Create(summary);
 
             accountToTables.LinkTo(copyTables, new DataflowLinkOptions { PropagateCompletion = true });
-            copyTables.LinkTo(summarize, new DataflowLinkOptions {PropagateCompletion = true});
+            copyTables.LinkTo(summarize, new DataflowLinkOptions { PropagateCompletion = true });
 
             var flow = DataflowBlock.Encapsulate(accountToTables, copyTables);
 

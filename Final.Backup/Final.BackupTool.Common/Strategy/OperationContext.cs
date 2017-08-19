@@ -11,6 +11,7 @@ using Microsoft.WindowsAzure.Storage.RetryPolicies;
 using Final.BackupTool.Common.ConsoleCommand;
 using Final.BackupTool.Common.Initialization;
 using Final.BackupTool.Common.Operational;
+using Microsoft.Azure;
 using NLog;
 
 namespace Final.BackupTool.Common.Strategy

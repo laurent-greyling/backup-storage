@@ -36,7 +36,7 @@ namespace Final.BackupTool.Common.Pipelines
                 var restoreTables = RestoreTableBlock.Create(commands, storageConnection, date);
 
                 var summary = new Summary();
-                var summarize = SummaryBlock.CreateTableSummary(summary);
+                var summarize = SummaryBlock.Create(summary);
 
                 accountToTables.LinkTo(restoreTables, new DataflowLinkOptions { PropagateCompletion = true });
                 restoreTables.LinkTo(summarize, new DataflowLinkOptions { PropagateCompletion = true });

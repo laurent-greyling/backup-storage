@@ -66,34 +66,21 @@ namespace Final.BackupTool.Common.Operational
                 throw;
             }
         }
-        public void WriteCopyOutcomeAsync(DateTimeOffset date, CopyStorageOperation[] copies, StorageConnection storageConnection)
+        public async Task WriteCopyOutcomeAsync(DateTimeOffset date, CopyStorageOperation copy, StorageConnection storageConnection)
         {
             var tableClient = storageConnection.OperationalAccount.CreateCloudTableClient();
             var table = tableClient.GetTableReference(OperationalDictionary.OperationDetailsTableName);
 
-            var operationEntities = copies.Select(copy => new CopyStorageOperationEntity
+            var entity = new CopyStorageOperationEntity
             {
                 PartitionKey = GetOperationDetailPartitionKey(storageConnection, date),
                 RowKey = copy.SourceTableName,
                 Status = copy.CopyStatus.ToString(),
                 ExtraInformation = copy.ExtraInformation?.ToString()
-            }).ToList();
+            };
+            var tableInsert = TableOperation.InsertOrMerge(entity);
 
-            var entities = operationEntities.GroupBy(c => c.PartitionKey).ToList();
-
-            Parallel.ForEach(entities, entity =>
-            {
-                Parallel.ForEach(Batch.Chunk(entity, 100), async items =>
-                {
-                    var batchOperation = new TableBatchOperation();
-                    foreach (var item in items)
-                    {
-                        batchOperation.Add(
-                        TableOperation.InsertOrMerge(item));
-                    }
-                    await table.ExecuteBatchAsync(batchOperation);
-                });
-            });
+            await table.ExecuteAsync(tableInsert);
         }
         public async Task FinishAsync(BlobOperation blobOperation, Summary summary, StorageConnection storageConnection)
         {

@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.RetryPolicies;
@@ -15,7 +12,7 @@ namespace Final.BackupTool.Common.Blocks
     {
         public static TransformManyBlock<CloudStorageAccount, CloudTable> Create(StorageConnection sourceStorageAccount)
         {
-            var fromAccountToTables = new TransformManyBlock<CloudStorageAccount, CloudTable>(
+            return new TransformManyBlock<CloudStorageAccount, CloudTable>(
                 account =>
                 {
                     var tableClient = sourceStorageAccount.ProductionStorageAccount.CreateCloudTableClient();
@@ -29,13 +26,7 @@ namespace Final.BackupTool.Common.Blocks
                                !acceptedContainer.StartsWith("activities") && // Exclude runtime data
                                !acceptedContainer.StartsWith("stagedfiles");
                     });
-                },
-                new ExecutionDataflowBlockOptions
-                {
-                    MaxDegreeOfParallelism = 20,
-                    BoundedCapacity = 20
                 });
-            return fromAccountToTables;
         }
     }
 }

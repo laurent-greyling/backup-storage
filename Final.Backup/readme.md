@@ -1,18 +1,23 @@
-# Final Backup Tool v0.8
+# Nfield Backup Tool v0.8.1
 
 **NOTES:**
 - **New configuration key added**
 - **A new (full) backup to a clean storage must be performed due to backup storage reorganization**
 
-The Final Backup tool can back up storage account blobs and tables on a periodic basis. It is intended to be run as a console application on a virtual machine. A first run backs up all business-critical production data (domain blobs and tables) from the configured production account to the configured backup account. Each subsequent run is incremental for new and changed blobs, and performs full backups for tables. Note that backups of tables are stored as blobs in JSON format.
+The Nfield Backup tool can back up storage account blobs and tables on a periodic basis. It is intended to be run as a console application on a virtual machine. A first run backs up all business-critical production data (domain blobs and tables) from the configured production account to the configured backup account. Each subsequent run is incremental for new and changed blobs, and performs full backups for tables. Note that backups of tables are stored as blobs in JSON format.
 
 An operational account stores tables that log the backup and restore operations performed. The operational account should not be configured to use a production or backup storage account. However, one operational account to list operations for all regions.   
 
 ## Version history
 
 ### Current Issues
-- There might still exist a out of memory problem with backing up tables. This need to be tested after refactoring was done.
+- None
 
+### v0.8.1
+- Out of memory exception fixes
+ - Lowered the amount of memory backup and restore of tables use.
+ - Release memory when finished
+ 
 ### v0.8
 - Restore specified blobs
 - Added to log files the restore command lines needed to restore with actual dates
@@ -67,10 +72,10 @@ An operational account stores tables that log the backup and restore operations 
 - Back up blob storages between configured storage accounts
 
 ## How to use
-The command line executable is called `Final.BackupTool.Console`. You must edit the configuration settings before the first run.
+The command line executable is called `Nfield.BackupTool.Console`. You must edit the configuration settings before the first run.
 
 ### Configuration
-Configuration is stored in the `Final.BackupTool.Console.exe.config` file, using the following settings:
+Configuration is stored in the `Nfield.BackupTool.Console.exe.config` file, using the following settings:
 
 |Setting|Purpose
 |:---:|---
@@ -85,7 +90,7 @@ Configuration is stored in the `Final.BackupTool.Console.exe.config` file, using
 To run a single or incremental backup:
 
 ```
-Final.BackupTool.Console.exe backup
+Nfield.BackupTool.Console.exe backup
 ```
 
 A first-time run, or switching to the next backup storage account, will do a full backup. Subsequent runs will do incremental backups. Incremental backups back up only new or changed blobs. A full backup will always occur for tables.
@@ -97,7 +102,7 @@ The backup tool can restore individual tables, entire blob containers (from here
 To restore tables, use:
 
 ```
-Final.BackupTool.Console.exe restore-table -t=[name] -d=[date] -e=[date]
+Nfield.BackupTool.Console.exe restore-table -t=[name] -d=[date] -e=[date]
 ```
 
 Specifying dates is mandatory. `fromDate` (or -d) and `toDate` (or -e) are dates specifying a date range in which the table is expected to have been backed up. The `fromDate` time would typically match the start time of a backup in the past. These times can be found in the operational log. The `toDate` date / time would typically be a few hours after this time, up to the start time of the next backup. In the current situation of daily backups a 24 hour difference can be used.
@@ -118,7 +123,7 @@ If the table to restore does not exist in the production storage, it is recreate
 To restore blobs, use:
 
 ```
-Final.BackupTool.Console.exe restore-blob -c=[containerName]  -b=[blobName] -d=[fromDate] -e=[toDate] -f=[force]>
+Nfield.BackupTool.Console.exe restore-blob -c=[containerName]  -b=[blobName] -d=[fromDate] -e=[toDate] -f=[force]>
 ```
 
 For `containerName` (or -c), specify one or more comma-separated container names to restore, e.g. `-c="myContainer"` or `-c="myContainer1,myContainer2"`. Use `*` to restore all containers (use with caution!). This is not a wildcard that can be used in combination with partial names, e.g. "*this" does not work.
