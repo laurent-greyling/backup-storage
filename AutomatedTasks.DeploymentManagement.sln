@@ -1,0 +1,50 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.26430.14
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{008C42E0-261B-4E7A-8B08-A7E7380553DF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Helpers", "AutomatedTasks\DeploymentManagement\Helpers\Helpers.csproj", "{383A03BA-6868-4DC5-860E-F588207740CC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BackupAndRestoreServices", "AutomatedTasks\DeploymentManagement\BackupAndRestoreServices\BackupAndRestoreServices.csproj", "{70107EAA-491C-44CF-90DB-2177069B9963}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Team", "Team", "{6CEA074B-8113-4BF7-AE86-7E284A2C5C58}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TeamBackupDeploymentPackages", "AutomatedTasks\DeploymentManagement\TeamBackupDeploymentPackages\TeamBackupDeploymentPackages.csproj", "{651713E6-03A8-46C0-A943-CE472943C882}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TeamRestoreDeploymentPackages", "AutomatedTasks\DeploymentManagement\TeamRestoreDeploymentPackages\TeamRestoreDeploymentPackages.csproj", "{B969EE14-5C7F-43D2-9048-A166F4EADD52}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{383A03BA-6868-4DC5-860E-F588207740CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{383A03BA-6868-4DC5-860E-F588207740CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{383A03BA-6868-4DC5-860E-F588207740CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{383A03BA-6868-4DC5-860E-F588207740CC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{70107EAA-491C-44CF-90DB-2177069B9963}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{70107EAA-491C-44CF-90DB-2177069B9963}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{70107EAA-491C-44CF-90DB-2177069B9963}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{70107EAA-491C-44CF-90DB-2177069B9963}.Release|Any CPU.Build.0 = Release|Any CPU
+		{651713E6-03A8-46C0-A943-CE472943C882}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{651713E6-03A8-46C0-A943-CE472943C882}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{651713E6-03A8-46C0-A943-CE472943C882}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{651713E6-03A8-46C0-A943-CE472943C882}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B969EE14-5C7F-43D2-9048-A166F4EADD52}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B969EE14-5C7F-43D2-9048-A166F4EADD52}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B969EE14-5C7F-43D2-9048-A166F4EADD52}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B969EE14-5C7F-43D2-9048-A166F4EADD52}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{383A03BA-6868-4DC5-860E-F588207740CC} = {008C42E0-261B-4E7A-8B08-A7E7380553DF}
+		{70107EAA-491C-44CF-90DB-2177069B9963} = {008C42E0-261B-4E7A-8B08-A7E7380553DF}
+		{651713E6-03A8-46C0-A943-CE472943C882} = {6CEA074B-8113-4BF7-AE86-7E284A2C5C58}
+		{B969EE14-5C7F-43D2-9048-A166F4EADD52} = {6CEA074B-8113-4BF7-AE86-7E284A2C5C58}
+	EndGlobalSection
+EndGlobal

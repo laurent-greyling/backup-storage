@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+    <StartArguments>-s "DefaultEndpointsProtocol=https%3bAccountName=backupdest%3bAccountKey=pQ2meKeCnPrleMi4pTNCYYVdChIcNsDFqMwqBCK4TG3UzIhC4u903jrMxt09Tom0ib7NX2fqEPkFYKDEx2ciHQ==%3bEndpointSuffix=core.windows.net" -d "DefaultEndpointsProtocol=https%3bAccountName=backupandrestore%3bAccountKey=FZ3imbMM0EmUvDdVcG3eS+wpD2WD+OQo23FhezzWrxympThf+WdWclz32Gv1Zf5533M6rxUsnPyhETqiQJePvA==%3bEndpointSuffix=core.windows.net" -r true -m "07/15/2017 19:05:46"</StartArguments>
+  </PropertyGroup>
+</Project>
