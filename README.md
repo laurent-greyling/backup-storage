@@ -10,4 +10,8 @@ Current operations and Apps
 - Switch on and off classic cloud services
   - __AutomatedTasks.DeploymentManagement__ - this will basically save your configuration, packages and diagnostic configuration to blob   
     storage and delete your cloud service. Next morning it will restore all services by redeploying them for you. This is done for swiching 
-    off services at night that is not needed and saving some costs. 
+    off services at night that is not needed and saving some costs.
+    
+- Switch on and Off webapps using Azure Active Directory (AAD)
+  - __IO.ToggleWebApp__ - this can be used to switch off your WebApps during the night or weekends or when not used so it doesn't incur  
+    costs
