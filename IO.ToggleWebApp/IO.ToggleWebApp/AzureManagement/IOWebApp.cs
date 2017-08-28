@@ -1,15 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Azure.Management.AppService.Fluent;
-using Microsoft.Azure.Management.ResourceManager.Fluent;
 using Microsoft.Rest;
-using Microsoft.Rest.Azure;
-using Microsoft.WindowsAzure;
-using Microsoft.WindowsAzure.Management.Compute;
-using Microsoft.WindowsAzure.Management.Compute.Models;
 
 namespace IO.ToggleWebApp.AzureManagement
 {
@@ -24,9 +15,19 @@ namespace IO.ToggleWebApp.AzureManagement
 
         public async Task Execute()
         {
-            if (AzureUtils.IsWeekend()) return;
-           
-            AzureUtils.RetreiveResource(_tokenCredentials);
+            var azureUtils = new AzureUtils(_tokenCredentials);
+
+            if (!AppConfigurationSettings.SwitchOn)
+            {
+                Console.WriteLine("Stopping WebApp");
+                await azureUtils.StopWebApp();
+                Console.WriteLine("WebApp Stopped");
+                return;
+            }
+
+            Console.WriteLine("Starting WebApp");
+            await azureUtils.StartWebApp();
+            Console.WriteLine("WebApp Started");
         }
     }
 }
