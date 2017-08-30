@@ -1,22 +1,42 @@
-﻿Login-AzureRmAccount
+﻿Param(
+    [Parameter (mandatory = $true)]
+    [string]$displayName,
+
+    [Parameter (mandatory = $true)]
+    [string]$homePage,
+
+    [Parameter (mandatory = $true)]
+    [string]$appUri,
+
+    [Parameter (mandatory = $true)]
+    [string]$pswyouwant,
+
+    [Parameter (mandatory = $true)]
+    [string]$applicationId,
+
+    [Parameter (mandatory = $true)]
+    [string]$tenantId
+)
+
+Login-AzureRmAccount
 
 $myAADApp = New-AzureRmADApplication 
-    -DisplayName "<DisplayName>" 
-    -HomePage "<Homepage of App>" 
-    -IdentifierUris "<App uri>" 
-    -Password "<Whatever apssword>"
+    -DisplayName $displayName 
+    -HomePage $homePage
+    -IdentifierUris $appUri 
+    -Password $pswyouwant
 
-New-AzureRmADServicePrincipal -ApplicationId "<your application id>"
+New-AzureRmADServicePrincipal -ApplicationId $applicationId
 
 New-AzureRmRoleAssignment  
     -RoleDefinitionName Contributor 
-    -ServicePrincipalName "<application id>"
+    -ServicePrincipalName $applicationId
 
 $svcPrincipalCredentials = Get-Credential
 
 Login-AzureRmAccount  
     -Credential $svcPrincipalCredentials 
     -ServicePrincipal 
-    -TenantId "<your tenant id guid>"
+    -TenantId $tenantId
 
 Get-AzureRmResourceGroup
