@@ -4,7 +4,7 @@ This app is for switch on and off your webapps in order to save some cost. This 
 
 ### What is needed
 
-First off you need to create an Azure Active Directory (AAD) application. This can easily be done by using the `CreateServicePrincipalAAD.ps1` powershell cmdlet.
+First off you need to create an Azure Active Directory (AAD) application. This can easily be done by using the `CreateServicePrincipalAAD.ps1` powershell cmdlet in the `PowerShellScripts` folder.
 
 Replace the given fields with your own credentials and ids. Run this cmdlet and it will create everything for you.
 
