@@ -1,7 +1,7 @@
 ﻿
 Param(
     [Parameter (mandatory = $true)]
-    [string]$userName,
+    [string]$clientId,
 
     #Leaving this empty will result in false and will always try to start webapp
     [Parameter (mandatory = $false)]
@@ -20,7 +20,7 @@ Clear-AzureProfile –Force
 Add-AzureAccount
 
 #Get credentials need AAD credentials username=clientid and password=servicePrincipalPassword
-$svcPrincipalCredentials = Get-Credential -UserName $userName
+$svcPrincipalCredentials = Get-Credential -UserName $clientId
 
 Login-AzureRmAccount -Credential $svcPrincipalCredentials -ServicePrincipal -TenantId $tenantId
 

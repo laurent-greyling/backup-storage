@@ -1,6 +1,6 @@
 ﻿Param(
     [Parameter (mandatory = $true)]
-    [string]$userName,
+    [string]$clientId,
 
     [Parameter (mandatory = $true)]
     [string]$tenantId,
@@ -24,7 +24,7 @@ Clear-AzureProfile –Force
 Add-AzureAccount
 
 #Get credentials need AAD credentials username=clientid and password=servicePrincipalPassword
-$svcPrincipalCredentials = Get-Credential -UserName $userName
+$svcPrincipalCredentials = Get-Credential -UserName $clientId
 
 Login-AzureRmAccount -Credential $svcPrincipalCredentials -ServicePrincipal -TenantId $tenantId
 
