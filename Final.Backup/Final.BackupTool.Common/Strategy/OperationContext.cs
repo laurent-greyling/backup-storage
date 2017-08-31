@@ -5,12 +5,11 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-using Microsoft.WindowsAzure;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.RetryPolicies;
 using Final.BackupTool.Common.ConsoleCommand;
-using Final.BackupTool.Common.Initialization;
 using Final.BackupTool.Common.Operational;
+using Final.BackupTool.Common.Pipelines;
 using Microsoft.Azure;
 using NLog;
 using NLog.Targets;
@@ -78,16 +77,16 @@ namespace Final.BackupTool.Common.Strategy
                     CultureInfo.InvariantCulture);
             if (string.IsNullOrEmpty(command.Skip) || command.Skip.ToLowerInvariant() != "tables")
             {
-                var tableOperation = Bootstrap.Container.GetInstance<ITableOperation>();
-                await tableOperation.BackupAsync(storageConnection);
+                var tablePipeline = new BackupTableStoragePipeline();
+                await tablePipeline.BackupAsync(storageConnection);
             }
             var tableBackUpToDate = DateTimeOffset.UtcNow.AddSeconds(3).ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
             
             var blobBackUpFromDate = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
             if (string.IsNullOrEmpty(command.Skip) || command.Skip.ToLowerInvariant() != "blobs")
             {
-                var blobOperation = Bootstrap.Container.GetInstance<IBlobOperation>();
-                await blobOperation.BackupAsync(storageConnection);
+                var blobPipeline = new BackupBlobStoragePipeline();
+                await blobPipeline.BackupAsync(storageConnection);
             }
             var blobBackUpToDate = DateTimeOffset.UtcNow.AddSeconds(3).ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
 
@@ -111,11 +110,11 @@ namespace Final.BackupTool.Common.Strategy
 
             var storageConnection = new StorageConnection();
 
-            var tableOperation = Bootstrap.Container.GetInstance<ITableOperation>();
-            await tableOperation.RestoreAsync(commands, storageConnection);
+            var tablePipeline = new RestoreTableStoragePipeLine();
+            await tablePipeline.RestoreAsync(commands, storageConnection);
 
-            var blobOperation = Bootstrap.Container.GetInstance<IBlobOperation>();
-            await blobOperation.RestoreAsync(commands, storageConnection);
+            var pipeline = new RestoreBlobStoragePipeline();
+            await pipeline.RestoreAsync(commands, storageConnection);
         }
 
         public async Task RestoreBlobAsync(RestoreBlobCommand command)
@@ -131,8 +130,8 @@ namespace Final.BackupTool.Common.Strategy
 
             var storageConnection = new StorageConnection();
 
-            var blobOperation = Bootstrap.Container.GetInstance<IBlobOperation>();
-            await blobOperation.RestoreAsync(commands, storageConnection);
+            var pipeline = new RestoreBlobStoragePipeline();
+            await pipeline.RestoreAsync(commands, storageConnection);
         }
 
         public async Task RestoreTableAsync(RestoreTableCommand command)
@@ -145,8 +144,8 @@ namespace Final.BackupTool.Common.Strategy
             };
             var storageConnection = new StorageConnection();
 
-            var tableOperation = Bootstrap.Container.GetInstance<ITableOperation>();
-            await tableOperation.RestoreAsync(commands, storageConnection);
+            var pipeline = new RestoreTableStoragePipeLine();
+            await pipeline.RestoreAsync(commands, storageConnection);
         }
 
         public async Task StoreLogInStorage()

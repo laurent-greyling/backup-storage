@@ -161,7 +161,6 @@
     <Compile Include="Blocks\BackupAccountToTableBlock.cs" />
     <Compile Include="Blocks\BackupTableBlock.cs" />
     <Compile Include="ConsoleCommand\RestoreCommand.cs" />
-    <Compile Include="Strategy\Batch.cs" />
     <Compile Include="Blocks\RestoreAccountToTableBlock.cs" />
     <Compile Include="Blocks\RestoreLogOperationDetailsBlock.cs" />
     <Compile Include="Blocks\RestoreContainerBlock.cs" />
@@ -194,10 +193,6 @@
     <Compile Include="Pipelines\BackupBlobStoragePipeline.cs" />
     <Compile Include="Pipelines\RestoreTableStoragePipeLine.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Strategy\AzureBlobOperation.cs" />
-    <Compile Include="Strategy\AzureTableOperation.cs" />
-    <Compile Include="Strategy\IBlobOperation.cs" />
-    <Compile Include="Strategy\ITableOperation.cs" />
     <Compile Include="Strategy\OperationContext.cs" />
     <Compile Include="Strategy\IOperationContext.cs" />
   </ItemGroup>
