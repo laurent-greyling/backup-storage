@@ -15,4 +15,5 @@ Current operations and Apps
 - Switch on and Off webapps using Azure Active Directory (AAD)
   - __IO.ToggleWebApp__ - this can be used to switch off your WebApps during the night or weekends or when not used so it doesn't incur  
     costs
-  - If you do not want to use the c# project to do this, inside the __IO.ToggleWebApp__ folder there is a `StartAndStopWebApp.ps1` file that you can run to do the same. If you convert this into a `workflow` project you can run it automated on azure. 
+  - In the __PowershellScripts__ folder there is a script called __StartAndStopWebapp.ps1__ you can run as well
+  - Or you can `Import-Module` __NeededResourcesForWebapp.psm1__ and run the `Start-Stop-WebApp` module. See [readme](https://github.com/laurent-greyling/microsoft-azure-apps/tree/master/PowerShellScripts/Modules/NeededResourcesForWebApp)
