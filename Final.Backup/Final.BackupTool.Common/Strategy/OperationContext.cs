@@ -38,11 +38,7 @@ namespace Final.BackupTool.Common.Strategy
                 throw new ConfigurationErrorsException("The configured backup storage looks like a production storage!");
             }
 
-            var tableClient = StorageConnection.OperationalAccount.CreateCloudTableClient();
-            var table = tableClient.GetTableReference(OperationalDictionary.OperationTableName);
-            table.CreateIfNotExists();
-            table = tableClient.GetTableReference(OperationalDictionary.OperationDetailsTableName);
-            table.CreateIfNotExists();
+            CreateOperationalLogTables();
 
             // Retrieve other config options
             var daysRetentionAfterDelete = CloudConfigurationManager.GetSetting("DaysRetentionAfterDelete");
@@ -57,6 +53,15 @@ namespace Final.BackupTool.Common.Strategy
             {
                 RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(10), 50)
             };
+        }
+
+        private void CreateOperationalLogTables()
+        {
+            var tableClient = StorageConnection.OperationalAccount.CreateCloudTableClient();
+            var table = tableClient.GetTableReference(OperationalDictionary.OperationTableName);
+            table.CreateIfNotExists();
+            table = tableClient.GetTableReference(OperationalDictionary.OperationDetailsTableName);
+            table.CreateIfNotExists();
         }
 
         private static bool BackupStorageLooksLikeProductionStorage(CloudBlobClient backupBlobClientToVerify)
