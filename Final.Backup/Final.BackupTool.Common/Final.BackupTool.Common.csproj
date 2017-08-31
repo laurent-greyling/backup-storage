@@ -160,6 +160,7 @@
   <ItemGroup>
     <Compile Include="Blocks\BackupAccountToTableBlock.cs" />
     <Compile Include="Blocks\BackupTableBlock.cs" />
+    <Compile Include="ConsoleCommand\RestoreCommand.cs" />
     <Compile Include="Strategy\Batch.cs" />
     <Compile Include="Blocks\RestoreAccountToTableBlock.cs" />
     <Compile Include="Blocks\RestoreLogOperationDetailsBlock.cs" />

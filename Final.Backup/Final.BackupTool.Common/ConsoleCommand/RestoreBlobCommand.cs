@@ -46,6 +46,11 @@ namespace Final.BackupTool.Common.ConsoleCommand
             {
                 logger.Error(ex);
             }
+            finally
+            {
+                logger.Info("*******************************************");
+                operation.StoreLogInStorage().Wait();
+            }
 
             return 0;
         }

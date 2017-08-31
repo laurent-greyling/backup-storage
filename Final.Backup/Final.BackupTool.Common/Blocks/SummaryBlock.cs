@@ -21,25 +21,5 @@ namespace Final.BackupTool.Common.Blocks
                 });
             return result;
         }
-
-        public static ITargetBlock<CopyStorageOperation[]> CreateTableSummary(Summary summary)
-        {
-            var result = new ActionBlock<CopyStorageOperation[]>(
-                operations =>
-                {
-                    foreach (var operation in operations)
-                    {
-                        if (operation.CopyStatus == StorageCopyStatus.Completed)
-                            ++summary.Copied;
-
-                        if (operation.CopyStatus == StorageCopyStatus.Skipped)
-                            ++summary.Skipped;
-
-                        if (operation.CopyStatus == StorageCopyStatus.Faulted)
-                            ++summary.Faulted;
-                    }
-                });
-            return result;
-        }
     }
 }

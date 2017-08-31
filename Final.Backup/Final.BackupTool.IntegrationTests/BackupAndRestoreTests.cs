@@ -5,7 +5,6 @@ using System.Linq;
 using System.Threading;
 using Microsoft.Azure;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Microsoft.WindowsAzure;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.Table;
@@ -122,11 +121,11 @@ namespace Final.BackupTool.IntegrationTests
             var blobContainerName = $"container{GetGuid}";
             var blobName = $"blob{GetGuid}";
             const string blobContents = "blob contents";
-            
+
             UpsertBlobInProductionContainer(blobContainerName, blobName, blobContents);
             BackupToolBackup();
             DeleteProductionBlob(blobContainerName, blobName);
-            
+
             // Make sure they're goners 
             Assert.IsFalse(ContainerOrBlobExists(ProductionBlobClient, blobContainerName, blobName));
 
@@ -141,7 +140,7 @@ namespace Final.BackupTool.IntegrationTests
 
             Assert.AreEqual(blobContents, GetProductionBlob(blobContainerName, blobName));
         }
-        
+
         [TestMethod]
         public void Test_RestoreBlobAfterChangeNoForce_OriginalBlobIsNotRestored()
         {
@@ -207,7 +206,7 @@ namespace Final.BackupTool.IntegrationTests
             var blobName = $"blob{GetGuid}";
             const string blobContentsFirst = "blob contents first";
             const string blobContentsSecond = "blob contents second";
-            
+
             UpsertBlobInProductionContainer(blobContainerName, blobName, blobContentsFirst);
             var startTime = DateTimeOffset.UtcNow;
             BackupToolBackup();
@@ -220,7 +219,7 @@ namespace Final.BackupTool.IntegrationTests
             BackupToolBackup();
             DeleteProductionBlob(blobContainerName, blobName);
 
-            var restoreDate = GetSnapShotDate(blobContainerName,startTime, endTime);
+            var restoreDate = GetSnapShotDate(blobContainerName, startTime, endTime);
             var startDate = DateTimeOffset.ParseExact(restoreDate, "d-M-yyyy H:mm:ss +00:00", CultureInfo.InvariantCulture)
                 .ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
             var endDate = DateTimeOffset.ParseExact(restoreDate, "d-M-yyyy H:mm:ss +00:00", CultureInfo.InvariantCulture)
@@ -231,7 +230,7 @@ namespace Final.BackupTool.IntegrationTests
             Assert.AreEqual(blobContentsFirst, GetProductionBlob(blobContainerName, blobName));
         }
 
-       #endregion
+        #endregion
 
         #region Blob Container tests
 
@@ -261,7 +260,7 @@ namespace Final.BackupTool.IntegrationTests
 
             // Make sure they're goners 
             Assert.IsFalse(ContainerOrBlobExists(ProductionBlobClient, blobContainerName));
-            
+
             // Put the latest back
             BackupToolRestoreBlob(blobContainerName, "*", restoreDate, endDate);
 
@@ -353,7 +352,7 @@ namespace Final.BackupTool.IntegrationTests
         #endregion
 
         #region Table tests
-        
+
         [TestMethod]
         public void Test_RunBackup_IgnoresSystemTables()
         {
@@ -405,7 +404,7 @@ namespace Final.BackupTool.IntegrationTests
 
             Assert.IsFalse(TableExistsInProduction(tableName));
 
-            var restoreDate = GetRestoreFromDate("backup-tablestorage", tableName);
+            var restoreDate = GetRestoreFromTableDate("backup-tablestorage", tableName);
             var startDate = DateTimeOffset.ParseExact(restoreDate, "yyyy-MM-dd HH:mm:ssZ", CultureInfo.InvariantCulture)
                 .ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
             var endDate = DateTimeOffset.ParseExact(restoreDate, "yyyy-MM-dd HH:mm:ssZ", CultureInfo.InvariantCulture)
@@ -443,7 +442,7 @@ namespace Final.BackupTool.IntegrationTests
             UpsertEntityInProductionTable(tableName, par3, row3, val3);
 
             BackupToolBackup();
-            
+
             DeleteEntityInProductionTable(tableName, par2, row2);
             UpsertEntityInProductionTable(tableName, par3, row3, val3NewValue);
 
@@ -451,7 +450,7 @@ namespace Final.BackupTool.IntegrationTests
             Assert.IsNull(GetProductionTableEntity(tableName, par2, row2));
             Assert.AreEqual(val3NewValue, GetProductionTableEntity(tableName, par3, row3).Value);
 
-            var restoreDate = GetRestoreFromDate("backup-tablestorage", tableName);
+            var restoreDate = GetRestoreFromTableDate("backup-tablestorage", tableName);
             var startDate = DateTimeOffset.ParseExact(restoreDate, "yyyy-MM-dd HH:mm:ssZ", CultureInfo.InvariantCulture)
                 .ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
             var endDate = DateTimeOffset.ParseExact(restoreDate, "yyyy-MM-dd HH:mm:ssZ", CultureInfo.InvariantCulture)
@@ -491,7 +490,7 @@ namespace Final.BackupTool.IntegrationTests
 
             BackupToolBackup();
 
-            var restoreDate = GetSnapShotDate("backup-tablestorage",startTime, endTime);
+            var restoreDate = GetSnapShotTableDate("backup-tablestorage", startTime, endTime);
             var startDate = DateTimeOffset.ParseExact(restoreDate, "d-M-yyyy H:mm:ss +00:00", CultureInfo.InvariantCulture)
                 .ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
             var endDate = DateTimeOffset.ParseExact(restoreDate, "d-M-yyyy H:mm:ss +00:00", CultureInfo.InvariantCulture)
@@ -503,6 +502,50 @@ namespace Final.BackupTool.IntegrationTests
             Assert.AreEqual(value1, GetProductionTableEntity(tableName, par, row).Value);
         }
 
+        #endregion
+
+        #region Restore All
+
+        [TestMethod]
+        public void Test_RestoreAllAfterDelete_MatchOriginal()
+        {
+            var blobContainerName = $"container{GetGuid}";
+            var blobName = $"blob{GetGuid}";
+            const string blobContents = "blob contents";
+
+            var tableName = $"table{GetGuid}";
+            var par1 = GetGuid;
+            var row1 = GetGuid;
+            var val1 = $"value{GetGuid}";
+            var par2 = GetGuid;
+            var row2 = GetGuid;
+            var val2 = $"value{GetGuid}";
+
+            UpsertEntityInProductionTable(tableName, par1, row1, val1);
+            UpsertEntityInProductionTable(tableName, par2, row2, val2);
+            UpsertBlobInProductionContainer(blobContainerName, blobName, blobContents);
+
+            BackupToolBackup();
+
+            DeleteProductionTable(tableName);
+            DeleteProductionBlob(blobContainerName, blobName);
+
+            Assert.IsFalse(TableExistsInProduction(tableName));
+            Assert.IsFalse(ContainerOrBlobExists(ProductionBlobClient, blobContainerName, blobName));
+
+            var restoreDate = GetRestoreFromTableDate("backup-tablestorage", tableName);
+            var startDate = DateTimeOffset.ParseExact(restoreDate, "yyyy-MM-dd HH:mm:ssZ", CultureInfo.InvariantCulture)
+                .ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+            var endDate = DateTimeOffset.ParseExact(restoreDate, "yyyy-MM-dd HH:mm:ssZ", CultureInfo.InvariantCulture)
+                .AddHours(2)
+                .ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+
+            BackupToolRestoreAll(startDate, endDate);
+
+            Assert.AreEqual(val1, GetProductionTableEntity(tableName, par1, row1).Value);
+            Assert.AreEqual(val2, GetProductionTableEntity(tableName, par2, row2).Value);
+            Assert.AreEqual(blobContents, GetProductionBlob(blobContainerName, blobName));
+        }
         #endregion
 
         #region Test Helpers
@@ -545,20 +588,20 @@ namespace Final.BackupTool.IntegrationTests
             var table = ProductionTableClient.GetTableReference(tableName);
             var retrieveOperation = TableOperation.Retrieve<SimpleEntity>(partitionKey, rowKey);
             var query = table.Execute(retrieveOperation);
-            return (SimpleEntity) query.Result;
+            return (SimpleEntity)query.Result;
         }
 
         private static void DeleteAllBlobContainers(CloudBlobClient blobClient)
         {
-           foreach(var container in blobClient.ListContainers())
-           {
-               // Delete every container except the table backup container because recreating it may cause 409 errors
-               // This only happens for the backup blob client
-               if (container.Name != TableContainer)
-               {
-                   PerformDeleteOperationWithRetries(() => container.Delete());
+            foreach (var container in blobClient.ListContainers())
+            {
+                // Delete every container except the table backup container because recreating it may cause 409 errors
+                // This only happens for the backup blob client
+                if (container.Name != TableContainer)
+                {
+                    PerformDeleteOperationWithRetries(() => container.Delete());
                 }
-           }
+            }
         }
 
         private static void DeleteProductionBlob(string containerName, string blobName)
@@ -588,14 +631,23 @@ namespace Final.BackupTool.IntegrationTests
                 {
                     table.Execute(TableOperation.Delete(entity));
                 }
-                
+
             }
         }
         private static string GetSnapShotDate(string containerName, DateTimeOffset startTime, DateTimeOffset endTime)
         {
             var container = BackupBlobClient.GetContainerReference(containerName);
             var restoreDate = container.ListBlobs(blobListingDetails: BlobListingDetails.Snapshots, useFlatBlobListing: true)
-                .Cast<CloudBlockBlob>().OrderByDescending(s=>s.SnapshotTime).Where(s=>s.SnapshotTime > startTime && s.SnapshotTime < endTime)
+                .Cast<CloudBlockBlob>().OrderByDescending(s => s.SnapshotTime).Where(s => s.SnapshotTime > startTime && s.SnapshotTime < endTime)
+                .Select(c => c.SnapshotTime).ToList().First();
+            return restoreDate.ToString();
+        }
+
+        private static string GetSnapShotTableDate(string containerName, DateTimeOffset startTime, DateTimeOffset endTime)
+        {
+            var container = BackupBlobClient.GetContainerReference(containerName);
+            var restoreDate = container.ListBlobs(blobListingDetails: BlobListingDetails.Snapshots, useFlatBlobListing: true)
+                .Cast<CloudAppendBlob>().OrderByDescending(s => s.SnapshotTime).Where(s => s.SnapshotTime > startTime && s.SnapshotTime < endTime)
                 .Select(c => c.SnapshotTime).ToList().First();
             return restoreDate.ToString();
         }
@@ -613,13 +665,26 @@ namespace Final.BackupTool.IntegrationTests
             return restoreDate;
         }
 
+        private static string GetRestoreFromTableDate(string containerName, string blobName)
+        {
+            var container = BackupBlobClient.GetContainerReference(containerName);
+            var restoreDate =
+                container.ListBlobs(blobListingDetails: BlobListingDetails.Metadata, useFlatBlobListing: true)
+                    .Cast<CloudAppendBlob>()
+                    .Where(c => c.Metadata.ContainsKey("BackupDate") && c.Name == blobName)
+                    .Select(c => c.Metadata.Values)
+                    .ToList()[0]
+                    .First();
+            return restoreDate;
+        }
+
         private static void UpsertEntityInProductionTable(string tableName, string partitionKey, string rowKey, string value)
         {
             // Construct table reference, remove dashes from the name as they're not allowed in there
-            var table = ProductionTableClient.GetTableReference(tableName.Replace("-",""));
+            var table = ProductionTableClient.GetTableReference(tableName.Replace("-", ""));
             table.CreateIfNotExists();
             var entity = new SimpleEntity(partitionKey, rowKey, value);
-            table.Execute(TableOperation.InsertOrReplace(entity));            
+            table.Execute(TableOperation.InsertOrReplace(entity));
         }
 
         private static void DeleteEntityInProductionTable(string tableName, string partitionKey, string rowKey)
@@ -627,7 +692,7 @@ namespace Final.BackupTool.IntegrationTests
             var table = ProductionTableClient.GetTableReference(tableName);
             var retrieveOperation = TableOperation.Retrieve<SimpleEntity>(partitionKey, rowKey);
             var retrieveQuery = table.Execute(retrieveOperation);
-            var deleteOperation = TableOperation.Delete((SimpleEntity) retrieveQuery.Result);
+            var deleteOperation = TableOperation.Delete((SimpleEntity)retrieveQuery.Result);
             table.Execute(deleteOperation);
         }
 
@@ -643,12 +708,12 @@ namespace Final.BackupTool.IntegrationTests
         {
             // For restoring reference, add to history
             _history.Add($"{DateTime.UtcNow:yyyy-MM-ddTHH:mm:ss}");
-            CallApp(new List<string> {"backup"});
+            CallApp(new List<string> { "backup" });
             // Give backup a wee bit of time to complete (will be fixed later)
             Thread.Sleep(TimeSpan.FromSeconds(10));
         }
 
-        private static void BackupToolRestoreTable(string tableName, string restoreDate,string endDate, int back = 0)
+        private static void BackupToolRestoreTable(string tableName, string restoreDate, string endDate, int back = 0)
         {
             CallApp(new List<string> { "restore-table", $"--tableName={tableName}", $"-d={restoreDate}", $"-e={endDate}" }, back: back);
             // Give AzCopy some time to realize it's not done yet
@@ -660,9 +725,14 @@ namespace Final.BackupTool.IntegrationTests
             CallApp(new List<string> { "restore-blob", $"--containerName={containerName}" }, force, back);
         }
 
-        private static void BackupToolRestoreBlob(string containerName, string blobName,string date, string toDate, bool force = false, int back = 0)
+        private static void BackupToolRestoreBlob(string containerName, string blobName, string date, string toDate, bool force = false, int back = 0)
         {
-            CallApp(new List<string>{ "restore-blob", $"-c={containerName}", $"-b={blobName}", $"-d={date}", $"-e={toDate}" }, force, back);
+            CallApp(new List<string> { "restore-blob", $"-c={containerName}", $"-b={blobName}", $"-d={date}", $"-e={toDate}" }, force, back);
+        }
+
+        private static void BackupToolRestoreAll(string date, string toDate)
+        {
+            CallApp(new List<string> { "restore-all", $"-d={date}", $"-e={toDate}" });
         }
 
         private static void CallApp(List<string> args, bool force = false, int back = 0)
@@ -677,7 +747,7 @@ namespace Final.BackupTool.IntegrationTests
             }
             Console.Program.Main(args.ToArray());
         }
-       
+
         public static void PerformDeleteOperationWithRetries(Action deleteOperation, int maxRetryCount = 60, int delayAfterRetryMs = 1000)
         {
             var retryCount = 0;
@@ -702,7 +772,7 @@ namespace Final.BackupTool.IntegrationTests
                             throw; // Any other issue needs investigating
                     }
                 }
-                
+
             }
             throw new TimeoutException(
                 $"Could not succesfully execute supplied action in {maxRetryCount} retries. Delay between attempts: {delayAfterRetryMs} ms");

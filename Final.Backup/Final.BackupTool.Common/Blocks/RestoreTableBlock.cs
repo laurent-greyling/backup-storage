@@ -3,15 +3,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.Table;
 using Newtonsoft.Json;
-using Final.BackupTool.Common.Entities;
 using Final.BackupTool.Common.Operational;
-using Final.BackupTool.Common.Strategy;
 
 namespace Final.BackupTool.Common.Blocks
 {

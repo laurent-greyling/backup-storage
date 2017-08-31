@@ -8,7 +8,6 @@ using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.RetryPolicies;
 using Microsoft.WindowsAzure.Storage.Table;
 using Newtonsoft.Json;
-using Final.BackupTool.Common.Entities;
 using Final.BackupTool.Common.Operational;
 
 namespace Final.BackupTool.Common.Blocks
@@ -70,7 +69,6 @@ namespace Final.BackupTool.Common.Blocks
 
                 foreach (var entity in tblData)
                 {
-
                     ++count;
                     SerializeEntity(entity, memoryStream);
 
@@ -107,7 +105,7 @@ namespace Final.BackupTool.Common.Blocks
             }
             catch (Exception e)
             {
-                await Console.Error.WriteLineAsync($"Error: Something went wrong trying to store table entity into blob; {e}");
+                await Console.Error.WriteLineAsync($"Error  in Table  {cloudTable.Name}: Something went wrong trying to store table entity into blob; {e}");
                 return new CopyStorageOperation
                 {
                     SourceContainerName = OperationalDictionary.TableBackUpContainerName,

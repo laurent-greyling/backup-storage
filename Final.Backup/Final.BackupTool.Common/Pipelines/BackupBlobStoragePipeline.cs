@@ -7,7 +7,6 @@ using Final.BackupTool.Common.Operational;
 
 namespace Final.BackupTool.Common.Pipelines
 {
-
     public class BackupBlobStoragePipeline
     {
         public async Task BackupAsync(StorageConnection storageConnection)

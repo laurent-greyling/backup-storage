@@ -13,12 +13,12 @@ using Final.BackupTool.Common.Initialization;
 using Final.BackupTool.Common.Operational;
 using Microsoft.Azure;
 using NLog;
+using NLog.Targets;
 
 namespace Final.BackupTool.Common.Strategy
 {
     public class OperationContext : IOperationContext
     {
-        
         public int DaysRetentionAfterDelete { get; }
         public StorageConnection StorageConnection =new StorageConnection();
         public ILogger Logger;
@@ -69,25 +69,53 @@ namespace Final.BackupTool.Common.Strategy
         }
         
 
-        public async Task BackupAsync()
+        public async Task BackupAsync(BackupCommand command)
         {
             var storageConnection = new StorageConnection();
             // Both these commands are already heavily parallel, so we just run them in order here
             // so they don't fight over bandwidth amongst themselves
-            var tableOperation = Bootstrap.Container.GetInstance<ITableOperation>();
-            var tableBackUpFromDate = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
-            await tableOperation.BackupAsync(storageConnection);
+            var tableBackUpFromDate = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss",
+                    CultureInfo.InvariantCulture);
+            if (string.IsNullOrEmpty(command.Skip) || command.Skip.ToLowerInvariant() != "tables")
+            {
+                var tableOperation = Bootstrap.Container.GetInstance<ITableOperation>();
+                await tableOperation.BackupAsync(storageConnection);
+            }
             var tableBackUpToDate = DateTimeOffset.UtcNow.AddSeconds(3).ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
             
-            var blobOperation = Bootstrap.Container.GetInstance<IBlobOperation>();
             var blobBackUpFromDate = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
-            await blobOperation.BackupAsync(storageConnection);
+            if (string.IsNullOrEmpty(command.Skip) || command.Skip.ToLowerInvariant() != "blobs")
+            {
+                var blobOperation = Bootstrap.Container.GetInstance<IBlobOperation>();
+                await blobOperation.BackupAsync(storageConnection);
+            }
             var blobBackUpToDate = DateTimeOffset.UtcNow.AddSeconds(3).ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
 
             Logger.Info("===>USE FOR RESTORING<===");
             Logger.Info($"restore-table -t=\"*\" -d=\"{tableBackUpFromDate}\" -e=\"{tableBackUpToDate}\"");
             Logger.Info($"restore-blob -c=\"*\" -b=\"*\" -d=\"{blobBackUpFromDate}\" -e=\"{blobBackUpToDate}\" -f=false");
-            
+            Logger.Info($"restore-all -d=\"{tableBackUpFromDate}\" -e=\"{blobBackUpToDate}\"");
+        }
+
+        public async Task RestoreAll(RestoreCommand command)
+        {
+            var commands = new BlobCommands
+            {
+                ContainerName = command.ContainerName,
+                BlobPath = command.BlobPath,
+                TableName = command.TableName,
+                FromDate = command.FromDate,
+                ToDate = command.ToDate,
+                Force = command.Force
+            };
+
+            var storageConnection = new StorageConnection();
+
+            var tableOperation = Bootstrap.Container.GetInstance<ITableOperation>();
+            await tableOperation.RestoreAsync(commands, storageConnection);
+
+            var blobOperation = Bootstrap.Container.GetInstance<IBlobOperation>();
+            await blobOperation.RestoreAsync(commands, storageConnection);
         }
 
         public async Task RestoreBlobAsync(RestoreBlobCommand command)
@@ -119,6 +147,32 @@ namespace Final.BackupTool.Common.Strategy
 
             var tableOperation = Bootstrap.Container.GetInstance<ITableOperation>();
             await tableOperation.RestoreAsync(commands, storageConnection);
+        }
+
+        public async Task StoreLogInStorage()
+        {
+            var storageConnection = new StorageConnection();
+            var operationalAccount = storageConnection.OperationalAccount;
+
+            var operationalClient = operationalAccount.CreateCloudBlobClient();
+            var container = operationalClient.GetContainerReference(OperationalDictionary.LogContainer);
+
+            container.CreateIfNotExists();
+
+            var fileTarget = (FileTarget)LogManager.Configuration.FindTargetByName("f");
+            var logEventInfo = new LogEventInfo { TimeStamp = DateTime.Now };
+            var filePath = Path.GetFullPath(fileTarget.FileName.Render(logEventInfo));
+
+            var blob = container.GetAppendBlobReference(Path.GetFileName(filePath));
+
+            await blob.CreateOrReplaceAsync();
+
+            using (var file = File.OpenRead(filePath))
+            {
+                await blob.AppendFromStreamAsync(file);
+            }
+
+            if (File.Exists(filePath)) File.Delete(filePath);
         }
     }
 }

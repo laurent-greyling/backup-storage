@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Diagnostics;
 using Final.BackupTool.Common.Initialization;
 using Final.BackupTool.Common.Strategy;
@@ -6,22 +6,20 @@ using NLog;
 
 namespace Final.BackupTool.Common.ConsoleCommand
 {
-    public class RestoreTableCommand : ManyConsole.ConsoleCommand
+    public class RestoreCommand : ManyConsole.ConsoleCommand
     {
-        public string TableName { get; set; }
+        public string ContainerName => "*";
+        public string BlobPath => "*";
+        public string TableName => "*";
         public string FromDate { get; set; }
-
         public string ToDate { get; set; }
+        public bool Force => true;
 
-        public RestoreTableCommand()
+        public RestoreCommand()
         {
-            IsCommand("restore-table", "Restore table");
-
-            HasRequiredOption("t|tableName=", "Name of the table to restore", s => { TableName = s; });
-
+            IsCommand("restore-all", "Restore all tables and blobs");
             HasRequiredOption("e|toDate=", "Specify the date to where you need to update to, must be greater than the fromdate", s => { ToDate = s; });
-
-            HasRequiredOption("d|fromDate=", "Date from when you want to restore from.", s => { FromDate = s; });
+            HasRequiredOption("d|fromDate=", "Date of the snapshot to restore. Restores the blob with that snapshot date or the last one before it", s => { FromDate = s; });
         }
 
         public override int Run(string[] remainingArguments)
@@ -37,9 +35,8 @@ namespace Final.BackupTool.Common.ConsoleCommand
             {
                 sw.Start();
 
-                operation.RestoreTableAsync(this).Wait();
-                
-                logger.Info($"Total: {sw.Elapsed}");
+                operation.RestoreAll(this).Wait();
+                logger.Info("Total:{0}", sw.Elapsed);
             }
             catch (Exception ex)
             {
@@ -55,3 +52,4 @@ namespace Final.BackupTool.Common.ConsoleCommand
         }
     }
 }
+

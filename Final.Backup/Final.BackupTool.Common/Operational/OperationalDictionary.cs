@@ -10,5 +10,6 @@
         public const string RowKey = "RowKey";
         public const string TimeStamp = "TimeStamp";
         public const string OperationDetailsTableName = "operationdetails";
+        public const string LogContainer = "logs";
     }
 }

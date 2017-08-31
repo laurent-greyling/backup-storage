@@ -88,8 +88,7 @@ namespace Final.BackupTool.Common.Operational
                 var batchOperation = new TableBatchOperation();
                 foreach (var item in entity)
                 {
-                    batchOperation.Add(
-                    TableOperation.Insert(item));
+                    batchOperation.InsertOrMerge(item);
                 }
                 await table.ExecuteBatchAsync(batchOperation);
             }

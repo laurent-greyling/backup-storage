@@ -1,7 +1,6 @@
-# Nfield Backup Tool v0.8.1
+# Nfield Backup Tool v0.9.0
 
 **NOTES:**
-- **New configuration key added**
 - **A new (full) backup to a clean storage must be performed due to backup storage reorganization**
 
 The Nfield Backup tool can back up storage account blobs and tables on a periodic basis. It is intended to be run as a console application on a virtual machine. A first run backs up all business-critical production data (domain blobs and tables) from the configured production account to the configured backup account. Each subsequent run is incremental for new and changed blobs, and performs full backups for tables. Note that backups of tables are stored as blobs in JSON format.
@@ -12,6 +11,12 @@ An operational account stores tables that log the backup and restore operations 
 
 ### Current Issues
 - None
+
+### v0.9.0
+- Restore all added, can now restore all tables and blobs in one go
+  - Can also restore individually as previously, but if you need to restore everything use `restore-all`
+- Added info to error logging in order to understand exception messages and where they might happen
+- Added optional command to skip either tables or blobs when backing up.
 
 ### v0.8.1
 - Out of memory exception fixes
@@ -90,10 +95,12 @@ Configuration is stored in the `Nfield.BackupTool.Console.exe.config` file, usin
 To run a single or incremental backup:
 
 ```
-Nfield.BackupTool.Console.exe backup
+Nfield.BackupTool.Console.exe backup <-s=["tables" or "blobs"]>
 ```
 
 A first-time run, or switching to the next backup storage account, will do a full backup. Subsequent runs will do incremental backups. Incremental backups back up only new or changed blobs. A full backup will always occur for tables.
+
+If the optional parameter is set to either `tables` or `blobs` it will skip backing up this specific storage, e.g. `Nfield.BackupTool.Console.exe backup -s="tables"` will skip table backup and only backup blobs. If left unspecified, all will be restored as in the past. This is mainly implemented to get to a specified section like blobs, little faster,in order to investigate a specific error occuring. 
 
 ### Restore
 The backup tool can restore individual tables, entire blob containers (from here on called *resource*). A restore is done from one of the storage accounts configured as `BackupstorageConnectionString` to the storage configured as `ProductionStorageConnectionString`.
@@ -139,6 +146,14 @@ The format for specifying a date is:
 
 `-f` is a bool specifying if you want to force a restore or not. Currently this use is only on container level and serve little purpose. This will serve a greater purpose once restore a specific blob is implemented, but can still be used when a destination blob exist and you want to force the restore for it.
 
+##### Restore All
+To restore all blob and tables
+
+```
+Nfield.BackupTool.Console.exe restore-all -d=[fromDate] -e=[toDate]
+```
+
+This command will restore all tables and blobs where force is always true. This means that this command will take the same amount of time to restore as it would've taken to backup.
 
 ### Log File information
 The log files contain alot of information that can be used to understand bugs, exceptions and some general informtion about the app. But the most useful information the log file holds is the 
@@ -147,6 +162,7 @@ The log files contain alot of information that can be used to understand bugs, e
 ===>USE FOR RESTORING<=== 
 restore-table -t="*" -d="2017-08-14T10:01:07" -e="2017-08-14T10:01:08" 
 restore-blob -c="*" -b="*" -d="2017-08-14T10:01:08" -e="2017-08-14T10:01:08" -f=false 
+restore-all -d="2017-08-14T10:01:08" -e="2017-08-14T10:01:08" 
 ``
 
 This is the command lines you will need to restore. Most of the fields are set to theur default values needed. For example `-t="*"` or `-c="*"` is to restore all tables or containers. But for the convenience of the user the dates `-d` and `-e` is already filled in with the correct dates needed to find and restore the point in time. In this manner you can find the log file of the date you want to restore, copy the command line and the dates are set, only change needed might be `-c`, `-b`, `-t` and `-f`. 

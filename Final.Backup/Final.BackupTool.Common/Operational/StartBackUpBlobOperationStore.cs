@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage.Table;
 using Final.BackupTool.Common.Entities;
@@ -85,15 +86,24 @@ namespace Final.BackupTool.Common.Operational
 
             var entities = blobOperationEntities.GroupBy(c => c.PartitionKey).ToList();
 
-            foreach (var entity in entities)
+            var logBatchSourceError = new StringBuilder();
+            try
             {
-                var batchOperation = new TableBatchOperation();
-                foreach (var item in entity)
+                foreach (var entity in entities)
                 {
-                    batchOperation.Add(
-                    TableOperation.Insert(item));
+                    var batchOperation = new TableBatchOperation();
+                    foreach (var item in entity)
+                    {
+                        logBatchSourceError.AppendLine($"RowKey: {item.RowKey}, Source: {item.Source}, Extra: {item.ExtraInformation}");
+                        batchOperation.InsertOrMerge(item);
+                    }
+                    await table.ExecuteBatchAsync(batchOperation);
+                    logBatchSourceError.Clear();
                 }
-                await table.ExecuteBatchAsync(batchOperation);
+            }
+            catch (Exception e)
+            {
+                await Console.Error.WriteLineAsync($"Error {e} on Source Batch: {logBatchSourceError}");
             }
         }
         

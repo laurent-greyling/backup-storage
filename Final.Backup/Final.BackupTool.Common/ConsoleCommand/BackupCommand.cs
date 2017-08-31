@@ -8,9 +8,12 @@ namespace Final.BackupTool.Common.ConsoleCommand
 {
     public class BackupCommand : ManyConsole.ConsoleCommand
     {
+        public string Skip { get; set; }
+
         public BackupCommand()
         {
             IsCommand("backup", "Perform full or incremental backup operation");
+            HasOption("s|skip", "Skip backup of tables or blobs", s => { Skip = s; });
         }
 
         public override int Run(string[] remainingArguments)
@@ -25,13 +28,17 @@ namespace Final.BackupTool.Common.ConsoleCommand
             try
             {
                 sw.Start();
-                operation.BackupAsync().Wait();
+                operation.BackupAsync(this).Wait();
                 logger.Info($"Total: {sw.Elapsed}");
-                logger.Info("*******************************************");
             }
             catch (Exception ex)
             {
                 logger.Error(ex);
+            }
+            finally
+            {
+                logger.Info("*******************************************");
+                operation.StoreLogInStorage().Wait();
             }
 
             return 0;
