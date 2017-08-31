@@ -113,8 +113,8 @@ namespace Final.BackupTool.Common.Strategy
             var tablePipeline = new RestoreTableStoragePipeLine();
             await tablePipeline.RestoreAsync(commands, storageConnection);
 
-            var pipeline = new RestoreBlobStoragePipeline();
-            await pipeline.RestoreAsync(commands, storageConnection);
+            var blobPipeline = new RestoreBlobStoragePipeline();
+            await blobPipeline.RestoreAsync(commands, storageConnection);
         }
 
         public async Task RestoreBlobAsync(RestoreBlobCommand command)
