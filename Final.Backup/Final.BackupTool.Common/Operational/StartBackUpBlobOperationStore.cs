@@ -11,7 +11,7 @@ namespace Final.BackupTool.Common.Operational
     {
         private readonly StorageConnection _storageConnection = new StorageConnection();
 
-        public StorageOperationEntity GetLastOperation(string sourceAccountName, string destinationAccountName)
+        public StorageOperationEntity GetLastOperation()
         {
             var partitionKey = GetOperationPartitionKey();
 
@@ -30,11 +30,8 @@ namespace Final.BackupTool.Common.Operational
             try
             {
                 var now = DateTimeOffset.UtcNow;
-
-                var sourceAccountName = _storageConnection.ProductionStorageAccount.Credentials.AccountName;
-                var destinationAccountName = _storageConnection.BackupStorageAccount.Credentials.AccountName;
-
-                var lastOperation = GetLastOperation(sourceAccountName, destinationAccountName);
+                
+                var lastOperation = GetLastOperation();
 
                 var operationType = lastOperation == null ? BlobOperationType.Full : BlobOperationType.Incremental;
 
@@ -42,8 +39,8 @@ namespace Final.BackupTool.Common.Operational
                 {
                     PartitionKey = GetOperationPartitionKey(),
                     RowKey = GetOperationRowKey(now),
-                    SourceAccount = sourceAccountName,
-                    DestinationAccount = destinationAccountName,
+                    SourceAccount = _storageConnection.ProductionStorageAccount.Credentials.AccountName,
+                    DestinationAccount = _storageConnection.BackupStorageAccount.Credentials.AccountName,
                     OperationDate = now,
                     StartTime = DateTimeOffset.UtcNow,
                     OperationType = operationType.ToString()

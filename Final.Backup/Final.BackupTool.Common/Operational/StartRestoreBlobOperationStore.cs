@@ -9,7 +9,7 @@ namespace Final.BackupTool.Common.Operational
     public class StartRestoreBlobOperationStore
     {
         private readonly StorageConnection _storageConnection = new StorageConnection();
-        public StorageOperationEntity GetLastOperation(string sourceAccountName, string destinationAccountName)
+        public StorageOperationEntity GetLastOperation()
         {
             var partitionKey = GetOperationPartitionKey();
 
@@ -29,17 +29,14 @@ namespace Final.BackupTool.Common.Operational
             {
                 var now = DateTimeOffset.UtcNow;
 
-                var sourceAccountName = _storageConnection.BackupStorageAccount.Credentials.AccountName;
-                var destinationAccountName = _storageConnection.ProductionStorageAccount.Credentials.AccountName;
-
-                var lastOperation = GetLastOperation(sourceAccountName, destinationAccountName);
+                var lastOperation = GetLastOperation();
 
                 var operationEntity = new StorageOperationEntity
                 {
                     PartitionKey = GetOperationPartitionKey(),
                     RowKey = GetOperationRowKey(now),
-                    SourceAccount = sourceAccountName,
-                    DestinationAccount = destinationAccountName,
+                    SourceAccount = _storageConnection.BackupStorageAccount.Credentials.AccountName,
+                    DestinationAccount = _storageConnection.ProductionStorageAccount.Credentials.AccountName,
                     OperationDate = now,
                     StartTime = DateTimeOffset.UtcNow,
                     OperationType = BlobOperationType.Full.ToString()
