@@ -9,40 +9,41 @@ namespace Final.BackupTool.Common.Operational
 {
     public class StartBackUpBlobOperationStore
     {
-        public StorageOperationEntity GetLastOperation(string sourceAccountName, string destinationAccountName,
-            StorageConnection storageConnection)
+        private readonly StorageConnection _storageConnection = new StorageConnection();
+
+        public StorageOperationEntity GetLastOperation(string sourceAccountName, string destinationAccountName)
         {
-            var partitionKey = GetOperationPartitionKey(storageConnection);
+            var partitionKey = GetOperationPartitionKey();
 
             var query = new TableQuery<StorageOperationEntity>()
                 .Where(TableQuery.GenerateFilterCondition(OperationalDictionary.PartitionKey, QueryComparisons.Equal,
                     partitionKey));
-            var tableClient = storageConnection.OperationalAccount.CreateCloudTableClient();
+            var tableClient = _storageConnection.OperationalAccount.CreateCloudTableClient();
             var table = tableClient.GetTableReference(OperationalDictionary.OperationTableName);
             var results = table.ExecuteQuery(query);
             var operation = results.FirstOrDefault();
             return operation;
         }
 
-        public async Task<BlobOperation> StartAsync(StorageConnection storageConnection)
+        public async Task<BlobOperation> StartAsync()
         {
             try
             {
                 var now = DateTimeOffset.UtcNow;
 
-                var sourceAccountName = storageConnection.ProductionStorageAccount.Credentials.AccountName;
-                var destinationAccountName = storageConnection.BackupStorageAccount.Credentials.AccountName;
+                var sourceAccountName = _storageConnection.ProductionStorageAccount.Credentials.AccountName;
+                var destinationAccountName = _storageConnection.BackupStorageAccount.Credentials.AccountName;
 
-                var lastOperation = GetLastOperation(sourceAccountName, destinationAccountName, storageConnection);
+                var lastOperation = GetLastOperation(sourceAccountName, destinationAccountName);
 
                 var operationType = lastOperation == null ? BlobOperationType.Full : BlobOperationType.Incremental;
 
                 var operationEntity = new StorageOperationEntity
                 {
-                    PartitionKey = GetOperationPartitionKey(storageConnection),
+                    PartitionKey = GetOperationPartitionKey(),
                     RowKey = GetOperationRowKey(now),
-                    SourceAccount = storageConnection.ProductionStorageAccount.Credentials.AccountName,
-                    DestinationAccount = storageConnection.BackupStorageAccount.Credentials.AccountName,
+                    SourceAccount = sourceAccountName,
+                    DestinationAccount = destinationAccountName,
                     OperationDate = now,
                     StartTime = DateTimeOffset.UtcNow,
                     OperationType = operationType.ToString()
@@ -56,7 +57,7 @@ namespace Final.BackupTool.Common.Operational
                 };
 
                 var insertOperation = TableOperation.Insert(operationEntity);
-                var tableClient = storageConnection.OperationalAccount.CreateCloudTableClient();
+                var tableClient = _storageConnection.OperationalAccount.CreateCloudTableClient();
                 var table = tableClient.GetTableReference(OperationalDictionary.OperationTableName);
                 await table.ExecuteAsync(insertOperation);
 
@@ -64,20 +65,20 @@ namespace Final.BackupTool.Common.Operational
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Console.Error.WriteLine(e);
                 throw;
             }
            
         }
 
-        public async Task WriteCopyOutcomeAsync(DateTimeOffset date, CopyStorageOperation[] copies, StorageConnection storageConnection)
+        public async Task WriteCopyOutcomeAsync(DateTimeOffset date, CopyStorageOperation[] copies)
         {
-            var tableClient = storageConnection.OperationalAccount.CreateCloudTableClient();
+            var tableClient = _storageConnection.OperationalAccount.CreateCloudTableClient();
             var table = tableClient.GetTableReference(OperationalDictionary.OperationDetailsTableName);
 
             var blobOperationEntities = copies.Select(copy => new CopyStorageOperationEntity
             {
-                PartitionKey = GetOperationDetailPartitionKey(storageConnection, date),
+                PartitionKey = GetOperationDetailPartitionKey(date),
                 RowKey = copy.SourceName.Replace('/', '_'),
                 Source = copy.SourceName,
                 Status = copy.CopyStatus.ToString(),
@@ -107,14 +108,14 @@ namespace Final.BackupTool.Common.Operational
             }
         }
         
-        public async Task FinishAsync(BlobOperation blobOperation, Summary summary, StorageConnection storageConnection)
+        public async Task FinishAsync(BlobOperation blobOperation, Summary summary)
         {
             // get the current back up
-            var tableClient = storageConnection.OperationalAccount.CreateCloudTableClient();
+            var tableClient = _storageConnection.OperationalAccount.CreateCloudTableClient();
             var table = tableClient.GetTableReference(OperationalDictionary.OperationTableName);
 
             var retrieveOperation = TableOperation.Retrieve<StorageOperationEntity>(
-                GetOperationPartitionKey(storageConnection),
+                GetOperationPartitionKey(),
                 blobOperation.Id
                 );
             var result = await table.ExecuteAsync(retrieveOperation);
@@ -135,12 +136,12 @@ namespace Final.BackupTool.Common.Operational
             await table.ExecuteAsync(saveOperation);
         }
 
-        private string GetOperationPartitionKey(StorageConnection storageConnection)
+        private string GetOperationPartitionKey()
         {
-            var sourceAccount = storageConnection.ProductionStorageAccount;
-            var destinationAccount = storageConnection.BackupStorageAccount;
+            var sourceAccount = _storageConnection.ProductionStorageAccount.Credentials.AccountName;
+            var destinationAccount = _storageConnection.BackupStorageAccount.Credentials.AccountName;
 
-            return $"{sourceAccount.Credentials.AccountName}_{destinationAccount.Credentials.AccountName}";
+            return $"{sourceAccount}_{destinationAccount}";
         }
 
         private string GetOperationRowKey(DateTimeOffset date)
@@ -148,9 +149,9 @@ namespace Final.BackupTool.Common.Operational
             return (DateTimeOffset.MaxValue.Ticks - date.Ticks).ToString("d19");
         }
 
-        private string GetOperationDetailPartitionKey(StorageConnection storageConnection, DateTimeOffset date)
+        private string GetOperationDetailPartitionKey(DateTimeOffset date)
         {
-            return $"{GetOperationPartitionKey(storageConnection)}_{GetOperationRowKey(date)}";
+            return $"{GetOperationPartitionKey()}_{GetOperationRowKey(date)}";
         }
     }
 }

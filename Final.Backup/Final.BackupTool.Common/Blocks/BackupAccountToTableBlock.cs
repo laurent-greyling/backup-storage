@@ -10,12 +10,13 @@ namespace Final.BackupTool.Common.Blocks
 {
     public class BackupAccountToTableBlock
     {
-        public static TransformManyBlock<CloudStorageAccount, CloudTable> Create(StorageConnection sourceStorageAccount)
+        public static TransformManyBlock<CloudStorageAccount, CloudTable> Create()
         {
+            var storageConnection = new StorageConnection();
             return new TransformManyBlock<CloudStorageAccount, CloudTable>(
                 account =>
                 {
-                    var tableClient = sourceStorageAccount.ProductionStorageAccount.CreateCloudTableClient();
+                    var tableClient = storageConnection.ProductionStorageAccount.CreateCloudTableClient();
                     tableClient.DefaultRequestOptions.RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(5), 5);
 
                     return tableClient.ListTables().Where(c =>

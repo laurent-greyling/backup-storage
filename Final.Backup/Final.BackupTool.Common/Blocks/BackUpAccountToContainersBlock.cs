@@ -9,8 +9,9 @@ namespace Final.BackupTool.Common.Blocks
 {
     public static class BackUpAccountToContainersBlock
     {
-        public static IPropagatorBlock<CloudStorageAccount, string> Create(StorageConnection storageConnection)
+        public static IPropagatorBlock<CloudStorageAccount, string> Create()
         {
+            var storageConnection = new StorageConnection();
             var storageAccount = storageConnection.ProductionStorageAccount;
             return new TransformManyBlock<CloudStorageAccount, string>(
                 account =>

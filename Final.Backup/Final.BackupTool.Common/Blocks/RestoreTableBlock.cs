@@ -4,7 +4,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks.Dataflow;
-using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.Table;
 using Newtonsoft.Json;
@@ -14,10 +13,12 @@ namespace Final.BackupTool.Common.Blocks
 {
     public class RestoreTableBlock
     {
-        public static IPropagatorBlock<CloudBlobContainer, CopyStorageOperation> Create(BlobCommands commands, StorageConnection storageConnection, DateTimeOffset date)
+        private static readonly StorageConnection StorageConnection = new StorageConnection();
+
+        public static IPropagatorBlock<CloudBlobContainer, CopyStorageOperation> Create(BlobCommands commands, DateTimeOffset date)
         {
             var retrieveBlobItems = RetrieveBlobItems(commands);
-            var restoreTables = RestoreTables(storageConnection, date);
+            var restoreTables = RestoreTables(date);
 
             retrieveBlobItems.LinkTo(restoreTables, new DataflowLinkOptions { PropagateCompletion = true });
 
@@ -30,14 +31,14 @@ namespace Final.BackupTool.Common.Blocks
                 GetBlobItems(commands.TableName, commands.FromDate, commands.ToDate, container));
         }
 
-        private static TransformBlock<CloudAppendBlob, CopyStorageOperation> RestoreTables(StorageConnection storageConnection, DateTimeOffset date)
+        private static TransformBlock<CloudAppendBlob, CopyStorageOperation> RestoreTables(DateTimeOffset date)
         {
             var operationStore = new StartRestoreTableOperationStore();
             var fromTableItemToStorageOperation =
                 new TransformBlock<CloudAppendBlob, CopyStorageOperation>(async table =>
                     {
-                        var copyStatus = DeserialiseAndRestoreTable(table, storageConnection.ProductionStorageAccount);
-                        await operationStore.WriteCopyOutcomeAsync(date, copyStatus, storageConnection);
+                        var copyStatus = DeserialiseAndRestoreTable(table);
+                        await operationStore.WriteCopyOutcomeAsync(date, copyStatus);
                         return copyStatus;
                     },
                     new ExecutionDataflowBlockOptions
@@ -100,13 +101,13 @@ namespace Final.BackupTool.Common.Blocks
         /// Then restore the table
         /// </summary>
         /// <param name="blobItem"></param>
-        /// <param name="destStorageAccount"></param>
         /// <returns></returns>
         private static CopyStorageOperation DeserialiseAndRestoreTable(
-            CloudAppendBlob blobItem, CloudStorageAccount destStorageAccount)
+            CloudAppendBlob blobItem)
         {
             try
             {
+                var destStorageAccount = StorageConnection.ProductionStorageAccount;
                 var tableClient = destStorageAccount.CreateCloudTableClient();
                 var table = tableClient.GetTableReference(blobItem.Name);
 

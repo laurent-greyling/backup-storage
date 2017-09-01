@@ -19,7 +19,7 @@ namespace Final.BackupTool.Common.Strategy
     public class OperationContext : IOperationContext
     {
         public int DaysRetentionAfterDelete { get; }
-        public StorageConnection StorageConnection = new StorageConnection();
+        private static readonly StorageConnection StorageConnection = new StorageConnection();
         public BackupTableStoragePipeline BackupTablePipeline = new BackupTableStoragePipeline();
         public RestoreTableStoragePipeLine RestoreTablePipeline = new RestoreTableStoragePipeLine();
         public BackupBlobStoragePipeline BackUpBlobPipeline = new BackupBlobStoragePipeline();
@@ -36,7 +36,7 @@ namespace Final.BackupTool.Common.Strategy
             // Read configuration
             logger.Info("Operation Context - reading configuration...");
 
-            BackupStorageLooksLikeProductionStorage(StorageConnection.BackupBlobClient);
+            BackupStorageLooksLikeProductionStorage();
             CreateOperationalLogTables();
 
             // Retrieve other config options
@@ -54,14 +54,14 @@ namespace Final.BackupTool.Common.Strategy
                     CultureInfo.InvariantCulture);
             if (string.IsNullOrEmpty(command.Skip) || command.Skip.ToLowerInvariant() != "tables")
             {
-                await BackupTablePipeline.BackupAsync(StorageConnection);
+                await BackupTablePipeline.BackupAsync();
             }
             var tableBackUpToDate = DateTimeOffset.UtcNow.AddSeconds(3).ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
             
             var blobBackUpFromDate = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
             if (string.IsNullOrEmpty(command.Skip) || command.Skip.ToLowerInvariant() != "blobs")
             {
-                await BackUpBlobPipeline.BackupAsync(StorageConnection);
+                await BackUpBlobPipeline.BackupAsync();
             }
             var blobBackUpToDate = DateTimeOffset.UtcNow.AddSeconds(3).ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
 
@@ -83,9 +83,9 @@ namespace Final.BackupTool.Common.Strategy
                 Force = command.Force
             };
             
-            await RestoreTablePipeline.RestoreAsync(commands, StorageConnection);
+            await RestoreTablePipeline.RestoreAsync(commands);
             
-            await RestoreBlobPipeline.RestoreAsync(commands, StorageConnection);
+            await RestoreBlobPipeline.RestoreAsync(commands);
         }
 
         public async Task RestoreBlobAsync(RestoreBlobCommand command)
@@ -99,7 +99,7 @@ namespace Final.BackupTool.Common.Strategy
                 Force = command.Force
             };
             
-            await RestoreBlobPipeline.RestoreAsync(commands, StorageConnection);
+            await RestoreBlobPipeline.RestoreAsync(commands);
         }
 
         public async Task RestoreTableAsync(RestoreTableCommand command)
@@ -111,7 +111,7 @@ namespace Final.BackupTool.Common.Strategy
                 ToDate = command.ToDate
             };
             
-            await RestoreTablePipeline.RestoreAsync(commands, StorageConnection);
+            await RestoreTablePipeline.RestoreAsync(commands);
         }
 
         public async Task StoreLogInStorage()
@@ -139,7 +139,7 @@ namespace Final.BackupTool.Common.Strategy
             if (File.Exists(filePath)) File.Delete(filePath);
         }
 
-        private void SetRequestOptions()
+        private static void SetRequestOptions()
         {
             StorageConnection.ProductionBlobClient.DefaultRequestOptions = new BlobRequestOptions
             {
@@ -151,7 +151,7 @@ namespace Final.BackupTool.Common.Strategy
             };
         }
 
-        private void CreateOperationalLogTables()
+        private static void CreateOperationalLogTables()
         {
             var tableClient = StorageConnection.OperationalAccount.CreateCloudTableClient();
             var table = tableClient.GetTableReference(OperationalDictionary.OperationTableName);
@@ -160,8 +160,9 @@ namespace Final.BackupTool.Common.Strategy
             table.CreateIfNotExists();
         }
 
-        private static void BackupStorageLooksLikeProductionStorage(CloudBlobClient backupBlobClientToVerify)
+        private static void BackupStorageLooksLikeProductionStorage()
         {
+            var backupBlobClientToVerify = StorageConnection.BackupBlobClient;
             var containers = backupBlobClientToVerify.ListContainers();
             var matchCount = containers.Select(container =>
                 container.Name.ToLowerInvariant()).Count(n => n.StartsWith("wad") || n.StartsWith("azure") || n.StartsWith("cacheclusterconfigs") || n.Contains("stageartifacts"));

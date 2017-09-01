@@ -1,39 +1,38 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
 using Microsoft.WindowsAzure.Storage;
 using Final.BackupTool.Common.Blocks;
-using Final.BackupTool.Common.Entities;
 using Final.BackupTool.Common.Operational;
 
 namespace Final.BackupTool.Common.Pipelines
 {
     public class RestoreTableStoragePipeLine
     {
-        public async Task RestoreAsync(BlobCommands commands, StorageConnection storageConnection)
+        public async Task RestoreAsync(BlobCommands commands)
         {
             var restoreOperationStore = new StartRestoreTableOperationStore();
-            var restoreOperation = await restoreOperationStore.StartAsync(storageConnection);
-            var summary = await ExecuteAsync(commands, storageConnection, restoreOperation.Date);
-            await restoreOperationStore.FinishAsync(restoreOperation, summary, storageConnection);
+            var restoreOperation = await restoreOperationStore.StartAsync();
+            var summary = await ExecuteAsync(commands, restoreOperation.Date);
+            await restoreOperationStore.FinishAsync(restoreOperation, summary);
         }
 
-        private async Task<Summary> ExecuteAsync(BlobCommands commands, StorageConnection storageConnection, DateTimeOffset date)
+        private async Task<Summary> ExecuteAsync(BlobCommands commands, DateTimeOffset date)
         {
-            var pipeline = CreatePipelineAsync(commands, storageConnection, date);
+            var pipeline = CreatePipelineAsync(commands, date);
 
+            var storageConnection = new StorageConnection();
             var summary = await pipeline(storageConnection.BackupStorageAccount);
 
             return summary;
         }
 
-        private Func<CloudStorageAccount, Task<Summary>> CreatePipelineAsync(BlobCommands commands, StorageConnection storageConnection, DateTimeOffset date)
+        private Func<CloudStorageAccount, Task<Summary>> CreatePipelineAsync(BlobCommands commands, DateTimeOffset date)
         {
             try
             {
-                var accountToTables = RestoreAccountToTableBlock.Create(storageConnection);
-                var restoreTables = RestoreTableBlock.Create(commands, storageConnection, date);
+                var accountToTables = RestoreAccountToTableBlock.Create();
+                var restoreTables = RestoreTableBlock.Create(commands, date);
 
                 var summary = new Summary();
                 var summarize = SummaryBlock.Create(summary);
@@ -54,7 +53,7 @@ namespace Final.BackupTool.Common.Pipelines
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                Console.Error.WriteLine(e);
                 throw new Exception("Error restoring tables", e);
             }
         }

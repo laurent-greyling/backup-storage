@@ -9,8 +9,9 @@ namespace Final.BackupTool.Common.Blocks
 {
     public static class RestoreAccountToContainersBlock
     {
-        public static IPropagatorBlock<CloudStorageAccount, string> Create(StorageConnection storageConnection, BlobCommands commands)
+        public static IPropagatorBlock<CloudStorageAccount, string> Create(BlobCommands commands)
         {
+            var storageConnection = new StorageConnection();
             var storageAccount = storageConnection.BackupStorageAccount;
             var containersToRestore = commands.ContainerName.Replace(" ", "").Split(',').ToList();
 

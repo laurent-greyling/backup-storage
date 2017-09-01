@@ -9,8 +9,9 @@ namespace Final.BackupTool.Common.Blocks
 {
     public class RestoreAccountToTableBlock
     {
-        public static TransformBlock<CloudStorageAccount, CloudBlobContainer> Create(StorageConnection storageConnection)
+        public static TransformBlock<CloudStorageAccount, CloudBlobContainer> Create()
         {
+            var storageConnection = new StorageConnection();
             var fromAccountToContainers = new TransformBlock<CloudStorageAccount, CloudBlobContainer>(
                 account =>
                 {

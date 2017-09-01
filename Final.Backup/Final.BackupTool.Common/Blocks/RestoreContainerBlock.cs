@@ -12,19 +12,19 @@ namespace Final.BackupTool.Common.Blocks
 {
     public class RestoreContainerBlock
     {
-        public static IPropagatorBlock<string, CopyStorageOperation> Create(BlobOperation blobOperation, StorageConnection storageConnection,
-            BlobCommands commands)
+        private static readonly StorageConnection StorageConnection = new StorageConnection();
+
+        public static IPropagatorBlock<string, CopyStorageOperation> Create(BlobOperation blobOperation, BlobCommands commands)
         {
-            var containerToBlobs = CreateContainerToCopyBlobs(storageConnection, commands);
-            var copyBlob = CreateCopyBlobs(blobOperation, storageConnection, commands.Force);
+            var containerToBlobs = CreateContainerToCopyBlobs(commands);
+            var copyBlob = CreateCopyBlobs(blobOperation, commands.Force);
 
             containerToBlobs.LinkTo(copyBlob, new DataflowLinkOptions { PropagateCompletion = true });
 
             return DataflowBlock.Encapsulate(containerToBlobs, copyBlob);
         }
 
-        private static TransformBlock<CopyStorageOperation, CopyStorageOperation> CreateCopyBlobs(BlobOperation blobOperation,
-            StorageConnection storageConnection, bool force)
+        private static TransformBlock<CopyStorageOperation, CopyStorageOperation> CreateCopyBlobs(BlobOperation blobOperation, bool force)
         {
             return new TransformBlock<CopyStorageOperation, CopyStorageOperation>(
                 async operation =>
@@ -34,7 +34,7 @@ namespace Final.BackupTool.Common.Blocks
                         switch (operation.SourceBlobType)
                         {
                             case BlobType.BlockBlob:
-                                var sourceBlobClient = storageConnection.BackupStorageAccount.CreateCloudBlobClient();
+                                var sourceBlobClient = StorageConnection.BackupStorageAccount.CreateCloudBlobClient();
 
                                 var sourceContainer =
                                     sourceBlobClient.GetContainerReference(operation.SourceContainerName);
@@ -42,7 +42,7 @@ namespace Final.BackupTool.Common.Blocks
                                 var sourceBlob = sourceContainer.GetBlockBlobReference(operation.SourceBlobName, operation.Snapshot);
 
                                 var destinationBlobClient =
-                                    storageConnection.ProductionStorageAccount.CreateCloudBlobClient();
+                                    StorageConnection.ProductionStorageAccount.CreateCloudBlobClient();
 
                                 var destinationContainer =
                                     destinationBlobClient.GetContainerReference(operation.DestinationContainerName);
@@ -121,7 +121,7 @@ namespace Final.BackupTool.Common.Blocks
         }
 
         private static TransformManyBlock<string, CopyStorageOperation>
-            CreateContainerToCopyBlobs(StorageConnection storageConnection, BlobCommands commands)
+            CreateContainerToCopyBlobs(BlobCommands commands)
         {
             var containerToBlobs = new TransformManyBlock<string, CopyStorageOperation>(
                 async containerName =>
@@ -129,11 +129,11 @@ namespace Final.BackupTool.Common.Blocks
                     Console.WriteLine($"Processing container: {containerName}");
 
                     // Make sure the container is created in the destination side
-                    var destinationBlobClient = storageConnection.ProductionStorageAccount.CreateCloudBlobClient();
+                    var destinationBlobClient = StorageConnection.ProductionStorageAccount.CreateCloudBlobClient();
                     var destinationContainer = destinationBlobClient.GetContainerReference(containerName);
                     await destinationContainer.CreateIfNotExistsAsync();
 
-                    var sourceBlobClient = storageConnection.BackupStorageAccount.CreateCloudBlobClient();
+                    var sourceBlobClient = StorageConnection.BackupStorageAccount.CreateCloudBlobClient();
                     var container = sourceBlobClient.GetContainerReference(containerName);
                     
                     var blobs = GetBlobItems(commands.BlobPath, commands.FromDate,commands.ToDate, container);

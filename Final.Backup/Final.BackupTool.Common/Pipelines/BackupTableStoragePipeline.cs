@@ -9,27 +9,28 @@ namespace Final.BackupTool.Common.Pipelines
 {
     public class BackupTableStoragePipeline
     {
-        public async Task BackupAsync(StorageConnection storageConnection)
+        public async Task BackupAsync()
         {
             var backupOperationStore = new StartBackupTableOperationStore();
-            var backupOperation = await backupOperationStore.StartAsync(storageConnection);
-            var summary = await ExecuteAsync(storageConnection, backupOperation.Date);
-            await backupOperationStore.FinishAsync(backupOperation, summary, storageConnection);
+            var backupOperation = await backupOperationStore.StartAsync();
+            var summary = await ExecuteAsync(backupOperation.Date);
+            await backupOperationStore.FinishAsync(backupOperation, summary);
         }
 
-        private async Task<Summary> ExecuteAsync(StorageConnection storageConnection, DateTimeOffset date)
+        private async Task<Summary> ExecuteAsync(DateTimeOffset date)
         {
-            var pipeline = CreatePipelineAsync(storageConnection, date);
+            var pipeline = CreatePipelineAsync(date);
 
+            var storageConnection = new StorageConnection();
             var summary = await pipeline(storageConnection.ProductionStorageAccount);
 
             return summary;
         }
 
-        private Func<CloudStorageAccount, Task<Summary>> CreatePipelineAsync(StorageConnection storageConnection, DateTimeOffset date)
+        private Func<CloudStorageAccount, Task<Summary>> CreatePipelineAsync(DateTimeOffset date)
         {
-            var accountToTables = BackupAccountToTableBlock.Create(storageConnection);
-            var copyTables = BackupTableBlock.Create(storageConnection, date);
+            var accountToTables = BackupAccountToTableBlock.Create();
+            var copyTables = BackupTableBlock.Create(date);
 
             var summary = new Summary();
             var summarize = SummaryBlock.Create(summary);

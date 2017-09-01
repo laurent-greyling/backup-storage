@@ -14,25 +14,26 @@ namespace Final.BackupTool.Common.Blocks
 {
     public class BackupTableBlock
     {
-        public static IPropagatorBlock<CloudTable, CopyStorageOperation> Create(StorageConnection storageConnection,
-            DateTimeOffset date)
+        private static readonly StorageConnection StorageConnection = new StorageConnection();
+
+        public static IPropagatorBlock<CloudTable, CopyStorageOperation> Create(DateTimeOffset date)
         {
-            return CreateCopyTables(storageConnection, date);
+            return CreateCopyTables(date);
         }
 
-        private static TransformBlock<CloudTable, CopyStorageOperation> CreateCopyTables(StorageConnection storageConnection, DateTimeOffset date)
+        private static TransformBlock<CloudTable, CopyStorageOperation> CreateCopyTables(DateTimeOffset date)
         {
             var operationStore = new StartBackupTableOperationStore();
             var copyToDestination = new TransformBlock<CloudTable, CopyStorageOperation>(async cloudTable =>
                 {
                     //Create a container to save tables into blob as json
-                    var blobClient = storageConnection.BackupStorageAccount.CreateCloudBlobClient();
+                    var blobClient = StorageConnection.BackupStorageAccount.CreateCloudBlobClient();
                     blobClient.DefaultRequestOptions.RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(5), 5);
                     var container = blobClient.GetContainerReference(OperationalDictionary.TableBackupContainer);
 
                     container.CreateIfNotExists();
                     var status = await CopyTableToBlobDestination(cloudTable, container, date);
-                    await operationStore.WriteCopyOutcomeAsync(date, status, storageConnection);
+                    await operationStore.WriteCopyOutcomeAsync(date, status);
 
                     return status;
                 },
