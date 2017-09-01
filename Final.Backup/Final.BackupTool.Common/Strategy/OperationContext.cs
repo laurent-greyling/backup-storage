@@ -19,7 +19,11 @@ namespace Final.BackupTool.Common.Strategy
     public class OperationContext : IOperationContext
     {
         public int DaysRetentionAfterDelete { get; }
-        public StorageConnection StorageConnection =new StorageConnection();
+        public StorageConnection StorageConnection = new StorageConnection();
+        public BackupTableStoragePipeline BackupTablePipeline = new BackupTableStoragePipeline();
+        public RestoreTableStoragePipeLine RestoreTablePipeline = new RestoreTableStoragePipeLine();
+        public BackupBlobStoragePipeline BackUpBlobPipeline = new BackupBlobStoragePipeline();
+        public RestoreBlobStoragePipeline RestoreBlobPipeline = new RestoreBlobStoragePipeline();
         public ILogger Logger;
         
         public OperationContext(ILogger logger)
@@ -31,67 +35,33 @@ namespace Final.BackupTool.Common.Strategy
 
             // Read configuration
             logger.Info("Operation Context - reading configuration...");
-            
-            // Fool proofing
-            if (BackupStorageLooksLikeProductionStorage(StorageConnection.BackupBlobClient))
-            {
-                throw new ConfigurationErrorsException("The configured backup storage looks like a production storage!");
-            }
 
+            BackupStorageLooksLikeProductionStorage(StorageConnection.BackupBlobClient);
             CreateOperationalLogTables();
 
             // Retrieve other config options
             var daysRetentionAfterDelete = CloudConfigurationManager.GetSetting("DaysRetentionAfterDelete");
             DaysRetentionAfterDelete = int.TryParse(daysRetentionAfterDelete, out int daysRetention) ? daysRetention : 60;
 
-            // Set request options
-            StorageConnection.ProductionBlobClient.DefaultRequestOptions = new BlobRequestOptions
-            {
-                RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(10), 50)
-            };
-            StorageConnection.BackupBlobClient.DefaultRequestOptions = new BlobRequestOptions
-            {
-                RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(10), 50)
-            };
+            SetRequestOptions();
         }
-
-        private void CreateOperationalLogTables()
-        {
-            var tableClient = StorageConnection.OperationalAccount.CreateCloudTableClient();
-            var table = tableClient.GetTableReference(OperationalDictionary.OperationTableName);
-            table.CreateIfNotExists();
-            table = tableClient.GetTableReference(OperationalDictionary.OperationDetailsTableName);
-            table.CreateIfNotExists();
-        }
-
-        private static bool BackupStorageLooksLikeProductionStorage(CloudBlobClient backupBlobClientToVerify)
-        {
-            var containers = backupBlobClientToVerify.ListContainers();
-            var matchCount = containers.Select(container =>
-                container.Name.ToLowerInvariant()).Count(n => n.StartsWith("wad") || n.StartsWith("azure") || n.StartsWith("cacheclusterconfigs") || n.Contains("stageartifacts"));
-            return matchCount > 0;
-        }
-        
 
         public async Task BackupAsync(BackupCommand command)
         {
-            var storageConnection = new StorageConnection();
             // Both these commands are already heavily parallel, so we just run them in order here
             // so they don't fight over bandwidth amongst themselves
             var tableBackUpFromDate = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss",
                     CultureInfo.InvariantCulture);
             if (string.IsNullOrEmpty(command.Skip) || command.Skip.ToLowerInvariant() != "tables")
             {
-                var tablePipeline = new BackupTableStoragePipeline();
-                await tablePipeline.BackupAsync(storageConnection);
+                await BackupTablePipeline.BackupAsync(StorageConnection);
             }
             var tableBackUpToDate = DateTimeOffset.UtcNow.AddSeconds(3).ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
             
             var blobBackUpFromDate = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
             if (string.IsNullOrEmpty(command.Skip) || command.Skip.ToLowerInvariant() != "blobs")
             {
-                var blobPipeline = new BackupBlobStoragePipeline();
-                await blobPipeline.BackupAsync(storageConnection);
+                await BackUpBlobPipeline.BackupAsync(StorageConnection);
             }
             var blobBackUpToDate = DateTimeOffset.UtcNow.AddSeconds(3).ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
 
@@ -112,14 +82,10 @@ namespace Final.BackupTool.Common.Strategy
                 ToDate = command.ToDate,
                 Force = command.Force
             };
-
-            var storageConnection = new StorageConnection();
-
-            var tablePipeline = new RestoreTableStoragePipeLine();
-            await tablePipeline.RestoreAsync(commands, storageConnection);
-
-            var blobPipeline = new RestoreBlobStoragePipeline();
-            await blobPipeline.RestoreAsync(commands, storageConnection);
+            
+            await RestoreTablePipeline.RestoreAsync(commands, StorageConnection);
+            
+            await RestoreBlobPipeline.RestoreAsync(commands, StorageConnection);
         }
 
         public async Task RestoreBlobAsync(RestoreBlobCommand command)
@@ -132,11 +98,8 @@ namespace Final.BackupTool.Common.Strategy
                 ToDate = command.ToDate,
                 Force = command.Force
             };
-
-            var storageConnection = new StorageConnection();
-
-            var pipeline = new RestoreBlobStoragePipeline();
-            await pipeline.RestoreAsync(commands, storageConnection);
+            
+            await RestoreBlobPipeline.RestoreAsync(commands, StorageConnection);
         }
 
         public async Task RestoreTableAsync(RestoreTableCommand command)
@@ -147,16 +110,13 @@ namespace Final.BackupTool.Common.Strategy
                 FromDate = command.FromDate,
                 ToDate = command.ToDate
             };
-            var storageConnection = new StorageConnection();
-
-            var pipeline = new RestoreTableStoragePipeLine();
-            await pipeline.RestoreAsync(commands, storageConnection);
+            
+            await RestoreTablePipeline.RestoreAsync(commands, StorageConnection);
         }
 
         public async Task StoreLogInStorage()
         {
-            var storageConnection = new StorageConnection();
-            var operationalAccount = storageConnection.OperationalAccount;
+            var operationalAccount = StorageConnection.OperationalAccount;
 
             var operationalClient = operationalAccount.CreateCloudBlobClient();
             var container = operationalClient.GetContainerReference(OperationalDictionary.LogContainer);
@@ -177,6 +137,40 @@ namespace Final.BackupTool.Common.Strategy
             }
 
             if (File.Exists(filePath)) File.Delete(filePath);
+        }
+
+        private void SetRequestOptions()
+        {
+            StorageConnection.ProductionBlobClient.DefaultRequestOptions = new BlobRequestOptions
+            {
+                RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(10), 50)
+            };
+            StorageConnection.BackupBlobClient.DefaultRequestOptions = new BlobRequestOptions
+            {
+                RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(10), 50)
+            };
+        }
+
+        private void CreateOperationalLogTables()
+        {
+            var tableClient = StorageConnection.OperationalAccount.CreateCloudTableClient();
+            var table = tableClient.GetTableReference(OperationalDictionary.OperationTableName);
+            table.CreateIfNotExists();
+            table = tableClient.GetTableReference(OperationalDictionary.OperationDetailsTableName);
+            table.CreateIfNotExists();
+        }
+
+        private static void BackupStorageLooksLikeProductionStorage(CloudBlobClient backupBlobClientToVerify)
+        {
+            var containers = backupBlobClientToVerify.ListContainers();
+            var matchCount = containers.Select(container =>
+                container.Name.ToLowerInvariant()).Count(n => n.StartsWith("wad") || n.StartsWith("azure") || n.StartsWith("cacheclusterconfigs") || n.Contains("stageartifacts"));
+
+            // Fool proofing
+            if (matchCount > 0)
+            {
+                throw new ConfigurationErrorsException("The configured backup storage looks like a production storage!");
+            }
         }
     }
 }
