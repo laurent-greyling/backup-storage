@@ -22,10 +22,10 @@ namespace Final.BackupTool.Common.Blocks
                     return tableClient.ListTables().Where(c =>
                     {
                         var acceptedContainer = c.Name.ToLowerInvariant();
-                        return !acceptedContainer.StartsWith("wad") && // Exclude WAD logs
-                               !acceptedContainer.StartsWith("wawsapplogtable") && // Exclude wawsapplogtable tables
-                               !acceptedContainer.StartsWith("activities") && // Exclude runtime data
-                               !acceptedContainer.StartsWith("stagedfiles");
+                        return !acceptedContainer.StartsWith(OperationalDictionary.Wad) && // Exclude WAD logs
+                               !acceptedContainer.StartsWith(OperationalDictionary.Wawsapplogtable) && // Exclude wawsapplogtable tables
+                               !acceptedContainer.StartsWith(OperationalDictionary.Activities) && // Exclude runtime data
+                               !acceptedContainer.StartsWith(OperationalDictionary.Stagedfiles);
                     });
                 });
         }

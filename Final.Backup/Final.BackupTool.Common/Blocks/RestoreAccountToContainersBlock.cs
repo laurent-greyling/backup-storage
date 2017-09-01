@@ -39,19 +39,20 @@ namespace Final.BackupTool.Common.Blocks
 
         private static bool ExcludedContainers(string containerName)
         {
-            return !containerName.StartsWith("wad") &&
-                   !containerName.StartsWith("azure") &&
-                   !containerName.StartsWith("cacheclusterconfigs") &&
-                   !containerName.StartsWith("arm-templates") &&
-                   !containerName.StartsWith("deploymentlog") &&
-                   !containerName.StartsWith("data-downloads") &&
-                   !containerName.StartsWith("downloads") &&
-                   !containerName.StartsWith("staged-files") &&
-                   !containerName.StartsWith("stagedfiles") &&
-                   !containerName.Contains("stageartifacts") &&
-                   !containerName.Contains("mydeployments") && //on RC storage and for local testing ignore this blob
-                   !containerName.Contains("temporary") &&
-                   !containerName.StartsWith(OperationalDictionary.TableBackUpContainerName);
+            return !containerName.StartsWith(OperationalDictionary.Wad) &&
+                  !containerName.StartsWith(OperationalDictionary.Azure) &&
+                  !containerName.StartsWith(OperationalDictionary.Cacheclusterconfigs) &&
+                  !containerName.StartsWith(OperationalDictionary.ArmTemplates) &&
+                  !containerName.StartsWith(OperationalDictionary.Deploymentlog) &&
+                  !containerName.StartsWith(OperationalDictionary.DataDownloads) &&
+                  !containerName.StartsWith(OperationalDictionary.Downloads) &&
+                  !containerName.StartsWith(OperationalDictionary.StagedDashFiles) &&
+                  !containerName.StartsWith(OperationalDictionary.Stagedfiles) &&
+                  !containerName.Contains(OperationalDictionary.Stageartifacts) &&
+                  !containerName.Contains(OperationalDictionary.Mydeployments) && //on RC storage and for local testing ignore this blob
+                  !containerName.Contains(OperationalDictionary.Temporary) &&
+                  !containerName.Equals(OperationalDictionary.Logs) &&
+                  !containerName.StartsWith(OperationalDictionary.TableBackUpContainerName);
         }
     }
 }

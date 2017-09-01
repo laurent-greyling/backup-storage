@@ -50,20 +50,20 @@ namespace Final.BackupTool.Common.Strategy
         {
             // Both these commands are already heavily parallel, so we just run them in order here
             // so they don't fight over bandwidth amongst themselves
-            var tableBackUpFromDate = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss",
+            var tableBackUpFromDate = DateTimeOffset.UtcNow.ToString(OperationalDictionary.DateFormat,
                     CultureInfo.InvariantCulture);
             if (string.IsNullOrEmpty(command.Skip) || command.Skip.ToLowerInvariant() != "tables")
             {
                 await BackupTablePipeline.BackupAsync();
             }
-            var tableBackUpToDate = DateTimeOffset.UtcNow.AddSeconds(3).ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+            var tableBackUpToDate = DateTimeOffset.UtcNow.AddSeconds(3).ToString(OperationalDictionary.DateFormat, CultureInfo.InvariantCulture);
             
-            var blobBackUpFromDate = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+            var blobBackUpFromDate = DateTimeOffset.UtcNow.ToString(OperationalDictionary.DateFormat, CultureInfo.InvariantCulture);
             if (string.IsNullOrEmpty(command.Skip) || command.Skip.ToLowerInvariant() != "blobs")
             {
                 await BackUpBlobPipeline.BackupAsync();
             }
-            var blobBackUpToDate = DateTimeOffset.UtcNow.AddSeconds(3).ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+            var blobBackUpToDate = DateTimeOffset.UtcNow.AddSeconds(3).ToString(OperationalDictionary.DateFormat, CultureInfo.InvariantCulture);
 
             Logger.Info("===>USE FOR RESTORING<===");
             Logger.Info($"restore-table -t=\"*\" -d=\"{tableBackUpFromDate}\" -e=\"{tableBackUpToDate}\"");
@@ -165,7 +165,11 @@ namespace Final.BackupTool.Common.Strategy
             var backupBlobClientToVerify = StorageConnection.BackupBlobClient;
             var containers = backupBlobClientToVerify.ListContainers();
             var matchCount = containers.Select(container =>
-                container.Name.ToLowerInvariant()).Count(n => n.StartsWith("wad") || n.StartsWith("azure") || n.StartsWith("cacheclusterconfigs") || n.Contains("stageartifacts"));
+                container.Name.ToLowerInvariant()).Count(n => 
+                n.StartsWith(OperationalDictionary.Wad) ||
+                n.StartsWith(OperationalDictionary.Azure) ||
+                n.StartsWith(OperationalDictionary.Cacheclusterconfigs) ||
+                n.Contains(OperationalDictionary.Stageartifacts));
 
             // Fool proofing
             if (matchCount > 0)

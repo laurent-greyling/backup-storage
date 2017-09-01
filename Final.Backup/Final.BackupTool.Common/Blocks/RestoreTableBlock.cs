@@ -28,7 +28,7 @@ namespace Final.BackupTool.Common.Blocks
         private static TransformManyBlock<CloudBlobContainer, CloudAppendBlob> RetrieveBlobItems(BlobCommands commands)
         {
             return new TransformManyBlock<CloudBlobContainer, CloudAppendBlob>(container =>
-                GetBlobItems(commands.TableName, commands.FromDate, commands.ToDate, container));
+                GetBlobItems(commands, container));
         }
 
         private static TransformBlock<CloudAppendBlob, CopyStorageOperation> RestoreTables(DateTimeOffset date)
@@ -52,25 +52,20 @@ namespace Final.BackupTool.Common.Blocks
         /// <summary>
         /// Get the blob items
         /// </summary>
-        /// <param name="tablesToRestore"></param>
-        /// <param name="snapShotTime"></param>
-        /// <param name="endSnapShotTime"></param>
+        /// <param name="commands"></param>
         /// <param name="container"></param>
         /// <returns></returns>
-        private static List<CloudAppendBlob> GetBlobItems(string tablesToRestore,
-            string snapShotTime,
-            string endSnapShotTime,
-            CloudBlobContainer container)
+        private static List<CloudAppendBlob> GetBlobItems(BlobCommands commands, CloudBlobContainer container)
         {
             //Specified tables to be restored
-            var tables = tablesToRestore.Replace(" ", "").Split(',').ToList();
+            var tables = commands.TableName.Replace(" ", "").Split(',').ToList();
 
-            if (!string.IsNullOrEmpty(snapShotTime))
+            if (!string.IsNullOrEmpty(commands.FromDate))
             {
                 try
                 {
-                    var from = DateTimeOffset.ParseExact(snapShotTime, "yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
-                    var to = DateTimeOffset.ParseExact(endSnapShotTime, "yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+                    var from = DateTimeOffset.ParseExact(commands.FromDate, OperationalDictionary.DateFormat, CultureInfo.InvariantCulture);
+                    var to = DateTimeOffset.ParseExact(commands.ToDate, OperationalDictionary.DateFormat, CultureInfo.InvariantCulture);
 
                     var snapShotsItems = container.ListBlobs(blobListingDetails: BlobListingDetails.All, useFlatBlobListing: true)
                         .Cast<CloudAppendBlob>()
@@ -111,9 +106,9 @@ namespace Final.BackupTool.Common.Blocks
                 var tableClient = destStorageAccount.CreateCloudTableClient();
                 var table = tableClient.GetTableReference(blobItem.Name);
 
-                table.CreateIfNotExists();
                 Console.WriteLine($"Restoring table: {table}");
-
+                table.CreateIfNotExists();
+                
                 using (var reader = new StreamReader(blobItem.OpenRead()))
                 {
                     var entities = new List<DynamicTableEntity>();
@@ -171,7 +166,6 @@ namespace Final.BackupTool.Common.Blocks
                 JsonConvert.DeserializeObject<Dictionary<string, object>>(backupData);
 
             var tableEntity = new DynamicTableEntity();
-
 
             foreach (var item in restoreTableDataEntities)
             {

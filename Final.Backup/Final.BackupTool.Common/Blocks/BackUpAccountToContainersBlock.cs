@@ -22,23 +22,28 @@ namespace Final.BackupTool.Common.Blocks
                     .Where(c =>
                     {
                         var n = c.Name.ToLowerInvariant();
-                        return !n.StartsWith("wad") &&
-                               !n.StartsWith("azure") &&
-                               !n.StartsWith("cacheclusterconfigs") &&
-                               !n.StartsWith("arm-templates") &&
-                               !n.StartsWith("deploymentlog") &&
-                               !n.StartsWith("data-downloads") &&
-                               !n.StartsWith("downloads") &&
-                               !n.StartsWith("staged-files") &&
-                               !n.StartsWith("stagedfiles") &&
-                               !n.Contains("stageartifacts") &&
-                               !n.StartsWith(OperationalDictionary.TableBackUpContainerName);
+                        return ExcludedContainers(n);
                     })
                     .Select(c => c.Name).ToList();
 
                     return containers;
                 }
             );
+        }
+
+        private static bool ExcludedContainers(string n)
+        {
+            return !n.StartsWith(OperationalDictionary.Wad) &&
+                   !n.StartsWith(OperationalDictionary.Azure) &&
+                   !n.StartsWith(OperationalDictionary.Cacheclusterconfigs) &&
+                   !n.StartsWith(OperationalDictionary.ArmTemplates) &&
+                   !n.StartsWith(OperationalDictionary.Deploymentlog) &&
+                   !n.StartsWith(OperationalDictionary.DataDownloads) &&
+                   !n.StartsWith(OperationalDictionary.Downloads) &&
+                   !n.StartsWith(OperationalDictionary.StagedDashFiles) &&
+                   !n.StartsWith(OperationalDictionary.Stagedfiles) &&
+                   !n.Contains(OperationalDictionary.Stageartifacts) &&
+                   !n.StartsWith(OperationalDictionary.TableBackUpContainerName);
         }
     }
 }

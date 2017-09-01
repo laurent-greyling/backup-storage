@@ -28,7 +28,7 @@ namespace Final.BackupTool.IntegrationTests
         private static List<string> _history;
 
         private const string TableContainer = "backup-tablestorage";
-
+        private const string DateFormat = "yyyy-MM-ddTHH:mm:ss";
         // Construct guid but remove characters that pose problems in storage
         public string GetGuid => Guid.NewGuid().ToString().Replace("-", "");
 
@@ -131,10 +131,10 @@ namespace Final.BackupTool.IntegrationTests
 
             var restoreDate = GetRestoreFromDate(blobContainerName, blobName);
             var startDate = DateTimeOffset.ParseExact(restoreDate, "yyyy-MM-dd HH:mm:ssZ", CultureInfo.InvariantCulture)
-                .ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+                .ToString(DateFormat, CultureInfo.InvariantCulture);
             var endDate = DateTimeOffset.ParseExact(restoreDate, "yyyy-MM-dd HH:mm:ssZ", CultureInfo.InvariantCulture)
                 .AddHours(2)
-                .ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+                .ToString(DateFormat, CultureInfo.InvariantCulture);
 
             BackupToolRestoreBlob(blobContainerName, blobName, startDate, endDate);
 
@@ -158,10 +158,10 @@ namespace Final.BackupTool.IntegrationTests
 
             var restoreDate = GetRestoreFromDate(blobContainerName, blobName);
             var startDate = DateTimeOffset.ParseExact(restoreDate, "yyyy-MM-dd HH:mm:ssZ", CultureInfo.InvariantCulture)
-                .ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+                .ToString(DateFormat, CultureInfo.InvariantCulture);
             var endDate = DateTimeOffset.ParseExact(restoreDate, "yyyy-MM-dd HH:mm:ssZ", CultureInfo.InvariantCulture)
                 .AddHours(2)
-                .ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+                .ToString(DateFormat, CultureInfo.InvariantCulture);
             // Do not force restore
             BackupToolRestoreBlob(blobContainerName, blobName, startDate, endDate);
 
@@ -186,10 +186,10 @@ namespace Final.BackupTool.IntegrationTests
 
             var restoreDate = GetRestoreFromDate(blobContainerName, blobName);
             var startDate = DateTimeOffset.ParseExact(restoreDate, "yyyy-MM-dd HH:mm:ssZ", CultureInfo.InvariantCulture)
-                .ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+                .ToString(DateFormat, CultureInfo.InvariantCulture);
             var endDate = DateTimeOffset.ParseExact(restoreDate, "yyyy-MM-dd HH:mm:ssZ", CultureInfo.InvariantCulture)
                 .AddHours(2)
-                .ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+                .ToString(DateFormat, CultureInfo.InvariantCulture);
 
             // Force restore
             BackupToolRestoreBlob(blobContainerName, blobName, startDate, endDate, true);
@@ -221,10 +221,10 @@ namespace Final.BackupTool.IntegrationTests
 
             var restoreDate = GetSnapShotDate(blobContainerName, startTime, endTime);
             var startDate = DateTimeOffset.ParseExact(restoreDate, "d-M-yyyy H:mm:ss +00:00", CultureInfo.InvariantCulture)
-                .ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+                .ToString(DateFormat, CultureInfo.InvariantCulture);
             var endDate = DateTimeOffset.ParseExact(restoreDate, "d-M-yyyy H:mm:ss +00:00", CultureInfo.InvariantCulture)
                 .AddSeconds(3)
-                .ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+                .ToString(DateFormat, CultureInfo.InvariantCulture);
             // Restore the blob from the first backup
             BackupToolRestoreBlob(blobContainerName, blobName, startDate, endDate);
             Assert.AreEqual(blobContentsFirst, GetProductionBlob(blobContainerName, blobName));
@@ -250,10 +250,10 @@ namespace Final.BackupTool.IntegrationTests
             UpsertBlobInProductionContainer(blobContainerName, blob2Name, blob2Contents);
             UpsertBlobInProductionContainer(blobContainerName, blob3Name, blob3Contents);
 
-            var restoreDate = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+            var restoreDate = DateTimeOffset.UtcNow.ToString(DateFormat, CultureInfo.InvariantCulture);
             // Back it up
             BackupToolBackup();
-            var endDate = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+            var endDate = DateTimeOffset.UtcNow.ToString(DateFormat, CultureInfo.InvariantCulture);
 
             // Oh noes! Disaster strikes!
             DeleteProductionContainer(blobContainerName);
@@ -287,10 +287,10 @@ namespace Final.BackupTool.IntegrationTests
             UpsertBlobInProductionContainer(blobContainerName, blob2Name, blob2Contents);
             UpsertBlobInProductionContainer(blobContainerName, blob3Name, blob3Contents);
 
-            var restoreDate = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+            var restoreDate = DateTimeOffset.UtcNow.ToString(DateFormat, CultureInfo.InvariantCulture);
             // Back it up
             BackupToolBackup();
-            var endDate = DateTimeOffset.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+            var endDate = DateTimeOffset.UtcNow.ToString(DateFormat, CultureInfo.InvariantCulture);
             // Apply some changes
             UpsertBlobInProductionContainer(blobContainerName, blob2Name, blob2ContentsAltered);
             DeleteProductionBlob(blobContainerName, blob3Name);
@@ -406,10 +406,10 @@ namespace Final.BackupTool.IntegrationTests
 
             var restoreDate = GetRestoreFromTableDate("backup-tablestorage", tableName);
             var startDate = DateTimeOffset.ParseExact(restoreDate, "yyyy-MM-dd HH:mm:ssZ", CultureInfo.InvariantCulture)
-                .ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+                .ToString(DateFormat, CultureInfo.InvariantCulture);
             var endDate = DateTimeOffset.ParseExact(restoreDate, "yyyy-MM-dd HH:mm:ssZ", CultureInfo.InvariantCulture)
                 .AddHours(2)
-                .ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+                .ToString(DateFormat, CultureInfo.InvariantCulture);
             BackupToolRestoreTable(tableName, startDate, endDate);
 
             Assert.AreEqual(val1, GetProductionTableEntity(tableName, par1, row1).Value);
@@ -452,10 +452,10 @@ namespace Final.BackupTool.IntegrationTests
 
             var restoreDate = GetRestoreFromTableDate("backup-tablestorage", tableName);
             var startDate = DateTimeOffset.ParseExact(restoreDate, "yyyy-MM-dd HH:mm:ssZ", CultureInfo.InvariantCulture)
-                .ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+                .ToString(DateFormat, CultureInfo.InvariantCulture);
             var endDate = DateTimeOffset.ParseExact(restoreDate, "yyyy-MM-dd HH:mm:ssZ", CultureInfo.InvariantCulture)
                 .AddHours(2)
-                .ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+                .ToString(DateFormat, CultureInfo.InvariantCulture);
 
             BackupToolRestoreTable(tableName, startDate, endDate);
 
@@ -492,10 +492,10 @@ namespace Final.BackupTool.IntegrationTests
 
             var restoreDate = GetSnapShotTableDate("backup-tablestorage", startTime, endTime);
             var startDate = DateTimeOffset.ParseExact(restoreDate, "d-M-yyyy H:mm:ss +00:00", CultureInfo.InvariantCulture)
-                .ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+                .ToString(DateFormat, CultureInfo.InvariantCulture);
             var endDate = DateTimeOffset.ParseExact(restoreDate, "d-M-yyyy H:mm:ss +00:00", CultureInfo.InvariantCulture)
                 .AddSeconds(3)
-                .ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+                .ToString(DateFormat, CultureInfo.InvariantCulture);
             BackupToolRestoreTable(tableName, startDate, endDate);
 
             // Ensure original value is in there
@@ -535,10 +535,10 @@ namespace Final.BackupTool.IntegrationTests
 
             var restoreDate = GetRestoreFromTableDate("backup-tablestorage", tableName);
             var startDate = DateTimeOffset.ParseExact(restoreDate, "yyyy-MM-dd HH:mm:ssZ", CultureInfo.InvariantCulture)
-                .ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+                .ToString(DateFormat, CultureInfo.InvariantCulture);
             var endDate = DateTimeOffset.ParseExact(restoreDate, "yyyy-MM-dd HH:mm:ssZ", CultureInfo.InvariantCulture)
                 .AddHours(2)
-                .ToString("yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+                .ToString(DateFormat, CultureInfo.InvariantCulture);
 
             BackupToolRestoreAll(startDate, endDate);
 

@@ -82,19 +82,55 @@ namespace Final.BackupTool.Common.Blocks
             );
         }
 
-        private static List<CloudBlockBlob> GetBlobItems(string blobsToRestore,
-           string snapShotTime,
-           string endSnapShotTime,
-           CloudBlobContainer container)
+        private static TransformManyBlock<string, CopyStorageOperation>
+            CreateContainerToCopyBlobs(BlobCommands commands)
         {
-            var blobs = blobsToRestore.Replace(" ", "").Split(',').ToList();
-            if (!string.IsNullOrEmpty(snapShotTime))
+            var containerToBlobs = new TransformManyBlock<string, CopyStorageOperation>(
+                async containerName =>
+                {
+                    Console.WriteLine($"Processing container: {containerName}");
+
+                    // Make sure the container is created in the destination side
+                    var destinationBlobClient = StorageConnection.ProductionStorageAccount.CreateCloudBlobClient();
+                    var destinationContainer = destinationBlobClient.GetContainerReference(containerName);
+                    await destinationContainer.CreateIfNotExistsAsync();
+
+                    var sourceBlobClient = StorageConnection.BackupStorageAccount.CreateCloudBlobClient();
+                    var container = sourceBlobClient.GetContainerReference(containerName);
+                    
+                    var blobs = GetBlobItems(commands, container);
+
+                    return blobs
+                        .Select(b => new CopyStorageOperation
+                        {
+                            SourceContainerName = containerName,
+                            SourceBlobName = b.Name,
+                            SourceBlobType = b.BlobType,
+                            SourceSize = b.Properties.Length,
+                            SourceBlobLastModified = b.Properties.LastModified,
+                            DestinationContainerName = containerName,
+                            Snapshot = b.SnapshotTime
+                        }).ToList();
+                },
+                new ExecutionDataflowBlockOptions
+                {
+                    MaxDegreeOfParallelism = 16,
+                    BoundedCapacity = 16,
+                }
+            );
+            return containerToBlobs;
+        }
+
+        private static List<CloudBlockBlob> GetBlobItems(BlobCommands commands, CloudBlobContainer container)
+        {
+            var blobs = commands.BlobPath.Replace(" ", "").Split(',').ToList();
+            if (!string.IsNullOrEmpty(commands.FromDate))
             {
                 try
                 {
-                    var from = DateTimeOffset.ParseExact(snapShotTime, "yyyy-MM-ddTHH:mm:ss",
+                    var from = DateTimeOffset.ParseExact(commands.FromDate, OperationalDictionary.DateFormat,
                         CultureInfo.InvariantCulture);
-                    var to = DateTimeOffset.ParseExact(endSnapShotTime, "yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+                    var to = DateTimeOffset.ParseExact(commands.ToDate, OperationalDictionary.DateFormat, CultureInfo.InvariantCulture);
 
                     var snapShotsItems = container.ListBlobs(useFlatBlobListing: true,
                             blobListingDetails: BlobListingDetails.All).Cast<CloudBlockBlob>()
@@ -118,45 +154,6 @@ namespace Final.BackupTool.Common.Blocks
             }
 
             throw new Exception("Set d|date= to a time stamp of 2017-07-15T19:05:46 to restore");
-        }
-
-        private static TransformManyBlock<string, CopyStorageOperation>
-            CreateContainerToCopyBlobs(BlobCommands commands)
-        {
-            var containerToBlobs = new TransformManyBlock<string, CopyStorageOperation>(
-                async containerName =>
-                {
-                    Console.WriteLine($"Processing container: {containerName}");
-
-                    // Make sure the container is created in the destination side
-                    var destinationBlobClient = StorageConnection.ProductionStorageAccount.CreateCloudBlobClient();
-                    var destinationContainer = destinationBlobClient.GetContainerReference(containerName);
-                    await destinationContainer.CreateIfNotExistsAsync();
-
-                    var sourceBlobClient = StorageConnection.BackupStorageAccount.CreateCloudBlobClient();
-                    var container = sourceBlobClient.GetContainerReference(containerName);
-                    
-                    var blobs = GetBlobItems(commands.BlobPath, commands.FromDate,commands.ToDate, container);
-
-                    return blobs
-                        .Select(b => new CopyStorageOperation
-                        {
-                            SourceContainerName = containerName,
-                            SourceBlobName = b.Name,
-                            SourceBlobType = b.BlobType,
-                            SourceSize = b.Properties.Length,
-                            SourceBlobLastModified = b.Properties.LastModified,
-                            DestinationContainerName = containerName,
-                            Snapshot = b.SnapshotTime
-                        }).ToList();
-                },
-                new ExecutionDataflowBlockOptions
-                {
-                    MaxDegreeOfParallelism = 16,
-                    BoundedCapacity = 16,
-                }
-            );
-            return containerToBlobs;
         }
 
         private static async Task<bool> CopyBlockBlobAsync(CloudBlockBlob sourceBlob, 
