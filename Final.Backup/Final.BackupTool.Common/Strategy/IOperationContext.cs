@@ -9,7 +9,7 @@ namespace Final.BackupTool.Common.Strategy
         Task RestoreAll(RestoreCommand command);
         Task RestoreBlobAsync(RestoreBlobCommand command);
         Task RestoreTableAsync(RestoreTableCommand command);
-        int DaysRetentionAfterDelete { get; }
+        int DaysRetentionAfterDelete { get; set; }
         Task StoreLogInStorage();
     }
 }

@@ -187,12 +187,14 @@
     <Compile Include="Operational\OperationalDictionary.cs" />
     <Compile Include="Entities\CopyStorageOperationEntity.cs" />
     <Compile Include="Operational\StorageConnection.cs" />
+    <Compile Include="Operational\StoreLogFile.cs" />
     <Compile Include="Operational\Summary.cs" />
     <Compile Include="Pipelines\BackupTableStoragePipeline.cs" />
     <Compile Include="Pipelines\RestoreBlobStoragePipeline.cs" />
     <Compile Include="Pipelines\BackupBlobStoragePipeline.cs" />
     <Compile Include="Pipelines\RestoreTableStoragePipeLine.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Strategy\InitializeOperation.cs" />
     <Compile Include="Strategy\OperationContext.cs" />
     <Compile Include="Strategy\IOperationContext.cs" />
   </ItemGroup>
