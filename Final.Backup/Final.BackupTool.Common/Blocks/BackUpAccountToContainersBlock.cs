@@ -15,7 +15,7 @@ namespace Final.BackupTool.Common.Blocks
             return new TransformManyBlock<CloudStorageAccount, string>(
                 account =>
                 {
-                    var blobClient = azureOperation.CreateProductionBlobClient;
+                    var blobClient = azureOperation.CreateProductionBlobClient();
                     blobClient.DefaultRequestOptions.RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(5), 5);
                     var containers = blobClient.ListContainers()
                     .Where(c =>
@@ -34,14 +34,14 @@ namespace Final.BackupTool.Common.Blocks
         {
             return !n.StartsWith(OperationalDictionary.Wad) &&
                    !n.StartsWith(OperationalDictionary.Azure) &&
-                   !n.StartsWith(OperationalDictionary.Cacheclusterconfigs) &&
+                   !n.StartsWith(OperationalDictionary.CacheClusterConfigs) &&
                    !n.StartsWith(OperationalDictionary.ArmTemplates) &&
-                   !n.StartsWith(OperationalDictionary.Deploymentlog) &&
+                   !n.StartsWith(OperationalDictionary.DeploymentLog) &&
                    !n.StartsWith(OperationalDictionary.DataDownloads) &&
                    !n.StartsWith(OperationalDictionary.Downloads) &&
                    !n.StartsWith(OperationalDictionary.StagedDashFiles) &&
-                   !n.StartsWith(OperationalDictionary.Stagedfiles) &&
-                   !n.Contains(OperationalDictionary.Stageartifacts) &&
+                   !n.StartsWith(OperationalDictionary.StagedFiles) &&
+                   !n.Contains(OperationalDictionary.StageArtifacts) &&
                    !n.StartsWith(OperationalDictionary.TableBackUpContainerName);
         }
     }

@@ -11,8 +11,8 @@ namespace Final.BackupTool.Common.Operational
     public class StartBackUpBlobOperationStore
     {
         private static readonly AzureOperations AzureOperations = new AzureOperations();
-        private readonly string _productionAccountName = AzureOperations.GetProductionAccountName;
-        private readonly string _backupAccountName = AzureOperations.GetBackupAccountName;
+        private readonly string _productionAccountName = AzureOperations.GetProductionAccountName();
+        private readonly string _backupAccountName = AzureOperations.GetBackupAccountName();
 
         public StorageOperationEntity GetLastOperation()
         {

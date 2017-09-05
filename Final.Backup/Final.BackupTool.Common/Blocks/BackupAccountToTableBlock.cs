@@ -16,16 +16,16 @@ namespace Final.BackupTool.Common.Blocks
             return new TransformManyBlock<CloudStorageAccount, CloudTable>(
                 account =>
                 {
-                    var tableClient = azureOperations.CreateProductionTableClient;
+                    var tableClient = azureOperations.CreateProductionTableClient();
                     tableClient.DefaultRequestOptions.RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(5), 5);
 
                     return tableClient.ListTables().Where(c =>
                     {
                         var acceptedContainer = c.Name.ToLowerInvariant();
                         return !acceptedContainer.StartsWith(OperationalDictionary.Wad) && // Exclude WAD logs
-                               !acceptedContainer.StartsWith(OperationalDictionary.Wawsapplogtable) && // Exclude wawsapplogtable tables
+                               !acceptedContainer.StartsWith(OperationalDictionary.WawsAppLogTable) && // Exclude wawsapplogtable tables
                                !acceptedContainer.StartsWith(OperationalDictionary.Activities) && // Exclude runtime data
-                               !acceptedContainer.StartsWith(OperationalDictionary.Stagedfiles);
+                               !acceptedContainer.StartsWith(OperationalDictionary.StagedFiles);
                     });
                 });
         }

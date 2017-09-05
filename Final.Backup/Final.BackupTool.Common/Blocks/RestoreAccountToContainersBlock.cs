@@ -17,7 +17,7 @@ namespace Final.BackupTool.Common.Blocks
             return new TransformManyBlock<CloudStorageAccount, string>(
                 account =>
                 {
-                    var blobClient = azureOperations.CreateBackupBlobClient;
+                    var blobClient = azureOperations.CreateBackupBlobClient();
                     blobClient.DefaultRequestOptions.RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(5), 5);
                     var containers = containersToRestore.Contains("*")
                         ? blobClient.ListContainers().Where(c =>
@@ -40,15 +40,15 @@ namespace Final.BackupTool.Common.Blocks
         {
             return !containerName.StartsWith(OperationalDictionary.Wad) &&
                    !containerName.StartsWith(OperationalDictionary.Azure) &&
-                   !containerName.StartsWith(OperationalDictionary.Cacheclusterconfigs) &&
+                   !containerName.StartsWith(OperationalDictionary.CacheClusterConfigs) &&
                    !containerName.StartsWith(OperationalDictionary.ArmTemplates) &&
-                   !containerName.StartsWith(OperationalDictionary.Deploymentlog) &&
+                   !containerName.StartsWith(OperationalDictionary.DeploymentLog) &&
                    !containerName.StartsWith(OperationalDictionary.DataDownloads) &&
                    !containerName.StartsWith(OperationalDictionary.Downloads) &&
                    !containerName.StartsWith(OperationalDictionary.StagedDashFiles) &&
-                   !containerName.StartsWith(OperationalDictionary.Stagedfiles) &&
-                   !containerName.Contains(OperationalDictionary.Stageartifacts) &&
-                   !containerName.Contains(OperationalDictionary.Mydeployments) &&
+                   !containerName.StartsWith(OperationalDictionary.StagedFiles) &&
+                   !containerName.Contains(OperationalDictionary.StageArtifacts) &&
+                   !containerName.Contains(OperationalDictionary.MyDeployments) &&
                    //on RC storage and for local testing ignore this blob
                    !containerName.Contains(OperationalDictionary.Temporary) &&
                    !containerName.Equals(OperationalDictionary.Logs) &&

@@ -30,11 +30,11 @@ namespace Final.BackupTool.Common.Strategy
 
         private static void SetRequestOptions()
         {
-            AzureOperations.CreateProductionBlobClient.DefaultRequestOptions = new BlobRequestOptions
+            AzureOperations.CreateProductionBlobClient().DefaultRequestOptions = new BlobRequestOptions
             {
                 RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(10), 50)
             };
-            AzureOperations.CreateBackupBlobClient.DefaultRequestOptions = new BlobRequestOptions
+            AzureOperations.CreateBackupBlobClient().DefaultRequestOptions = new BlobRequestOptions
             {
                 RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(10), 50)
             };
@@ -48,14 +48,14 @@ namespace Final.BackupTool.Common.Strategy
 
         private static void BackupStorageLooksLikeProductionStorage()
         {
-            var backupBlobClientToVerify = AzureOperations.CreateBackupBlobClient;
+            var backupBlobClientToVerify = AzureOperations.CreateBackupBlobClient();
             var containers = backupBlobClientToVerify.ListContainers();
             var matchCount = containers.Select(container =>
                 container.Name.ToLowerInvariant()).Count(n =>
                 n.StartsWith(OperationalDictionary.Wad) ||
                 n.StartsWith(OperationalDictionary.Azure) ||
-                n.StartsWith(OperationalDictionary.Cacheclusterconfigs) ||
-                n.Contains(OperationalDictionary.Stageartifacts));
+                n.StartsWith(OperationalDictionary.CacheClusterConfigs) ||
+                n.Contains(OperationalDictionary.StageArtifacts));
 
             // Fool proofing
             if (matchCount > 0)

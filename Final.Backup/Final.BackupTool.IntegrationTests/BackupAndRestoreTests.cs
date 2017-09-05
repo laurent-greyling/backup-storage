@@ -28,7 +28,7 @@ namespace Final.BackupTool.IntegrationTests
         private static List<string> _history;
 
         private const string TableContainer = "backup-tablestorage";
-        private const string DateFormat = "yyyy-MM-ddTHH:mm:ss";
+        private const string DateFormat = "yyyy-MM-ddTHH:mm:ssZ";
         // Construct guid but remove characters that pose problems in storage
         public string GetGuid => Guid.NewGuid().ToString().Replace("-", "");
 

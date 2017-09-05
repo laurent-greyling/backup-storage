@@ -15,7 +15,7 @@ namespace Final.BackupTool.Common.Blocks
             var fromAccountToContainers = new TransformBlock<CloudStorageAccount, CloudBlobContainer>(
                 account =>
                 {
-                    var blobClient = azureOperations.CreateBackupBlobClient;
+                    var blobClient = azureOperations.CreateBackupBlobClient();
                     blobClient.DefaultRequestOptions.RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(5), 5);
 
                     return blobClient.GetContainerReference(OperationalDictionary.TableBackupContainer);

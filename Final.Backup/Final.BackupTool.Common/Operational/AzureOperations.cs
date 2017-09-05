@@ -14,7 +14,7 @@ namespace Final.BackupTool.Common.Operational
         #region backup
         public CloudBlobContainer BackUpContainerReference(string containerName)
         {
-            var blobClient = CreateBackupBlobClient;
+            var blobClient = CreateBackupBlobClient();
             blobClient.DefaultRequestOptions.RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(5), 5);
             return blobClient.GetContainerReference(containerName);
         }
@@ -38,26 +38,39 @@ namespace Final.BackupTool.Common.Operational
             return container;
         }
 
-        public CloudBlobClient CreateBackupBlobClient => GetBackupStorageAccount.CreateCloudBlobClient();
+        public CloudBlobClient CreateBackupBlobClient()
+        {
+            return GetBackupStorageAccount().CreateCloudBlobClient();
+        }
 
-        public CloudTableClient CreateBackupTableClient => GetBackupStorageAccount.CreateCloudTableClient();
+        public CloudTableClient CreateBackupTableClient()
+        {
+            return GetBackupStorageAccount().CreateCloudTableClient();
+        }
 
-        public CloudStorageAccount GetBackupStorageAccount => CloudStorageAccount.Parse(StorageConnection.BackupStorageConnectionString);
+        public CloudStorageAccount GetBackupStorageAccount()
+        {
+            return CloudStorageAccount.Parse(StorageConnection.BackupStorageConnectionString);
+        }
 
-        public string GetBackupAccountName => GetBackupStorageAccount.Credentials.AccountName;
+        public string GetBackupAccountName()
+        {
+            return GetBackupStorageAccount().Credentials.AccountName;
+        }
+
         #endregion
 
         #region production
         public CloudBlobContainer ProductionContainerReference(string containerName)
         {
-            var blobClient = CreateProductionBlobClient;
+            var blobClient = CreateProductionBlobClient();
             blobClient.DefaultRequestOptions.RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(5), 5);
             return blobClient.GetContainerReference(containerName);
         }
 
         public CloudTable ProductionTableReference(string tableName)
         {
-            var destStorageAccount = GetProductionStorageAccount;
+            var destStorageAccount = GetProductionStorageAccount();
             var tableClient = destStorageAccount.CreateCloudTableClient();
             return tableClient.GetTableReference(tableName);
         }
@@ -82,20 +95,32 @@ namespace Final.BackupTool.Common.Operational
             return table;
         }
 
-        public CloudBlobClient CreateProductionBlobClient => GetProductionStorageAccount.CreateCloudBlobClient();
+        public CloudBlobClient CreateProductionBlobClient()
+        {
+            return GetProductionStorageAccount().CreateCloudBlobClient();
+        }
 
-        public CloudTableClient CreateProductionTableClient => GetProductionStorageAccount.CreateCloudTableClient();
+        public CloudTableClient CreateProductionTableClient()
+        {
+            return GetProductionStorageAccount().CreateCloudTableClient();
+        }
 
-        public CloudStorageAccount GetProductionStorageAccount => CloudStorageAccount.Parse(StorageConnection.ProductionStorageConnectionString);
+        public CloudStorageAccount GetProductionStorageAccount()
+        {
+            return CloudStorageAccount.Parse(StorageConnection.ProductionStorageConnectionString);
+        }
 
-        public string GetProductionAccountName => GetProductionStorageAccount.Credentials.AccountName;
+        public string GetProductionAccountName()
+        {
+            return GetProductionStorageAccount().Credentials.AccountName;
+        }
 
         #endregion
 
         #region operations
         public CloudBlobContainer OperationsContainerReference(string containerName)
         {
-            var blobClient = GetOperationsStorageAccount.CreateCloudBlobClient();
+            var blobClient = GetOperationsStorageAccount().CreateCloudBlobClient();
             blobClient.DefaultRequestOptions.RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(5), 5);
             return blobClient.GetContainerReference(containerName);
         }
@@ -115,7 +140,7 @@ namespace Final.BackupTool.Common.Operational
 
         public CloudTable OperationsTableReference(string tableName)
         {
-            var destStorageAccount = GetOperationsStorageAccount;
+            var destStorageAccount = GetOperationsStorageAccount();
             var tableClient = destStorageAccount.CreateCloudTableClient();
             return tableClient.GetTableReference(tableName);
         }
@@ -127,7 +152,11 @@ namespace Final.BackupTool.Common.Operational
             return table;
         }
 
-        public CloudStorageAccount GetOperationsStorageAccount => CloudStorageAccount.Parse(StorageConnection.OperationStorageConnectionString);
+        public CloudStorageAccount GetOperationsStorageAccount()
+        {
+            return CloudStorageAccount.Parse(StorageConnection.OperationStorageConnectionString);
+        }
+
         #endregion
 
 

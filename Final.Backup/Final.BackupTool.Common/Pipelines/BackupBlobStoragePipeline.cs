@@ -26,7 +26,7 @@ namespace Final.BackupTool.Common.Pipelines
             var pipeline = CreatePipelineAsync(blobOperation);
 
             var azureOperations = new AzureOperations();
-            var summary = await pipeline(azureOperations.GetProductionStorageAccount);
+            var summary = await pipeline(azureOperations.GetProductionStorageAccount());
 
             return summary;
         }
