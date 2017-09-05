@@ -7,6 +7,7 @@ using Final.BackupTool.Common.Operational;
 
 namespace Final.BackupTool.Common.Pipelines
 {
+
     public class BackupBlobStoragePipeline
     {
         public async Task BackupAsync()
@@ -24,13 +25,13 @@ namespace Final.BackupTool.Common.Pipelines
         {
             var pipeline = CreatePipelineAsync(blobOperation);
 
-            var storageConnection = new StorageConnection();
-            var summary = await pipeline(storageConnection.ProductionStorageAccount);
+            var azureOperations = new AzureOperations();
+            var summary = await pipeline(azureOperations.GetProductionStorageAccount);
 
             return summary;
         }
 
-        private Func<CloudStorageAccount,Task<Summary>> CreatePipelineAsync(BlobOperation blobOperation)
+        private Func<CloudStorageAccount, Task<Summary>> CreatePipelineAsync(BlobOperation blobOperation)
         {
             var accountToContainers = BackUpAccountToContainersBlock.Create();
             var containers = BackupContainerBlock.Create(blobOperation);
@@ -43,7 +44,7 @@ namespace Final.BackupTool.Common.Pipelines
             containers.LinkTo(logOperationDetailsBlock, new DataflowLinkOptions { PropagateCompletion = true });
             logOperationDetailsBlock.LinkTo(summarize, new DataflowLinkOptions { PropagateCompletion = true });
 
-            var flow =  DataflowBlock.Encapsulate(accountToContainers, logOperationDetailsBlock);
+            var flow = DataflowBlock.Encapsulate(accountToContainers, logOperationDetailsBlock);
 
             return async account =>
             {

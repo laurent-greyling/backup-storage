@@ -11,12 +11,11 @@ namespace Final.BackupTool.Common.Blocks
     {
         public static IPropagatorBlock<CloudStorageAccount, string> Create()
         {
-            var storageConnection = new StorageConnection();
-            var storageAccount = storageConnection.ProductionStorageAccount;
+            var azureOperation = new AzureOperations();
             return new TransformManyBlock<CloudStorageAccount, string>(
                 account =>
                 {
-                    var blobClient = storageAccount.CreateCloudBlobClient();
+                    var blobClient = azureOperation.CreateProductionBlobClient;
                     blobClient.DefaultRequestOptions.RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(5), 5);
                     var containers = blobClient.ListContainers()
                     .Where(c =>

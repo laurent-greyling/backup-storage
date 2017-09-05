@@ -11,9 +11,9 @@ namespace Final.BackupTool.Common.Strategy
 {
     public class InitializeOperation
     {
-        private static readonly StorageConnection StorageConnection = new StorageConnection();
+        private static readonly AzureOperations AzureOperations = new AzureOperations();
 
-        public void Initialize(ILogger logger)
+        public void Execute(ILogger logger)
         {
             // Log version
             logger.Info($"************VERSION {Assembly.GetExecutingAssembly().GetName().Version}*****************");
@@ -30,11 +30,11 @@ namespace Final.BackupTool.Common.Strategy
 
         private static void SetRequestOptions()
         {
-            StorageConnection.ProductionBlobClient.DefaultRequestOptions = new BlobRequestOptions
+            AzureOperations.CreateProductionBlobClient.DefaultRequestOptions = new BlobRequestOptions
             {
                 RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(10), 50)
             };
-            StorageConnection.BackupBlobClient.DefaultRequestOptions = new BlobRequestOptions
+            AzureOperations.CreateBackupBlobClient.DefaultRequestOptions = new BlobRequestOptions
             {
                 RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(10), 50)
             };
@@ -42,16 +42,13 @@ namespace Final.BackupTool.Common.Strategy
 
         private static void CreateOperationalLogTables()
         {
-            var tableClient = StorageConnection.OperationalAccount.CreateCloudTableClient();
-            var table = tableClient.GetTableReference(OperationalDictionary.OperationTableName);
-            table.CreateIfNotExists();
-            table = tableClient.GetTableReference(OperationalDictionary.OperationDetailsTableName);
-            table.CreateIfNotExists();
+            AzureOperations.CreateOperationsTable(OperationalDictionary.OperationTableName);
+            AzureOperations.CreateOperationsTable(OperationalDictionary.OperationDetailsTableName);
         }
 
         private static void BackupStorageLooksLikeProductionStorage()
         {
-            var backupBlobClientToVerify = StorageConnection.BackupBlobClient;
+            var backupBlobClientToVerify = AzureOperations.CreateBackupBlobClient;
             var containers = backupBlobClientToVerify.ListContainers();
             var matchCount = containers.Select(container =>
                 container.Name.ToLowerInvariant()).Count(n =>

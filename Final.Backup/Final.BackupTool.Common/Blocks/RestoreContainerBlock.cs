@@ -12,7 +12,7 @@ namespace Final.BackupTool.Common.Blocks
 {
     public class RestoreContainerBlock
     {
-        private static readonly StorageConnection StorageConnection = new StorageConnection();
+        private static readonly AzureOperations AzureOperations = new AzureOperations();
 
         public static IPropagatorBlock<string, CopyStorageOperation> Create(BlobOperation blobOperation, BlobCommands commands)
         {
@@ -24,7 +24,8 @@ namespace Final.BackupTool.Common.Blocks
             return DataflowBlock.Encapsulate(containerToBlobs, copyBlob);
         }
 
-        private static TransformBlock<CopyStorageOperation, CopyStorageOperation> CreateCopyBlobs(BlobOperation blobOperation, bool force)
+        private static TransformBlock<CopyStorageOperation, CopyStorageOperation> CreateCopyBlobs(BlobOperation blobOperation,
+            bool force)
         {
             return new TransformBlock<CopyStorageOperation, CopyStorageOperation>(
                 async operation =>
@@ -34,21 +35,12 @@ namespace Final.BackupTool.Common.Blocks
                         switch (operation.SourceBlobType)
                         {
                             case BlobType.BlockBlob:
-                                var sourceBlobClient = StorageConnection.BackupStorageAccount.CreateCloudBlobClient();
-
-                                var sourceContainer =
-                                    sourceBlobClient.GetContainerReference(operation.SourceContainerName);
-
-                                var sourceBlob = sourceContainer.GetBlockBlobReference(operation.SourceBlobName, operation.Snapshot);
-
-                                var destinationBlobClient =
-                                    StorageConnection.ProductionStorageAccount.CreateCloudBlobClient();
-
-                                var destinationContainer =
-                                    destinationBlobClient.GetContainerReference(operation.DestinationContainerName);
+                                var sourceBlob = AzureOperations.BackupBlockBlobReference(
+                                    operation.SourceContainerName, operation.SourceBlobName, operation.Snapshot);
 
                                 var destinationBlob =
-                                    destinationContainer.GetBlockBlobReference(operation.SourceBlobName);
+                                    AzureOperations.ProductionBlockBlobReference(operation.DestinationContainerName,
+                                        operation.SourceBlobName);
 
                                 if (!force && destinationBlob.Exists())
                                 {
@@ -91,13 +83,9 @@ namespace Final.BackupTool.Common.Blocks
                     Console.WriteLine($"Processing container: {containerName}");
 
                     // Make sure the container is created in the destination side
-                    var destinationBlobClient = StorageConnection.ProductionStorageAccount.CreateCloudBlobClient();
-                    var destinationContainer = destinationBlobClient.GetContainerReference(containerName);
-                    await destinationContainer.CreateIfNotExistsAsync();
+                    await AzureOperations.CreateProductionContainerAsync(containerName);
+                    var container = AzureOperations.BackUpContainerReference(containerName);
 
-                    var sourceBlobClient = StorageConnection.BackupStorageAccount.CreateCloudBlobClient();
-                    var container = sourceBlobClient.GetContainerReference(containerName);
-                    
                     var blobs = GetBlobItems(commands, container);
 
                     return blobs
@@ -156,23 +144,23 @@ namespace Final.BackupTool.Common.Blocks
             throw new Exception("Set d|date= to a time stamp of 2017-07-15T19:05:46 to restore");
         }
 
-        private static async Task<bool> CopyBlockBlobAsync(CloudBlockBlob sourceBlob, 
-            CloudBlockBlob destinationBlob, 
+        private static async Task<bool> CopyBlockBlobAsync(CloudBlockBlob sourceBlob,
+            CloudBlockBlob destinationBlob,
             BlobOperation blobOperation)
         {
             for (var i = 0; i < 5; ++i)
             {
                 var cancellationTokenSource = new CancellationTokenSource();
                 var cancellationToken = cancellationTokenSource.Token;
-                
+
                 var copyBlob = CopyBlockBlobAsync(sourceBlob, destinationBlob, cancellationToken, blobOperation);
-                
+
                 var completedTask = await Task.WhenAny(copyBlob, Task.Delay(TimeSpan.FromMinutes(2 * (i + 1)), cancellationToken));
                 var copyCompleted = completedTask == copyBlob;
 
                 if (!copyCompleted)
                 {
-                    await Console.Error.WriteLineAsync($"Unable to copy {sourceBlob.Container.Name}/{sourceBlob.Name} (Attempt {i+1})");
+                    await Console.Error.WriteLineAsync($"Unable to copy {sourceBlob.Container.Name}/{sourceBlob.Name} (Attempt {i + 1})");
                 }
 
                 // Also cancel the delay
@@ -199,7 +187,7 @@ namespace Final.BackupTool.Common.Blocks
                 using (var stream = await sourceBlob.OpenReadAsync(cancellationToken))
                 {
                     CopyMetadata(sourceBlob, destinationBlob);
-                    
+
                     // Mark the blob with the date of the backup
                     destinationBlob.Metadata[OperationalDictionary.BackUpDate] = blobOperation.Date.ToString("u");
 

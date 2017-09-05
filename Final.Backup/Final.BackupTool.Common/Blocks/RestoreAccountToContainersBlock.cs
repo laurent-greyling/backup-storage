@@ -11,14 +11,13 @@ namespace Final.BackupTool.Common.Blocks
     {
         public static IPropagatorBlock<CloudStorageAccount, string> Create(BlobCommands commands)
         {
-            var storageConnection = new StorageConnection();
-            var storageAccount = storageConnection.BackupStorageAccount;
+            var azureOperations = new AzureOperations();
             var containersToRestore = commands.ContainerName.Replace(" ", "").Split(',').ToList();
 
             return new TransformManyBlock<CloudStorageAccount, string>(
                 account =>
                 {
-                    var blobClient = storageAccount.CreateCloudBlobClient();
+                    var blobClient = azureOperations.CreateBackupBlobClient;
                     blobClient.DefaultRequestOptions.RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(5), 5);
                     var containers = containersToRestore.Contains("*")
                         ? blobClient.ListContainers().Where(c =>
@@ -40,19 +39,20 @@ namespace Final.BackupTool.Common.Blocks
         private static bool ExcludedContainers(string containerName)
         {
             return !containerName.StartsWith(OperationalDictionary.Wad) &&
-                  !containerName.StartsWith(OperationalDictionary.Azure) &&
-                  !containerName.StartsWith(OperationalDictionary.Cacheclusterconfigs) &&
-                  !containerName.StartsWith(OperationalDictionary.ArmTemplates) &&
-                  !containerName.StartsWith(OperationalDictionary.Deploymentlog) &&
-                  !containerName.StartsWith(OperationalDictionary.DataDownloads) &&
-                  !containerName.StartsWith(OperationalDictionary.Downloads) &&
-                  !containerName.StartsWith(OperationalDictionary.StagedDashFiles) &&
-                  !containerName.StartsWith(OperationalDictionary.Stagedfiles) &&
-                  !containerName.Contains(OperationalDictionary.Stageartifacts) &&
-                  !containerName.Contains(OperationalDictionary.Mydeployments) && //on RC storage and for local testing ignore this blob
-                  !containerName.Contains(OperationalDictionary.Temporary) &&
-                  !containerName.Equals(OperationalDictionary.Logs) &&
-                  !containerName.StartsWith(OperationalDictionary.TableBackUpContainerName);
+                   !containerName.StartsWith(OperationalDictionary.Azure) &&
+                   !containerName.StartsWith(OperationalDictionary.Cacheclusterconfigs) &&
+                   !containerName.StartsWith(OperationalDictionary.ArmTemplates) &&
+                   !containerName.StartsWith(OperationalDictionary.Deploymentlog) &&
+                   !containerName.StartsWith(OperationalDictionary.DataDownloads) &&
+                   !containerName.StartsWith(OperationalDictionary.Downloads) &&
+                   !containerName.StartsWith(OperationalDictionary.StagedDashFiles) &&
+                   !containerName.StartsWith(OperationalDictionary.Stagedfiles) &&
+                   !containerName.Contains(OperationalDictionary.Stageartifacts) &&
+                   !containerName.Contains(OperationalDictionary.Mydeployments) &&
+                   //on RC storage and for local testing ignore this blob
+                   !containerName.Contains(OperationalDictionary.Temporary) &&
+                   !containerName.Equals(OperationalDictionary.Logs) &&
+                   !containerName.StartsWith(OperationalDictionary.TableBackUpContainerName);
         }
     }
 }

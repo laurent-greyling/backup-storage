@@ -13,7 +13,7 @@ namespace Final.BackupTool.Common.Blocks
 {
     public class RestoreTableBlock
     {
-        private static readonly StorageConnection StorageConnection = new StorageConnection();
+        private static readonly AzureOperations AzureOperations = new AzureOperations();
 
         public static IPropagatorBlock<CloudBlobContainer, CopyStorageOperation> Create(BlobCommands commands, DateTimeOffset date)
         {
@@ -28,7 +28,7 @@ namespace Final.BackupTool.Common.Blocks
         private static TransformManyBlock<CloudBlobContainer, CloudAppendBlob> RetrieveBlobItems(BlobCommands commands)
         {
             return new TransformManyBlock<CloudBlobContainer, CloudAppendBlob>(container =>
-                GetBlobItems(commands, container));
+                    GetBlobItems(commands, container));
         }
 
         private static TransformBlock<CloudAppendBlob, CopyStorageOperation> RestoreTables(DateTimeOffset date)
@@ -36,11 +36,11 @@ namespace Final.BackupTool.Common.Blocks
             var operationStore = new StartRestoreTableOperationStore();
             var fromTableItemToStorageOperation =
                 new TransformBlock<CloudAppendBlob, CopyStorageOperation>(async table =>
-                    {
-                        var copyStatus = DeserialiseAndRestoreTable(table);
-                        await operationStore.WriteCopyOutcomeAsync(date, copyStatus);
-                        return copyStatus;
-                    },
+                {
+                    var copyStatus = DeserialiseAndRestoreTable(table);
+                    await operationStore.WriteCopyOutcomeAsync(date, copyStatus);
+                    return copyStatus;
+                },
                     new ExecutionDataflowBlockOptions
                     {
                         MaxDegreeOfParallelism = 20,
@@ -68,9 +68,9 @@ namespace Final.BackupTool.Common.Blocks
                     var to = DateTimeOffset.ParseExact(commands.ToDate, OperationalDictionary.DateFormat, CultureInfo.InvariantCulture);
 
                     var snapShotsItems = container.ListBlobs(blobListingDetails: BlobListingDetails.All, useFlatBlobListing: true)
-                        .Cast<CloudAppendBlob>()
-                        .Where(c => c.IsSnapshot && c.SnapshotTime.GetValueOrDefault().DateTime >= from.DateTime)
-                        .ToList();
+                            .Cast<CloudAppendBlob>()
+                            .Where(c => c.IsSnapshot && c.SnapshotTime.GetValueOrDefault().DateTime >= from.DateTime)
+                            .ToList();
 
                     if (snapShotsItems.Count > 1)
                     {
@@ -79,8 +79,8 @@ namespace Final.BackupTool.Common.Blocks
                     }
 
                     return tables.Contains("*")
-                        ? snapShotsItems
-                        : snapShotsItems.Where(c => tables.Any(n => n == c.Name)).ToList();
+                         ? snapShotsItems
+                         : snapShotsItems.Where(c => tables.Any(n => n == c.Name)).ToList();
                 }
                 catch (Exception e)
                 {
@@ -102,13 +102,9 @@ namespace Final.BackupTool.Common.Blocks
         {
             try
             {
-                var destStorageAccount = StorageConnection.ProductionStorageAccount;
-                var tableClient = destStorageAccount.CreateCloudTableClient();
-                var table = tableClient.GetTableReference(blobItem.Name);
-
+                var table = AzureOperations.CreateProductionTable(blobItem.Name);
                 Console.WriteLine($"Restoring table: {table}");
-                table.CreateIfNotExists();
-                
+
                 using (var reader = new StreamReader(blobItem.OpenRead()))
                 {
                     var entities = new List<DynamicTableEntity>();

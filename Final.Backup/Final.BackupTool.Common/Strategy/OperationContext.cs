@@ -22,12 +22,11 @@ namespace Final.BackupTool.Common.Strategy
         {
             Logger = logger;
             var initializeOperation = new InitializeOperation();
-            initializeOperation.Initialize(Logger);
+            initializeOperation.Execute(Logger);
 
             // Retrieve other config options
             var daysRetentionAfterDelete = CloudConfigurationManager.GetSetting("DaysRetentionAfterDelete");
             DaysRetentionAfterDelete = int.TryParse(daysRetentionAfterDelete, out int daysRetention) ? daysRetention : 60;
-
         }
 
         public async Task BackupAsync(BackupCommand command)

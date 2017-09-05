@@ -19,7 +19,7 @@ namespace Final.BackupTool.Common.Blocks
                     return operations;
                 });
 
-            batchBlock.LinkTo(logBlock, new DataflowLinkOptions {PropagateCompletion = true});
+            batchBlock.LinkTo(logBlock, new DataflowLinkOptions { PropagateCompletion = true });
             return DataflowBlock.Encapsulate(batchBlock, logBlock);
         }
     }

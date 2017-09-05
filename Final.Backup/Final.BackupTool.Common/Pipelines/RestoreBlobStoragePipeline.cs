@@ -25,13 +25,13 @@ namespace Final.BackupTool.Common.Pipelines
         {
             var pipeline = CreatePipelineAsync(blobOperation, commands);
 
-            var storageConnection = new StorageConnection();
-            var summary = await pipeline(storageConnection.BackupStorageAccount);
+            var azureOperations = new AzureOperations();
+            var summary = await pipeline(azureOperations.GetBackupStorageAccount);
 
             return summary;
         }
 
-        private Func<CloudStorageAccount,Task<Summary>> CreatePipelineAsync(BlobOperation blobOperation, BlobCommands commands)
+        private Func<CloudStorageAccount, Task<Summary>> CreatePipelineAsync(BlobOperation blobOperation, BlobCommands commands)
         {
             var accountToContainers = RestoreAccountToContainersBlock.Create(commands);
             var containers = RestoreContainerBlock.Create(blobOperation, commands);
@@ -44,7 +44,7 @@ namespace Final.BackupTool.Common.Pipelines
             containers.LinkTo(logOperationDetailsBlock, new DataflowLinkOptions { PropagateCompletion = true });
             logOperationDetailsBlock.LinkTo(summarize, new DataflowLinkOptions { PropagateCompletion = true });
 
-            var flow =  DataflowBlock.Encapsulate(accountToContainers, logOperationDetailsBlock);
+            var flow = DataflowBlock.Encapsulate(accountToContainers, logOperationDetailsBlock);
 
             return async (account) =>
             {

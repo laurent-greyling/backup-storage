@@ -10,13 +10,8 @@ namespace Final.BackupTool.Common.Operational
     {
         public async Task Save()
         {
-            var storageConnection = new StorageConnection();
-            var operationalAccount = storageConnection.OperationalAccount;
-
-            var operationalClient = operationalAccount.CreateCloudBlobClient();
-            var container = operationalClient.GetContainerReference(OperationalDictionary.LogContainer);
-
-            container.CreateIfNotExists();
+            var azureOperations = new AzureOperations();
+            var container = await azureOperations.CreateOperationsContainerAsync(OperationalDictionary.LogContainer);
 
             var fileTarget = (FileTarget)LogManager.Configuration.FindTargetByName("f");
             var logEventInfo = new LogEventInfo { TimeStamp = DateTime.Now };
@@ -24,7 +19,10 @@ namespace Final.BackupTool.Common.Operational
 
             var blob = container.GetAppendBlobReference(Path.GetFileName(filePath));
 
-            await blob.CreateOrReplaceAsync();
+            if (!blob.Exists())
+            {
+                await blob.CreateOrReplaceAsync();
+            }
 
             using (var file = File.OpenRead(filePath))
             {
