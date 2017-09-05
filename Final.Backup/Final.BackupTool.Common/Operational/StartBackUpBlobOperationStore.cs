@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage.Table;
 using Final.BackupTool.Common.Entities;
@@ -74,7 +75,7 @@ namespace Final.BackupTool.Common.Operational
             var blobOperationEntities = copies.Select(copy => new CopyStorageOperationEntity
             {
                 PartitionKey = GetOperationDetailPartitionKey(date),
-                RowKey = copy.SourceName.Replace('/', '_'),
+                RowKey = Regex.Replace(copy.SourceName, @"(\s+|/|\\|#|\?)", "_"),
                 Source = copy.SourceName,
                 Status = copy.CopyStatus.ToString(),
                 ExtraInformation = copy.ExtraInformation?.ToString()
