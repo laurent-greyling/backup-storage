@@ -141,7 +141,7 @@ namespace Final.BackupTool.Common.Blocks
                 }
             }
 
-            throw new Exception("Set d|date= to a time stamp of 2017-07-15T19:05:46 to restore");
+            throw new Exception($"Set d|date= and e|endDate= to a time stamp format {OperationalDictionary.DateFormat} to restore");
         }
 
         private static async Task<bool> CopyBlockBlobAsync(CloudBlockBlob sourceBlob,

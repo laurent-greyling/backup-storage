@@ -88,7 +88,7 @@ namespace Final.BackupTool.Common.Blocks
                 }
             }
 
-            throw new InvalidOperationException("Set d|date= and e|endDate to a time stamp of 2017-07-15T19:05:46 to restore");
+            throw new InvalidOperationException($"Set d|date= and e|endDate= to a time stamp format {OperationalDictionary.DateFormat} to restore");
         }
 
         /// <summary>
