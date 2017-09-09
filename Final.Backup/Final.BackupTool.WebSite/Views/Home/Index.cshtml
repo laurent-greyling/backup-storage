@@ -1,0 +1,55 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+<div id="connectionStrings">
+    <label>Connection Strings</label>
+    <div id="ProductionStorage">
+        <label>Production Storage</label>
+        <input type="text"/>
+    </div>
+    <div id="BackupStorage">
+        <label>Backup Storage</label>
+        <input type="text"/>
+    </div>
+    <div id="OperationalStorage">
+        <label>Operational Storage</label>
+        <input type="text"/>
+    </div>
+</div>
+
+<div>
+    <label>Backup</label>
+    <input id="BackupTable" type="button" value="Tables"/>
+    <input id="BackupBlobs" type="button" value="Blobs" />
+    <input id="BackupAll" type="button" value="All" />
+</div>
+<div>
+    <label>Restore</label>
+    <div id="ContainerName">
+        <label>Container Name</label>
+        <input type="text"/>
+    </div>
+    <div id="BlobName">
+        <label>Blob Name</label>
+        <input type="text" />
+    </div>
+    <div id="TableName">
+        <label>Table Name</label>
+        <input type="text" />
+    </div>
+    <div id="RestoreOptions">
+        <div id="Force">
+            <label>Force Blob Restore</label>
+            <input type="checkbox"/>
+        </div>
+        <div id="SnapShotDates">
+            <label>Restore From Date</label>
+            <input type="date"/>
+            <label>Restore To Date</label>
+            <input type="date" format=""/>
+        </div>
+    </div>
+    <input id="RestoreTable" type="button" value="Tables" />
+    <input id="RestoreBlobs" type="button" value="Blobs" />
+    <input id="RestoreAll" type="button" value="All" />
+</div>
