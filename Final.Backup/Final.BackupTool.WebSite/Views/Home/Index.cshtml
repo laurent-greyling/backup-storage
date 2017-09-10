@@ -1,55 +1,108 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
 }
-<div id="connectionStrings">
-    <label>Connection Strings</label>
-    <div id="ProductionStorage">
-        <label>Production Storage</label>
-        <input type="text"/>
-    </div>
-    <div id="BackupStorage">
-        <label>Backup Storage</label>
-        <input type="text"/>
-    </div>
-    <div id="OperationalStorage">
-        <label>Operational Storage</label>
-        <input type="text"/>
-    </div>
+<div id="connectionStrings" class="card">
+    <h4>Connection Strings</h4>
+    <table>
+        <colgroup>
+            <col span="2"/>
+        </colgroup>
+        <tr>
+            <td>
+                <label>Production Storage:</label>
+            </td>
+            <td>
+                <input id="ProductionStorage" type="text" size="100" placeholder="Production Storage"/>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label>Backup Storage:</label>
+            </td>
+            <td>
+                <input id="BackupStorage" type="text" size="100" placeholder="Backup Storage"/>
+            </td>
+        </tr >
+        <tr>
+            <td>
+                <label>Operational Storage:</label>
+            </td>
+            <td>
+                <input  id="OperationalStorage" type="text" size="100" placeholder="Operational Storage"/>
+            </td>
+        </tr>
+    </table>
 </div>
 
-<div>
-    <label>Backup</label>
-    <input id="BackupTable" type="button" value="Tables"/>
-    <input id="BackupBlobs" type="button" value="Blobs" />
-    <input id="BackupAll" type="button" value="All" />
+<div class="card">
+    <div>
+        <h4>Backup</h4>
+    </div>
+    <input id="BackupTable" type="button" value="Tables" class="button"/>
+    <input id="BackupBlobs" type="button" value="Blobs" class="button"/>
+    <input id="BackupAll" type="button" value="All" class="button"/>
 </div>
-<div>
-    <label>Restore</label>
-    <div id="ContainerName">
-        <label>Container Name</label>
-        <input type="text"/>
-    </div>
-    <div id="BlobName">
-        <label>Blob Name</label>
-        <input type="text" />
-    </div>
-    <div id="TableName">
-        <label>Table Name</label>
-        <input type="text" />
-    </div>
-    <div id="RestoreOptions">
-        <div id="Force">
-            <label>Force Blob Restore</label>
-            <input type="checkbox"/>
-        </div>
-        <div id="SnapShotDates">
-            <label>Restore From Date</label>
-            <input type="date"/>
-            <label>Restore To Date</label>
-            <input type="date" format=""/>
-        </div>
-    </div>
-    <input id="RestoreTable" type="button" value="Tables" />
-    <input id="RestoreBlobs" type="button" value="Blobs" />
-    <input id="RestoreAll" type="button" value="All" />
+<div class="card">
+    <h4>Restore</h4>
+    <table>
+        <colgroup>
+            <col span="2"/>
+        </colgroup>
+        <tr>
+            <td>
+                <label>Container Name:</label>
+            </td>
+            <td>
+                <input id="ContainerName" type="text" size="100" placeholder="Name of container to restore..." />
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label>Blob Name:</label>
+            </td>
+            <td>
+                <input id="BlobName" type="text" size="100" placeholder="Name of blob to restore..." />
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label>Table Name:</label>
+            </td>
+            <td>
+                <input id="TableName" type="text" size="100" placeholder="Name of table to restore..." />
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label>Restore From Date:</label>
+            </td>
+            <td>
+                <input id="FromaDate" type="datetime-local"/>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label>Restore To Date:</label>
+            </td>
+            <td>
+                <input id="ToDate" type="datetime-local"/>
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div>
+                    <label>Force Blob Restore:</label>
+                </div>
+            </td>
+            <td>
+                <div class="checkboxThree">
+                    <input id="Force" value="1" type="checkbox" name=""/>
+                    <label for="Force"></label>
+                </div>
+            </td>
+        </tr>
+    </table>
+    <input id="RestoreTable" type="button" value="Tables" class="button"/>
+    <input id="RestoreBlobs" type="button" value="Blobs" class="button"/>
+    <input id="RestoreAll" type="button" value="All" class="button"/>
 </div>

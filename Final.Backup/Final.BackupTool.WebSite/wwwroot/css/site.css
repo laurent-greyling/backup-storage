@@ -35,3 +35,115 @@ textarea {
         display: none;
     }
 }
+
+.card {
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+    transition: 0.3s;
+    border-radius: 5px; /* 5px rounded corners */
+    margin: 15px;
+    padding: 8px;
+}
+
+input[type=text], select {
+    height: 1px;
+    padding: 12px 20px;
+    margin-left: 50px;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+input[type=datetime-local], select {
+    height: 1px;
+    padding: 12px 20px;
+    margin-left: 50px;
+    display: inline-block;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+input[type=checkbox] {
+    visibility: hidden;
+}
+.checkboxThree {
+    width: 100px;
+    height: 20px;
+    background: white;
+    margin: 0 40px 15px;
+
+    border-radius: 4px;
+    position: relative;
+}
+
+.checkboxThree:before {
+    content: 'yes';
+    position: absolute;
+    top: 6px;
+    left: 13px;
+    height: 1px;
+    color: #26ca28;
+    font-size: 12px;
+}
+
+.checkboxThree:after {
+    content: 'no';
+    position: absolute;
+    top: 6px;
+    left: 84px;
+    height: 1px;
+    color: #111;
+    font-size: 12px;
+}
+
+.checkboxThree label {
+    display: block;
+    width: 52px;
+    height: 13px;
+    border-radius: 4px;
+
+    transition: all .5s ease;
+    cursor: pointer;
+    position: absolute;
+    top: 9px;
+    z-index: 1;
+    left: 12px;
+    background: #ddd;
+}
+
+/**
+ * Create the checkbox event for the label
+ */
+.checkboxThree input[type=checkbox]:checked + label {
+    left: 60px;
+    background: #26ca28;
+}
+
+.button {
+    background-color: white;
+    color: black;
+    border: 1px solid #555555;
+    border-radius: 20px;
+    font-size: 15px;
+}
+
+    .button:active {
+        background-color: #26ca28;
+        color: black;
+        border: 1px solid #26ca28;
+        border-radius: 20px;
+        font-size: 15px;
+    }
+
+.button:focus {
+    background-color: #26ca28;
+    color: black;
+    border: 1px solid #26ca28;
+    border-radius: 20px;
+    font-size: 15px;
+}
+
+input[type="button"] {
+    outline: none;
+}
