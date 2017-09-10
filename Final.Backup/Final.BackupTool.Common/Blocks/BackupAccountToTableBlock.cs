@@ -10,21 +10,22 @@ namespace Final.BackupTool.Common.Blocks
 {
     public class BackupAccountToTableBlock
     {
-        public static TransformManyBlock<CloudStorageAccount, CloudTable> Create(StorageConnection sourceStorageAccount)
+        public static TransformManyBlock<CloudStorageAccount, CloudTable> Create()
         {
+            var azureOperations = new AzureOperations();
             return new TransformManyBlock<CloudStorageAccount, CloudTable>(
                 account =>
                 {
-                    var tableClient = sourceStorageAccount.ProductionStorageAccount.CreateCloudTableClient();
+                    var tableClient = azureOperations.CreateProductionTableClient();
                     tableClient.DefaultRequestOptions.RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(5), 5);
 
                     return tableClient.ListTables().Where(c =>
                     {
                         var acceptedContainer = c.Name.ToLowerInvariant();
-                        return !acceptedContainer.StartsWith("wad") && // Exclude WAD logs
-                               !acceptedContainer.StartsWith("wawsapplogtable") && // Exclude wawsapplogtable tables
-                               !acceptedContainer.StartsWith("activities") && // Exclude runtime data
-                               !acceptedContainer.StartsWith("stagedfiles");
+                        return !acceptedContainer.StartsWith(OperationalDictionary.Wad) && // Exclude WAD logs
+                               !acceptedContainer.StartsWith(OperationalDictionary.WawsAppLogTable) && // Exclude wawsapplogtable tables
+                               !acceptedContainer.StartsWith(OperationalDictionary.Activities) && // Exclude runtime data
+                               !acceptedContainer.StartsWith(OperationalDictionary.StagedFiles);
                     });
                 });
         }

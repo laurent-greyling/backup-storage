@@ -10,32 +10,32 @@ namespace Final.BackupTool.Common.Pipelines
 
     public class RestoreBlobStoragePipeline
     {
-        public async Task RestoreAsync(BlobCommands commands, StorageConnection storageConnection)
+        public async Task RestoreAsync(BlobCommands commands)
         {
             var restoreOperationStore = new StartRestoreBlobOperationStore();
 
-            var restoreOperation = await restoreOperationStore.StartAsync(storageConnection);
+            var restoreOperation = await restoreOperationStore.StartAsync();
 
-            var summary = await ExecuteAsync(restoreOperation, storageConnection, commands);
+            var summary = await ExecuteAsync(restoreOperation, commands);
 
-            await restoreOperationStore.FinishAsync(restoreOperation, summary, storageConnection);
+            await restoreOperationStore.FinishAsync(restoreOperation, summary);
         }
 
-        private async Task<Summary> ExecuteAsync(BlobOperation blobOperation, StorageConnection storageConnection, BlobCommands commands)
+        private async Task<Summary> ExecuteAsync(BlobOperation blobOperation, BlobCommands commands)
         {
-            var pipeline = CreatePipelineAsync(blobOperation, storageConnection, commands);
+            var pipeline = CreatePipelineAsync(blobOperation, commands);
 
-            var summary = await pipeline(storageConnection.BackupStorageAccount);
+            var azureOperations = new AzureOperations();
+            var summary = await pipeline(azureOperations.GetBackupStorageAccount());
 
             return summary;
         }
 
-        private Func<CloudStorageAccount,Task<Summary>> CreatePipelineAsync(BlobOperation blobOperation, StorageConnection storageConnection,
-            BlobCommands commands)
+        private Func<CloudStorageAccount, Task<Summary>> CreatePipelineAsync(BlobOperation blobOperation, BlobCommands commands)
         {
-            var accountToContainers = RestoreAccountToContainersBlock.Create(storageConnection, commands);
-            var containers = RestoreContainerBlock.Create(blobOperation, storageConnection, commands);
-            var logOperationDetailsBlock = RestoreLogOperationDetailsBlock.Create(blobOperation, storageConnection);
+            var accountToContainers = RestoreAccountToContainersBlock.Create(commands);
+            var containers = RestoreContainerBlock.Create(blobOperation, commands);
+            var logOperationDetailsBlock = RestoreLogOperationDetailsBlock.Create(blobOperation);
 
             var summary = new Summary();
             var summarize = SummaryBlock.Create(summary);
@@ -44,7 +44,7 @@ namespace Final.BackupTool.Common.Pipelines
             containers.LinkTo(logOperationDetailsBlock, new DataflowLinkOptions { PropagateCompletion = true });
             logOperationDetailsBlock.LinkTo(summarize, new DataflowLinkOptions { PropagateCompletion = true });
 
-            var flow =  DataflowBlock.Encapsulate(accountToContainers, logOperationDetailsBlock);
+            var flow = DataflowBlock.Encapsulate(accountToContainers, logOperationDetailsBlock);
 
             return async (account) =>
             {

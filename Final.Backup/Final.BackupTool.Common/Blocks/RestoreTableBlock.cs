@@ -4,7 +4,6 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks.Dataflow;
-using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.Table;
 using Newtonsoft.Json;
@@ -14,10 +13,12 @@ namespace Final.BackupTool.Common.Blocks
 {
     public class RestoreTableBlock
     {
-        public static IPropagatorBlock<CloudBlobContainer, CopyStorageOperation> Create(BlobCommands commands, StorageConnection storageConnection, DateTimeOffset date)
+        private static readonly AzureOperations AzureOperations = new AzureOperations();
+
+        public static IPropagatorBlock<CloudBlobContainer, CopyStorageOperation> Create(BlobCommands commands, DateTimeOffset date)
         {
             var retrieveBlobItems = RetrieveBlobItems(commands);
-            var restoreTables = RestoreTables(storageConnection, date);
+            var restoreTables = RestoreTables(date);
 
             retrieveBlobItems.LinkTo(restoreTables, new DataflowLinkOptions { PropagateCompletion = true });
 
@@ -27,19 +28,19 @@ namespace Final.BackupTool.Common.Blocks
         private static TransformManyBlock<CloudBlobContainer, CloudAppendBlob> RetrieveBlobItems(BlobCommands commands)
         {
             return new TransformManyBlock<CloudBlobContainer, CloudAppendBlob>(container =>
-                GetBlobItems(commands.TableName, commands.FromDate, commands.ToDate, container));
+                    GetBlobItems(commands, container));
         }
 
-        private static TransformBlock<CloudAppendBlob, CopyStorageOperation> RestoreTables(StorageConnection storageConnection, DateTimeOffset date)
+        private static TransformBlock<CloudAppendBlob, CopyStorageOperation> RestoreTables(DateTimeOffset date)
         {
             var operationStore = new StartRestoreTableOperationStore();
             var fromTableItemToStorageOperation =
                 new TransformBlock<CloudAppendBlob, CopyStorageOperation>(async table =>
-                    {
-                        var copyStatus = DeserialiseAndRestoreTable(table, storageConnection.ProductionStorageAccount);
-                        await operationStore.WriteCopyOutcomeAsync(date, copyStatus, storageConnection);
-                        return copyStatus;
-                    },
+                {
+                    var copyStatus = DeserialiseAndRestoreTable(table);
+                    await operationStore.WriteCopyOutcomeAsync(date, copyStatus);
+                    return copyStatus;
+                },
                     new ExecutionDataflowBlockOptions
                     {
                         MaxDegreeOfParallelism = 20,
@@ -51,30 +52,25 @@ namespace Final.BackupTool.Common.Blocks
         /// <summary>
         /// Get the blob items
         /// </summary>
-        /// <param name="tablesToRestore"></param>
-        /// <param name="snapShotTime"></param>
-        /// <param name="endSnapShotTime"></param>
+        /// <param name="commands"></param>
         /// <param name="container"></param>
         /// <returns></returns>
-        private static List<CloudAppendBlob> GetBlobItems(string tablesToRestore,
-            string snapShotTime,
-            string endSnapShotTime,
-            CloudBlobContainer container)
+        private static List<CloudAppendBlob> GetBlobItems(BlobCommands commands, CloudBlobContainer container)
         {
             //Specified tables to be restored
-            var tables = tablesToRestore.Replace(" ", "").Split(',').ToList();
+            var tables = commands.TableName.Replace(" ", "").Split(',').ToList();
 
-            if (!string.IsNullOrEmpty(snapShotTime))
+            if (!string.IsNullOrEmpty(commands.FromDate))
             {
                 try
                 {
-                    var from = DateTimeOffset.ParseExact(snapShotTime, "yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
-                    var to = DateTimeOffset.ParseExact(endSnapShotTime, "yyyy-MM-ddTHH:mm:ss", CultureInfo.InvariantCulture);
+                    var from = DateTimeOffset.ParseExact(commands.FromDate, OperationalDictionary.DateFormat, CultureInfo.InvariantCulture);
+                    var to = DateTimeOffset.ParseExact(commands.ToDate, OperationalDictionary.DateFormat, CultureInfo.InvariantCulture);
 
                     var snapShotsItems = container.ListBlobs(blobListingDetails: BlobListingDetails.All, useFlatBlobListing: true)
-                        .Cast<CloudAppendBlob>()
-                        .Where(c => c.IsSnapshot && c.SnapshotTime.GetValueOrDefault().DateTime >= from.DateTime)
-                        .ToList();
+                            .Cast<CloudAppendBlob>()
+                            .Where(c => c.IsSnapshot && c.SnapshotTime.GetValueOrDefault().DateTime >= from.DateTime)
+                            .ToList();
 
                     if (snapShotsItems.Count > 1)
                     {
@@ -83,8 +79,8 @@ namespace Final.BackupTool.Common.Blocks
                     }
 
                     return tables.Contains("*")
-                        ? snapShotsItems
-                        : snapShotsItems.Where(c => tables.Any(n => n == c.Name)).ToList();
+                         ? snapShotsItems
+                         : snapShotsItems.Where(c => tables.Any(n => n == c.Name)).ToList();
                 }
                 catch (Exception e)
                 {
@@ -92,7 +88,7 @@ namespace Final.BackupTool.Common.Blocks
                 }
             }
 
-            throw new InvalidOperationException("Set d|date= and e|endDate to a time stamp of 2017-07-15T19:05:46 to restore");
+            throw new InvalidOperationException($"Set d|date= and e|endDate= to a time stamp format {OperationalDictionary.DateFormat} to restore");
         }
 
         /// <summary>
@@ -100,17 +96,13 @@ namespace Final.BackupTool.Common.Blocks
         /// Then restore the table
         /// </summary>
         /// <param name="blobItem"></param>
-        /// <param name="destStorageAccount"></param>
         /// <returns></returns>
         private static CopyStorageOperation DeserialiseAndRestoreTable(
-            CloudAppendBlob blobItem, CloudStorageAccount destStorageAccount)
+            CloudAppendBlob blobItem)
         {
             try
             {
-                var tableClient = destStorageAccount.CreateCloudTableClient();
-                var table = tableClient.GetTableReference(blobItem.Name);
-
-                table.CreateIfNotExists();
+                var table = AzureOperations.CreateProductionTable(blobItem.Name);
                 Console.WriteLine($"Restoring table: {table}");
 
                 using (var reader = new StreamReader(blobItem.OpenRead()))
@@ -170,7 +162,6 @@ namespace Final.BackupTool.Common.Blocks
                 JsonConvert.DeserializeObject<Dictionary<string, object>>(backupData);
 
             var tableEntity = new DynamicTableEntity();
-
 
             foreach (var item in restoreTableDataEntities)
             {

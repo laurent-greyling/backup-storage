@@ -9,12 +9,13 @@ namespace Final.BackupTool.Common.Blocks
 {
     public class RestoreAccountToTableBlock
     {
-        public static TransformBlock<CloudStorageAccount, CloudBlobContainer> Create(StorageConnection storageConnection)
+        public static TransformBlock<CloudStorageAccount, CloudBlobContainer> Create()
         {
+            var azureOperations = new AzureOperations();
             var fromAccountToContainers = new TransformBlock<CloudStorageAccount, CloudBlobContainer>(
                 account =>
                 {
-                    var blobClient = storageConnection.BackupStorageAccount.CreateCloudBlobClient();
+                    var blobClient = azureOperations.CreateBackupBlobClient();
                     blobClient.DefaultRequestOptions.RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(5), 5);
 
                     return blobClient.GetContainerReference(OperationalDictionary.TableBackupContainer);
