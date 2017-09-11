@@ -1,4 +1,4 @@
-# Nfield Backup Tool v0.9.0
+# Nfield Backup Tool v0.9.1
 
 **NOTES:**
 - **A new (full) backup to a clean storage must be performed due to backup storage reorganization**
@@ -11,6 +11,10 @@ An operational account stores tables that log the backup and restore operations 
 
 ### Current Issues
 - None
+
+### v0.9.1
+- Fix row key issue, escape special characters
+- Some minor refactoring
 
 ### v0.9.0
 - Restore all added, can now restore all tables and blobs in one go

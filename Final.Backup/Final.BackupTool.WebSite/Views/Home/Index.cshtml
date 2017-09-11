@@ -1,0 +1,110 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+@model Final.BackupTool.WebSite.Model.ConnectionStringModel
+
+    <div id="connectionStrings" class="card">
+        <h4>Connection Strings</h4>
+        <table>
+            <colgroup>
+                <col span="2"/>
+            </colgroup>
+            <tr>
+                <td>
+                    <label>Production Storage:</label>
+                </td>
+                <td>
+                    @*@Html.TextBoxFor(model => model.ProductionStorageConnectionString)*@
+                    <input id="productionStorage" type="text" size="100" placeholder="Production Storage" name="productionStorage"/>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Backup Storage:</label>
+                </td>
+                <td>
+                    <input id="BackupStorage" type="text" size="100" placeholder="Backup Storage" name="backupStorage"/>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Operational Storage:</label>
+                </td>
+                <td>
+                    <input id="OperationalStorage" type="text" size="100" placeholder="Operational Storage" name="operationalStorage"/>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="card">
+        <div>
+            <h4>Backup</h4>
+        </div>
+        <input id="BackupTable" type="button" value="Tables" class="button" onclick="location.href = '@Url.Action("BackupTable", "Backup")'"/>
+        <input id="BackupBlobs" type="button" value="Blobs" class="button" onclick="location.href = '@Url.Action("BackupBlob", "Backup")'"/>
+        <input id="BackupAll" type="button" value="All" class="button" onclick="location.href = '@Url.Action("BackupAll", "Backup")'"/>
+    </div>
+<div class="card">
+    <h4>Restore</h4>
+    <table>
+        <colgroup>
+            <col span="2" />
+        </colgroup>
+        <tr>
+            <td>
+                <label>Container Name:</label>
+            </td>
+            <td>
+                <input id="ContainerName" type="text" size="100" placeholder="Name of container to restore..." />
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label>Blob Name:</label>
+            </td>
+            <td>
+                <input id="BlobName" type="text" size="100" placeholder="Name of blob to restore..." />
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label>Table Name:</label>
+            </td>
+            <td>
+                <input id="TableName" type="text" size="100" placeholder="Name of table to restore..." />
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label>Restore From Date:</label>
+            </td>
+            <td>
+                <input id="FromaDate" type="datetime-local" />
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <label>Restore To Date:</label>
+            </td>
+            <td>
+                <input id="ToDate" type="datetime-local" />
+            </td>
+        </tr>
+        <tr>
+            <td>
+                <div>
+                    <label>Force Blob Restore:</label>
+                </div>
+            </td>
+            <td>
+                <div class="checkboxThree">
+                    <input id="Force" value="1" type="checkbox" name="" />
+                    <label for="Force"></label>
+                </div>
+            </td>
+        </tr>
+    </table>
+    <input id="RestoreTable" type="button" value="Tables" class="button" />
+    <input id="RestoreBlobs" type="button" value="Blobs" class="button" />
+    <input id="RestoreAll" type="button" value="All" class="button" />
+</div>
