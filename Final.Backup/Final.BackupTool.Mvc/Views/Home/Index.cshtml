@@ -1,0 +1,168 @@
+﻿@{
+    ViewBag.Title = "Home Page";
+}
+
+@model Final.BackupTool.Mvc.Models.OperationalModel
+
+
+@using (Html.BeginForm("Execute", "Operational"))
+{
+    <div id="connectionStrings" class="card">
+        <h4>Connection Strings</h4>
+        <table>
+            <colgroup>
+                <col span="2" />
+            </colgroup>
+            <tr>
+                <td>
+                    <label>Production Storage:</label>
+                </td>
+                <td>
+                    @Html.TextBoxFor(model => model.ProductionStorageConnectionString, new { Size="100", Placeholder="Production Storage", Id="productionStorage", Class="textinput" })
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Backup Storage:</label>
+                </td>
+                <td>
+                    @Html.TextBoxFor(model => model.BackupStorageConnectionString, new { Size="100", Placeholder="Backup Storage", Id="backupStorage", Class="textinput" })
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Operational Storage:</label>
+                </td>
+                <td>
+                    @Html.TextBoxFor(model => model.OperationalStorageConnectionString, new { Size="100", Placeholder="Operational Storage", Id="operationalStorage", Class="textinput" })
+                </td>
+            </tr>
+        </table>
+    </div>
+        <div class="card">
+            <div>
+                <h4>Backup</h4>
+            </div>
+            <table>
+                <colgroup>
+                    <col span="2" />
+                </colgroup>
+                <tr>
+                    <td>
+                        <div>
+                            <label>Backup Tables:</label>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="checkboxThree">
+                            <input id="backupTables" type="checkbox", value="true" name="BackupTables">
+                            <label for="backupTables"></label>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div>
+                            <label>Backup Blobs:</label>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="checkboxThree">
+                            <input id="backupBlobs" type="checkbox" , value="true" name="BackupBlobs">
+                            <label for="backupBlobs"></label>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+            <input id="backup" type="submit" value="backup" class="button" name="Start" />
+        </div>
+        <div class="card">
+            <h4>Restore</h4>
+            <table>
+                <colgroup>
+                    <col span="2" />
+                </colgroup>
+                <tr>
+                    <td>
+                        <label>Container Name:</label>
+                    </td>
+                    <td>
+                        @Html.TextBoxFor(model => model.ContainerName, new { Size="100", Placeholder="Name of container to restore...", Id="containerName", Class="textinput" })
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label>Blob Name:</label>
+                    </td>
+                    <td>
+                        @Html.TextBoxFor(model => model.BlobName, new { Size="100", Placeholder="Name of blob to restore...", Id="blobName", Class="textinput" })
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label>Table Name:</label>
+                    </td>
+                    <td>
+                        @Html.TextBoxFor(model => model.TableName, new { Size="100", Placeholder="Name of table to restore...", Id="tableName", Class="textinput" })
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label>Restore From Date:</label>
+                    </td>
+                    <td>
+                        <input id="FromDate" type="datetime-local" name="FromDate" />
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <label>Restore To Date:</label>
+                    </td>
+                    <td>
+                        <input id="ToDate" type="datetime-local" name="ToDate" />
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div>
+                            <label>Force Blob Restore:</label>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="checkboxThree">
+                            <input id="force" type="checkbox" , value="true" name="Force">
+                            <label for="force"></label>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div>
+                            <label>Restore Tables:</label>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="checkboxThree">
+                            <input id="restoreTables" type="checkbox" , value="true" name="RestoreTables">
+                            <label for="restoreTables"></label>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <div>
+                            <label>Restore Blobs:</label>
+                        </div>
+                    </td>
+                    <td>
+                        <div class="checkboxThree">
+                            <input id="restoreBlobs" type="checkbox" , value="true" name="RestoreBlobs">
+                            <label for="restoreBlobs"></label>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+            <input id="restore" type="submit" value="restore" class="button" name="Start" />
+        </div>
+}
+
