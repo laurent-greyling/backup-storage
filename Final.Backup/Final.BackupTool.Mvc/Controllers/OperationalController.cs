@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Globalization;
+using System.Net;
 using System.Threading.Tasks;
 using System.Web.Configuration;
 using Final.BackupTool.Mvc.Models;
 using System.Web.Mvc;
 using Final.BackupTool.Common.ConsoleCommand;
 using Final.BackupTool.Common.Initialization;
-using Final.BackupTool.Common.Operational;
 using Final.BackupTool.Common.Strategy;
 using NLog;
 
@@ -19,18 +19,18 @@ namespace Final.BackupTool.Mvc.Controllers
         public ActionResult Execute(OperationalModel operationalParams)
         {
             SetConnectionStrings(operationalParams);
-
+            Task<HttpStatusCodeResult> result = null;
             if (operationalParams.Start == "backup")
             {
-                Task.Run(async () => await BackUpAsync(operationalParams));
+                result = Task.Run(async () => await BackUpAsync(operationalParams));
             }
 
             if (operationalParams.Start == "restore")
             {
-                Task.Run(async () => await RestoreAsync(operationalParams));
+                result = Task.Run(async () => await RestoreAsync(operationalParams));
             }
-
-            return View();
+            
+            return View(new StatusModel {Result = result});
         }
 
         private static void SetConnectionStrings(OperationalModel operationalParams)
@@ -52,7 +52,7 @@ namespace Final.BackupTool.Mvc.Controllers
             }
         }
 
-        private async Task BackUpAsync(OperationalModel operationalParams)
+        private async Task<HttpStatusCodeResult> BackUpAsync(OperationalModel operationalParams)
         {
             Bootstrap.Start();
             var logger = Bootstrap.Container.GetInstance<ILogger>();
@@ -80,15 +80,18 @@ namespace Final.BackupTool.Mvc.Controllers
             catch (Exception ex)
             {
                 logger.Error(ex);
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
             finally
             {
                 logger.Info("*******************************************");
                 operation.StoreLogInStorage().Wait();
             }
+
+            return new HttpStatusCodeResult(HttpStatusCode.OK);
         }
 
-        private async Task RestoreAsync(OperationalModel operationalParams)
+        private async Task<HttpStatusCodeResult> RestoreAsync(OperationalModel operationalParams)
         {
             Bootstrap.Start();
             var logger = Bootstrap.Container.GetInstance<ILogger>();
@@ -141,12 +144,15 @@ namespace Final.BackupTool.Mvc.Controllers
             catch (Exception e)
             {
                 logger.Error(e);
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
             finally
             {
                 logger.Info("*******************************************");
                 operation.StoreLogInStorage().Wait();
             }
+
+            return new HttpStatusCodeResult(HttpStatusCode.OK);
         }
     }
 }
