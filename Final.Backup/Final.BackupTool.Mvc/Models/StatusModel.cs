@@ -5,6 +5,6 @@ namespace Final.BackupTool.Mvc.Models
 {
     public class StatusModel
     {
-        public Task<HttpStatusCodeResult> Result { get; set; }
+        public string Operation { get; set; }
     }
 }

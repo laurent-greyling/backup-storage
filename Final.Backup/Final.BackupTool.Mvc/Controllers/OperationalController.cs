@@ -19,18 +19,25 @@ namespace Final.BackupTool.Mvc.Controllers
         public ActionResult Execute(OperationalModel operationalParams)
         {
             SetConnectionStrings(operationalParams);
-            Task<HttpStatusCodeResult> result = null;
+            var operation = string.Empty;
+
             if (operationalParams.Start == "backup")
             {
-                result = Task.Run(async () => await BackUpAsync(operationalParams));
+                Task.Run(async () => await BackUpAsync(operationalParams));
+                operation = "Backup Status";
             }
 
             if (operationalParams.Start == "restore")
             {
-                result = Task.Run(async () => await RestoreAsync(operationalParams));
+                Task.Run(async () => await RestoreAsync(operationalParams));
+                operation = "Restore Status";
             }
             
-            return View(new StatusModel {Result = result});
+            var statusModel = new StatusModel
+            {
+                Operation = operation
+            };
+            return RedirectToAction("Index","Status", statusModel);
         }
 
         private static void SetConnectionStrings(OperationalModel operationalParams)
