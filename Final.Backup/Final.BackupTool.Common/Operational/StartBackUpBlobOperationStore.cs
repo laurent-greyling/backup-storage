@@ -133,7 +133,7 @@ namespace Final.BackupTool.Common.Operational
 
         private string GetOperationPartitionKey()
         {
-            return $"{_productionAccountName}_{_backupAccountName}";
+            return $"blobs_{_productionAccountName}_{_backupAccountName}";
         }
 
         private string GetOperationRowKey(DateTimeOffset date)

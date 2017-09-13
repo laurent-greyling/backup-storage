@@ -4,4 +4,40 @@
     ViewBag.Title = "title";
 }
 
-<h3>@ViewData["op"]</h3>
+<h3>@ViewData["operation"]</h3>
+
+<table class="table-fill">
+    <thead>
+    <tr>
+        <th class="text-left table-fill"></th>
+        <th class="text-left table-fill">Production Storage Details</th>
+        <th class="text-left table-fill">Operation Type</th>
+        <th class="text-left table-fill">Copied</th>
+        <th class="text-left table-fill">Skipped</th>
+        <th class="text-left table-fill">Faulted</th>
+        <th class="text-left table-fill">Finished In</th>
+    </tr>
+    </thead>
+    <tbody class="table-hover table-fill">
+    <tr>
+        <td class="text-left table-fill">Table Details</td>
+        <td class="text-left table-fill">@ViewData["TableCount"]</td>
+        <td class="text-left table-fill">@ViewData["TableOperationType"]</td>
+        <td class="text-left table-fill">@ViewData["TablesCopied"]</td>
+        <td class="text-left table-fill">@ViewData["TablesSkipped"]</td>
+        <td class="text-left table-fill">@ViewData["TablesFaulted"]</td>
+        <td class="text-left table-fill">@ViewData["TablesFinishedIn"]</td>
+    </tr>
+    <tr>
+        <td class="text-left table-fill">Container Details</td>
+        <td class="text-left table-fill">@ViewData["ContainerCount"]</td>
+        <td class="text-left table-fill">@ViewData["BlobsOperationType"]</td>
+        <td class="text-left table-fill">@ViewData["BlobsCopied"]</td>
+        <td class="text-left table-fill">@ViewData["BlobsSkipped"]</td>
+        <td class="text-left table-fill">@ViewData["BlobsFaulted"]</td>
+        <td class="text-left table-fill">@ViewData["BlobsFinishedIn"]</td>
+    </tr>
+    </tbody>
+</table>
+
+
