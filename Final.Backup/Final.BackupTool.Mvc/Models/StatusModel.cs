@@ -11,7 +11,8 @@ namespace Final.BackupTool.Mvc.Models
         public string Operation { get; set; }
 
         public DateTimeOffset? OperationDate { get; set; }
-
+        public DateTimeOffset? EndTime { get; set; }
+        public DateTimeOffset? StartTime { get; set; }
         public int TableCount { get; set; }
 
         public int ContainerCount { get; set; }

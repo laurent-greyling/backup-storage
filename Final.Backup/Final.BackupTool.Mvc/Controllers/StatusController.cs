@@ -22,18 +22,24 @@ namespace Final.BackupTool.Mvc.Controllers
 
             var status = GetOperationStatus(statusModel);
             var tableStatus = status.Where(x => x.PartitionKey.StartsWith("tables_")).ToList();
-            ViewData["TableOperationType"] = $"{tableStatus[0].OperationType}";
-            ViewData["TablesCopied"] = $"{tableStatus[0].Copied}";
-            ViewData["TablesSkipped"] = $"{tableStatus[0].Skipped}";
-            ViewData["TablesFaulted"] = $"{tableStatus[0].Faulted}";
-            ViewData["TablesFinishedIn"] = $"000";
+            var tableFinishedTime = tableStatus.Count >= 1 ? tableStatus[0].EndTime - tableStatus[0].StartTime : new TimeSpan();
+            ViewData["TableOperationType"] = tableStatus.Count >= 1 ? $"{tableStatus[0].OperationType}" : "Waiting to Execute";
+            ViewData["TablesCopied"] = tableStatus.Count >= 1 ? $"{tableStatus[0].Copied}" : "0";
+            ViewData["TablesSkipped"] = tableStatus.Count >= 1 ? $"{tableStatus[0].Skipped}" : "0";
+            ViewData["TablesFaulted"] = tableStatus.Count >= 1 ? $"{tableStatus[0].Faulted}" : "0";
+            ViewData["TablesFinishedIn"] = tableStatus.Count >= 1 ? tableFinishedTime != null
+                ? $"{tableFinishedTime.Value.Days}:{tableFinishedTime.Value.Hours}:{tableFinishedTime.Value.Minutes}:{tableFinishedTime.Value.Seconds}"
+                : "" : "";
             
             var blobStatus = status.Where(x => x.PartitionKey.StartsWith("blobs_")).ToList();
-            ViewData["BlobsOperationType"] = status.Count > 1 ? $"{blobStatus[0].OperationType}" : "Waiting to Execute";
-            ViewData["BlobsCopied"] = status.Count > 1 ? $"{blobStatus[0].Copied}" : "0";
-            ViewData["BlobsSkipped"] = status.Count > 1 ? $"{blobStatus[0].Skipped}" : "0";
-            ViewData["BlobsFaulted"] = status.Count > 1 ? $"{blobStatus[0].Faulted}" : "0";
-            ViewData["BlobsFinishedIn"] = $"000";
+            var blobFinishedTime = blobStatus.Count >= 1 ? blobStatus[0].EndTime - blobStatus[0].StartTime : new TimeSpan();
+            ViewData["BlobsOperationType"] = blobStatus.Count >= 1 ? $"{blobStatus[0].OperationType}" : "Waiting to Execute";
+            ViewData["BlobsCopied"] = blobStatus.Count >= 1 ? $"{blobStatus[0].Copied}" : "0";
+            ViewData["BlobsSkipped"] = blobStatus.Count >= 1 ? $"{blobStatus[0].Skipped}" : "0";
+            ViewData["BlobsFaulted"] = blobStatus.Count >= 1 ? $"{blobStatus[0].Faulted}" : "0";
+            ViewData["BlobsFinishedIn"] = blobStatus.Count >= 1 ? blobFinishedTime != null
+                ? $"{blobFinishedTime.Value.Days}:{blobFinishedTime.Value.Hours}:{blobFinishedTime.Value.Minutes}:{blobFinishedTime.Value.Seconds}"
+                : "" : "";
 
             return View();
         }
@@ -57,7 +63,9 @@ namespace Final.BackupTool.Mvc.Controllers
                     OperationType = result.OperationType,
                     Copied = result.Copied,
                     Skipped = result.Skipped,
-                    Faulted = result.Faulted
+                    Faulted = result.Faulted,
+                    EndTime = result.EndTime,
+                    StartTime = result.StartTime
                 })
                 .ToList();
 
