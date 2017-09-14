@@ -46,9 +46,9 @@ namespace Final.BackupTool.Mvc.Controllers
 
             //TODO: figure out how to give a nice output, faster than this
             var operationDetails = GetOperationDetails(statusModel);
-            ViewData["Source"] = operationDetails.Select(x=>x.Source).ToList();
-            ViewData["Status"] = operationDetails.Select(x => x.Status).ToList();
-            ViewData["ExtraInfo"] = operationDetails.Select(x => x.ExtraInformation).ToList();
+            ViewData["Source"] = "";
+            ViewData["Status"] = "";
+            ViewData["ExtraInfo"] = "";
 
             return View();
         }
@@ -85,8 +85,8 @@ namespace Final.BackupTool.Mvc.Controllers
             var operationDetailsTableReference = azureOperation.OperationsTableReference(OperationalDictionary.OperationDetailsTableName);
 
             var query = new TableQuery<CopyStorageOperationEntity>();
-            var xxx = operationDetailsTableReference.ExecuteQuery(query)
-                .Where(t => t.Timestamp >= statusModel.OperationDate).ToList();
+            //var xxx = operationDetailsTableReference.ExecuteQuery(query)
+            //    .Where(t => t.Timestamp >= statusModel.OperationDate).ToList();
 
             return null;
         }

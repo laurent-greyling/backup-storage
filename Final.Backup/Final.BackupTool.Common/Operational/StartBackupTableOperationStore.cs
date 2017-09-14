@@ -66,7 +66,7 @@ namespace Final.BackupTool.Common.Operational
         }
         public async Task WriteCopyOutcomeAsync(DateTimeOffset date, CopyStorageOperation copy)
         {
-            var table = AzureOperations.OperationsTableReference(OperationalDictionary.OperationTableName);
+            var table = AzureOperations.OperationsTableReference(OperationalDictionary.OperationDetailsTableName);
 
             var entity = new CopyStorageOperationEntity
             {
