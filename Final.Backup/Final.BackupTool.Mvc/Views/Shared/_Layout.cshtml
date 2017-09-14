@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@using System.Reflection
+<!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8" />
@@ -27,7 +28,7 @@
         @RenderBody()
         <hr />
         <footer>
-            <p>&copy; @DateTime.Now.Year - Azure Storage Backup And Restore</p>
+            <p>&copy; @DateTime.Now.Year - Azure Storage Backup And Restore : version @Assembly.GetExecutingAssembly().GetName().Version</p>
         </footer>
     </div>
 

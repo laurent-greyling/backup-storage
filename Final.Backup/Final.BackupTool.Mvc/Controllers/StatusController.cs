@@ -22,24 +22,33 @@ namespace Final.BackupTool.Mvc.Controllers
 
             var status = GetOperationStatus(statusModel);
             var tableStatus = status.Where(x => x.PartitionKey.StartsWith("tables_")).ToList();
-            var tableFinishedTime = tableStatus.Count >= 1 ? tableStatus[0].EndTime - tableStatus[0].StartTime : new TimeSpan();
-            ViewData["TableOperationType"] = tableStatus.Count >= 1 ? $"{tableStatus[0].OperationType}" : "Waiting to Execute";
-            ViewData["TablesCopied"] = tableStatus.Count >= 1 ? $"{tableStatus[0].Copied}" : "0";
-            ViewData["TablesSkipped"] = tableStatus.Count >= 1 ? $"{tableStatus[0].Skipped}" : "0";
-            ViewData["TablesFaulted"] = tableStatus.Count >= 1 ? $"{tableStatus[0].Faulted}" : "0";
-            ViewData["TablesFinishedIn"] = tableStatus.Count >= 1 ? tableFinishedTime != null
+
+            var tableFinishedTime = tableStatus.Count > 0 ? tableStatus[0].EndTime - tableStatus[0].StartTime : null;
+            ViewData["TableOperationType"] = tableStatus.Count > 0 ? $"{tableStatus[0].OperationType}" : "Waiting to Execute";
+            ViewData["TablesCopied"] = tableStatus.Count > 0 ? $"{tableStatus[0].Copied}" : "0";
+            ViewData["TablesSkipped"] = tableStatus.Count > 0 ? $"{tableStatus[0].Skipped}" : "0";
+            ViewData["TablesFaulted"] = tableStatus.Count > 0 ? $"{tableStatus[0].Faulted}" : "0";
+            ViewData["TablesFinishedIn"] = tableStatus.Count > 0 ? tableFinishedTime != null
                 ? $"{tableFinishedTime.Value.Days}:{tableFinishedTime.Value.Hours}:{tableFinishedTime.Value.Minutes}:{tableFinishedTime.Value.Seconds}"
                 : "" : "";
-            
+            ViewData["TableStatus"] = tableFinishedTime == null ? "Executing..." : "Finished";
+
             var blobStatus = status.Where(x => x.PartitionKey.StartsWith("blobs_")).ToList();
-            var blobFinishedTime = blobStatus.Count >= 1 ? blobStatus[0].EndTime - blobStatus[0].StartTime : new TimeSpan();
-            ViewData["BlobsOperationType"] = blobStatus.Count >= 1 ? $"{blobStatus[0].OperationType}" : "Waiting to Execute";
-            ViewData["BlobsCopied"] = blobStatus.Count >= 1 ? $"{blobStatus[0].Copied}" : "0";
-            ViewData["BlobsSkipped"] = blobStatus.Count >= 1 ? $"{blobStatus[0].Skipped}" : "0";
-            ViewData["BlobsFaulted"] = blobStatus.Count >= 1 ? $"{blobStatus[0].Faulted}" : "0";
-            ViewData["BlobsFinishedIn"] = blobStatus.Count >= 1 ? blobFinishedTime != null
+            var blobFinishedTime = blobStatus.Count > 0 ? blobStatus[0].EndTime - blobStatus[0].StartTime : null;
+            ViewData["BlobsOperationType"] = blobStatus.Count > 0 ? $"{blobStatus[0].OperationType}" : "Waiting to Execute";
+            ViewData["BlobsCopied"] = blobStatus.Count > 0 ? $"{blobStatus[0].Copied}" : "0";
+            ViewData["BlobsSkipped"] = blobStatus.Count > 0 ? $"{blobStatus[0].Skipped}" : "0";
+            ViewData["BlobsFaulted"] = blobStatus.Count > 0 ? $"{blobStatus[0].Faulted}" : "0";
+            ViewData["BlobsFinishedIn"] = blobStatus.Count > 0 ? blobFinishedTime != null
                 ? $"{blobFinishedTime.Value.Days}:{blobFinishedTime.Value.Hours}:{blobFinishedTime.Value.Minutes}:{blobFinishedTime.Value.Seconds}"
                 : "" : "";
+            ViewData["BlobStatus"] = blobFinishedTime == null ? "Executing..." : "Finished";
+
+            //TODO: figure out how to give a nice output, faster than this
+            var operationDetails = GetOperationDetails(statusModel);
+            ViewData["Source"] = operationDetails.Select(x=>x.Source).ToList();
+            ViewData["Status"] = operationDetails.Select(x => x.Status).ToList();
+            ViewData["ExtraInfo"] = operationDetails.Select(x => x.ExtraInformation).ToList();
 
             return View();
         }
@@ -51,9 +60,10 @@ namespace Final.BackupTool.Mvc.Controllers
             //var operationDetailsTableReference = azureOperation.OperationsTableReference(OperationalDictionary.OperationDetailsTableName);
 
             var query = new TableQuery<StorageOperationEntity>();
-            var results = operationTableReference.ExecuteQuery(query).Where(t => t.StartTime >= statusModel.OperationDate).ToList();
+            var results = operationTableReference.ExecuteQuery(query)
+                .Where(t => t.StartTime >= statusModel.OperationDate).ToList();
 
-            var status = results.Select(result => new StatusModel
+            return results.Select(result => new StatusModel
                 {
                     PartitionKey = result.PartitionKey,
                     Operation = statusModel.Operation,
@@ -66,12 +76,19 @@ namespace Final.BackupTool.Mvc.Controllers
                     Faulted = result.Faulted,
                     EndTime = result.EndTime,
                     StartTime = result.StartTime
-                })
-                .ToList();
-
-            return status;
-
+            }).ToList();
         }
-        
+
+        private List<CopyStorageOperationEntity> GetOperationDetails(StatusModel statusModel)
+        {
+            var azureOperation = new AzureOperations();
+            var operationDetailsTableReference = azureOperation.OperationsTableReference(OperationalDictionary.OperationDetailsTableName);
+
+            var query = new TableQuery<CopyStorageOperationEntity>();
+            var xxx = operationDetailsTableReference.ExecuteQuery(query)
+                .Where(t => t.Timestamp >= statusModel.OperationDate).ToList();
+
+            return null;
+        }
     }
 }
