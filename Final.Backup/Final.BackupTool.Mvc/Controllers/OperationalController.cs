@@ -47,7 +47,11 @@ namespace Final.BackupTool.Mvc.Controllers
                 Operation = operation,
                 OperationDate = operationDate,
                 TableCount = tableCount,
-                ContainerCount = containerCount
+                ContainerCount = containerCount,
+                BackupTable = operationalParams.BackupTables,
+                BackupBlobs = operationalParams.BackupBlobs,
+                RestoreTable = operationalParams.RestoreTables,
+                RestoreBlobs = operationalParams.RestoreBlobs
             };
 
             return RedirectToAction("Index","Status", statusModel);

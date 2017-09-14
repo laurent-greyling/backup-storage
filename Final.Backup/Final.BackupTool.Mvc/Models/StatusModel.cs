@@ -22,5 +22,9 @@ namespace Final.BackupTool.Mvc.Models
         public int Copied { get; set; }
         public int Skipped { get; set; }
         public int Faulted { get; set; }
+        public bool BackupTable { get; set; }
+        public bool BackupBlobs { get; set; }
+        public bool RestoreTable { get; set; }
+        public bool RestoreBlobs { get; set; }
     }
 }

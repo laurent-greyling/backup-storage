@@ -107,7 +107,7 @@ namespace Final.BackupTool.Common.Operational
             var saveOperation = TableOperation.Replace(entity);
             await table.ExecuteAsync(saveOperation);
         }
-        private string GetOperationPartitionKey()
+        public string GetOperationPartitionKey()
         {
             return $"tables_{_productionAccountName}_{_backupAccountName}";
         }
@@ -117,7 +117,7 @@ namespace Final.BackupTool.Common.Operational
             return (DateTimeOffset.MaxValue.Ticks - date.Ticks).ToString("d19");
         }
 
-        private string GetOperationDetailPartitionKey(DateTimeOffset date)
+        public string GetOperationDetailPartitionKey(DateTimeOffset date)
         {
             return $"{GetOperationPartitionKey()}_{GetOperationRowKey(date)}";
         }
