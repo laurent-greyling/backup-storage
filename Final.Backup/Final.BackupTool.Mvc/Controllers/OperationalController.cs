@@ -47,7 +47,9 @@ namespace Final.BackupTool.Mvc.Controllers
                     operationalParams.BlobName = "*";
                     operationalParams.TableName = "*";
                 }
+
                 Task.Run(async () => await RestoreAsync(operationalParams));
+
                 operation = "Restore Status";
                 tableCount = operationalParams.RestoreTables ? GetNumberOfTablesInBackup() : 0;
                 containerCount = operationalParams.RestoreBlobs ? GetNumberOfContainersInBackup() : 0;
@@ -208,7 +210,7 @@ namespace Final.BackupTool.Mvc.Controllers
             try
             {
                 sw.Start();
-                if (!operationalParams.RestoreTables && !operationalParams.RestoreBlobs)
+                if (operationalParams.RestoreTables && operationalParams.RestoreBlobs)
                 {
                     var restoreCommand = new RestoreCommand
                     {
@@ -219,7 +221,7 @@ namespace Final.BackupTool.Mvc.Controllers
                     await operation.RestoreAll(restoreCommand);
                 }
 
-                if (operationalParams.RestoreTables)
+                if (operationalParams.RestoreTables && !operationalParams.RestoreBlobs)
                 {
                     var restoreTablesCommand = new RestoreTableCommand
                     {
@@ -231,7 +233,7 @@ namespace Final.BackupTool.Mvc.Controllers
                     await operation.RestoreTableAsync(restoreTablesCommand);
                 }
 
-                if (operationalParams.RestoreBlobs)
+                if (operationalParams.RestoreBlobs && !operationalParams.RestoreTables)
                 {
                     var restoreBlobsCommand = new RestoreBlobCommand
                     {
