@@ -21,9 +21,7 @@ namespace Final.BackupTool.Mvc.Controllers
             ViewData["TableCount"] = $"{statusModel.TableCount}";
             ViewData["ContainerCount"] = $"{statusModel.ContainerCount}";
 
-            var status = GetOperationStatus(statusModel);
-            var tableStatus = status.Where(x => x.PartitionKey.StartsWith("tables_")).ToList();
-
+            var tableStatus = GetTableOperationStatus(statusModel);
             var tableFinishedTime = tableStatus.Count > 0 ? tableStatus[0].EndTime - tableStatus[0].StartTime : null;
             ViewData["TableOperationType"] = !statusModel.BackupTable
                 ? ""
@@ -42,7 +40,7 @@ namespace Final.BackupTool.Mvc.Controllers
                     ? "Executing..."
                     : "Finished";
 
-            var blobStatus = status.Where(x => x.PartitionKey.StartsWith("blobs_")).ToList();
+            var blobStatus = GetBlobOperationStatus(statusModel);
             var blobFinishedTime = blobStatus.Count > 0 ? blobStatus[0].EndTime - blobStatus[0].StartTime : null;
             ViewData["BlobsOperationType"] = !statusModel.BackupBlobs
                 ? ""
@@ -67,10 +65,11 @@ namespace Final.BackupTool.Mvc.Controllers
             ViewData["Status"] = "";
             ViewData["ExtraInfo"] = "";
 
+            ModelState.Clear();
             return View();
         }
 
-        private List<StatusModel> GetOperationStatus(StatusModel statusModel)
+        private List<StatusModel> GetTableOperationStatus(StatusModel statusModel)
         {
             var azureOperation = new AzureOperations();
 
@@ -87,13 +86,6 @@ namespace Final.BackupTool.Mvc.Controllers
                 .Where(t => t.PartitionKey == backupTableOperationStore.GetOperationPartitionKey()).ToList();
             }
 
-            if (statusModel.BackupBlobs && statusModel.Operation == "Backup Status")
-            {
-                var backupBlobOperationStore = new StartBackUpBlobOperationStore();
-                results = operationTableReference.ExecuteQuery(query)
-                .Where(t => t.PartitionKey == backupBlobOperationStore.GetOperationPartitionKey()).ToList();
-            }
-
             if (statusModel.RestoreTable && statusModel.Operation == "Restore Status")
             {
                 var restoreTableOperationStore = new StartRestoreTableOperationStore();
@@ -101,15 +93,7 @@ namespace Final.BackupTool.Mvc.Controllers
                 .Where(t => t.PartitionKey == restoreTableOperationStore.GetOperationPartitionKey()).ToList();
             }
 
-            if (statusModel.RestoreBlobs && statusModel.Operation == "Restore Status")
-            {
-                var restoreBlobOperationStore = new StartRestoreBlobOperationStore();
-                results = operationTableReference.ExecuteQuery(query)
-                .Where(t => t.PartitionKey == restoreBlobOperationStore.GetOperationPartitionKey()).ToList();
-            }
-
-
-            return results.Select(result => new StatusModel
+            return results.Where(x=>x.OperationDate > statusModel.OperationDate).Select(result => new StatusModel
                 {
                     PartitionKey = result.PartitionKey,
                     Operation = statusModel.Operation,
@@ -122,6 +106,46 @@ namespace Final.BackupTool.Mvc.Controllers
                     Faulted = result.Faulted,
                     EndTime = result.EndTime,
                     StartTime = result.StartTime
+            }).ToList();
+        }
+
+        private List<StatusModel> GetBlobOperationStatus(StatusModel statusModel)
+        {
+            var azureOperation = new AzureOperations();
+
+            var operationTableReference = azureOperation.OperationsTableReference(OperationalDictionary.OperationTableName);
+            //var operationDetailsTableReference = azureOperation.OperationsTableReference(OperationalDictionary.OperationDetailsTableName);
+
+            var query = new TableQuery<StorageOperationEntity>();
+            var results = new List<StorageOperationEntity>();
+            
+            if (statusModel.BackupBlobs && statusModel.Operation == "Backup Status")
+            {
+                var backupBlobOperationStore = new StartBackUpBlobOperationStore();
+                results = operationTableReference.ExecuteQuery(query)
+                .Where(t => t.PartitionKey == backupBlobOperationStore.GetOperationPartitionKey()).ToList();
+            }
+            
+            if (statusModel.RestoreBlobs && statusModel.Operation == "Restore Status")
+            {
+                var restoreBlobOperationStore = new StartRestoreBlobOperationStore();
+                results = operationTableReference.ExecuteQuery(query)
+                .Where(t => t.PartitionKey == restoreBlobOperationStore.GetOperationPartitionKey()).ToList();
+            }
+
+            return results.Where(x => x.OperationDate > statusModel.OperationDate).Select(result => new StatusModel
+            {
+                PartitionKey = result.PartitionKey,
+                Operation = statusModel.Operation,
+                OperationDate = statusModel.OperationDate,
+                TableCount = statusModel.TableCount,
+                ContainerCount = statusModel.ContainerCount,
+                OperationType = result.OperationType,
+                Copied = result.Copied,
+                Skipped = result.Skipped,
+                Faulted = result.Faulted,
+                EndTime = result.EndTime,
+                StartTime = result.StartTime
             }).ToList();
         }
 
