@@ -26,12 +26,6 @@ namespace Final.BackupTool.Mvc.Controllers
             var tableCount = 0;
             var containerCount = 0;
 
-            //todo: need to get this right, every time this is an issue, sigh
-            operationalParams.FromDate = DateTimeOffset.ParseExact(operationalParams.FromDate.ToString(), OperationalDictionary.DateFormat,
-                        CultureInfo.InvariantCulture);
-            operationalParams.ToDate = DateTimeOffset.ParseExact(operationalParams.ToDate.ToString(), OperationalDictionary.DateFormat,
-                        CultureInfo.InvariantCulture);
-
             if (operationalParams.Start == "backup")
             {
                 Task.Run(async () => await BackUpAsync(operationalParams));
@@ -42,6 +36,17 @@ namespace Final.BackupTool.Mvc.Controllers
 
             if (operationalParams.Start == "restore")
             {
+                operationalParams.FromDate = DateTimeOffset.ParseExact(operationalParams.FromDate, "yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture)
+               .ToString(OperationalDictionary.DateFormat, CultureInfo.InvariantCulture);
+                operationalParams.ToDate = DateTimeOffset.ParseExact(operationalParams.ToDate, "yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture)
+                    .ToString(OperationalDictionary.DateFormat, CultureInfo.InvariantCulture);
+
+                if (operationalParams.RestoreBlobs && operationalParams.RestoreTables)
+                {
+                    operationalParams.ContainerName = "*";
+                    operationalParams.BlobName = "*";
+                    operationalParams.TableName = "*";
+                }
                 Task.Run(async () => await RestoreAsync(operationalParams));
                 operation = "Restore Status";
                 tableCount = operationalParams.RestoreTables ? GetNumberOfTablesInBackup() : 0;

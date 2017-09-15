@@ -24,7 +24,7 @@ namespace Final.BackupTool.Mvc.Models
         public string ContainerName { get; set; }
         public string TableName { get; set; }
         public string BlobName { get; set; }
-        public DateTimeOffset? FromDate { get; set; }
-        public DateTimeOffset? ToDate { get; set; }
+        public string FromDate { get; set; }
+        public string ToDate { get; set; }
     }
 }
