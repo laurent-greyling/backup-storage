@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
@@ -48,7 +49,7 @@ namespace Final.BackupTool.Mvc.Controllers
                     operationalParams.TableName = "*";
                 }
 
-                Task.Run(async () => await RestoreAsync(operationalParams));
+                Task.Run(() => Restore(operationalParams));
 
                 operation = "Restore Status";
                 tableCount = operationalParams.RestoreTables ? GetNumberOfTablesInBackup() : 0;
@@ -162,54 +163,36 @@ namespace Final.BackupTool.Mvc.Controllers
 
         private async Task<HttpStatusCodeResult> BackUpAsync(OperationalModel operationalParams)
         {
-            Bootstrap.Start();
-            var logger = Bootstrap.Container.GetInstance<ILogger>();
-            var operation = Bootstrap.Container.GetInstance<IOperationContext>();
-            var command = new BackupCommand();
-
-            if (!operationalParams.BackupTables)
-            {
-                command.Skip = "tables";
-            }
-
-            if (!operationalParams.BackupBlobs)
-            {
-                command.Skip = "blobs";
-            }
-
-            var sw = new Stopwatch();
-
             try
             {
-                sw.Start();
-                await operation.BackupAsync(command);
-                logger.Info($"Total: {sw.Elapsed}");
+                var command = new BackupCommand();
+
+                if (!operationalParams.BackupTables)
+                {
+                    command.Skip = "tables";
+                }
+
+                if (!operationalParams.BackupBlobs)
+                {
+                    command.Skip = "blobs";
+                }
+
+                command.Run(null);
             }
             catch (Exception ex)
             {
-                logger.Error(ex);
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
-            finally
-            {
-                logger.Info("*******************************************");
-                operation.StoreLogInStorage().Wait();
             }
 
             return new HttpStatusCodeResult(HttpStatusCode.OK);
         }
 
-        private async Task<HttpStatusCodeResult> RestoreAsync(OperationalModel operationalParams)
+        private static HttpStatusCodeResult Restore(OperationalModel operationalParams)
         {
-            Bootstrap.Start();
-            var logger = Bootstrap.Container.GetInstance<ILogger>();
-            var operation = Bootstrap.Container.GetInstance<IOperationContext>();
-            var sw = new Stopwatch();
-            var fromDate = operationalParams.FromDate.ToString();
-            var toDate = operationalParams.ToDate.ToString();
+            var fromDate = operationalParams.FromDate;
+            var toDate = operationalParams.ToDate;
             try
             {
-                sw.Start();
                 if (operationalParams.RestoreTables && operationalParams.RestoreBlobs)
                 {
                     var restoreCommand = new RestoreCommand
@@ -217,8 +200,7 @@ namespace Final.BackupTool.Mvc.Controllers
                         FromDate = fromDate,
                         ToDate = toDate
                     };
-
-                    await operation.RestoreAll(restoreCommand);
+                    restoreCommand.Run(null);
                 }
 
                 if (operationalParams.RestoreTables && !operationalParams.RestoreBlobs)
@@ -230,7 +212,7 @@ namespace Final.BackupTool.Mvc.Controllers
                         ToDate = toDate
                     };
 
-                    await operation.RestoreTableAsync(restoreTablesCommand);
+                    restoreTablesCommand.Run(null);
                 }
 
                 if (operationalParams.RestoreBlobs && !operationalParams.RestoreTables)
@@ -244,20 +226,12 @@ namespace Final.BackupTool.Mvc.Controllers
                         Force = operationalParams.Force
                     };
 
-                    await operation.RestoreBlobAsync(restoreBlobsCommand);
+                    restoreBlobsCommand.Run(null);
                 }
-
-                logger.Info("Total:{0}", sw.Elapsed);
             }
             catch (Exception e)
             {
-                logger.Error(e);
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
-            finally
-            {
-                logger.Info("*******************************************");
-                operation.StoreLogInStorage().Wait();
             }
 
             return new HttpStatusCodeResult(HttpStatusCode.OK);

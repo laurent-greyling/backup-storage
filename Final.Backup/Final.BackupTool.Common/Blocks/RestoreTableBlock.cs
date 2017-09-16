@@ -174,8 +174,7 @@ namespace Final.BackupTool.Common.Blocks
                         tableEntity.RowKey = (string)item.Value;
                         break;
                     case OperationalDictionary.TimeStamp:
-                        tableEntity.Timestamp = DateTimeOffset.Parse((string)item.Value,
-                            CultureInfo.CurrentCulture);
+                        tableEntity.Timestamp = DateTimeOffset.UtcNow;
                         break;
                     default:
                         //Change the property into the correct type as it was originally saved as

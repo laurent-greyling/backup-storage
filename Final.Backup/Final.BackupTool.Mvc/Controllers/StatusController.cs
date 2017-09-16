@@ -23,7 +23,7 @@ namespace Final.BackupTool.Mvc.Controllers
 
             var tableStatus = GetTableOperationStatus(statusModel);
             var tableFinishedTime = tableStatus.Count > 0 ? tableStatus[0].EndTime - tableStatus[0].StartTime : null;
-            ViewData["TableOperationType"] = !statusModel.BackupTable
+            ViewData["TableOperationType"] = !statusModel.BackupTable && !statusModel.RestoreTable
                 ? ""
                 : tableStatus.Count > 0
                     ? $"{tableStatus[0].OperationType}"
@@ -34,7 +34,7 @@ namespace Final.BackupTool.Mvc.Controllers
             ViewData["TablesFinishedIn"] = tableStatus.Count > 0 ? tableFinishedTime != null
                 ? $"{tableFinishedTime.Value.Days}:{tableFinishedTime.Value.Hours}:{tableFinishedTime.Value.Minutes}:{tableFinishedTime.Value.Seconds}"
                 : "" : "";
-            ViewData["TableStatus"] = !statusModel.BackupTable
+            ViewData["TableStatus"] = !statusModel.BackupTable && !statusModel.RestoreTable
                 ? "Skipped"
                 : tableFinishedTime == null
                     ? "Executing..."
@@ -42,7 +42,7 @@ namespace Final.BackupTool.Mvc.Controllers
 
             var blobStatus = GetBlobOperationStatus(statusModel);
             var blobFinishedTime = blobStatus.Count > 0 ? blobStatus[0].EndTime - blobStatus[0].StartTime : null;
-            ViewData["BlobsOperationType"] = !statusModel.BackupBlobs
+            ViewData["BlobsOperationType"] = !statusModel.BackupBlobs && !statusModel.RestoreBlobs
                 ? ""
                 : blobStatus.Count > 0
                     ? $"{blobStatus[0].OperationType}"
@@ -53,7 +53,7 @@ namespace Final.BackupTool.Mvc.Controllers
             ViewData["BlobsFinishedIn"] = blobStatus.Count > 0 ? blobFinishedTime != null
                 ? $"{blobFinishedTime.Value.Days}:{blobFinishedTime.Value.Hours}:{blobFinishedTime.Value.Minutes}:{blobFinishedTime.Value.Seconds}"
                 : "" : "";
-            ViewData["BlobStatus"] = !statusModel.BackupBlobs
+            ViewData["BlobStatus"] = !statusModel.BackupBlobs && !statusModel.RestoreBlobs
                 ? "Skipped"
                 : blobFinishedTime == null
                     ? "Executing..."
