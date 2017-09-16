@@ -20,7 +20,9 @@
                 @Html.ActionLink("Azure Storage Backup And Restore", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
             </div>
             <div class="navbar-collapse collapse">
-               
+                <ul class="nav navbar-nav">
+                    <li>@Html.ActionLink("View Log", "Index", "OperationalLogs")</li>
+                </ul>
             </div>
         </div>
     </div>

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Net;
@@ -9,10 +7,7 @@ using System.Web.Configuration;
 using Final.BackupTool.Mvc.Models;
 using System.Web.Mvc;
 using Final.BackupTool.Common.ConsoleCommand;
-using Final.BackupTool.Common.Initialization;
 using Final.BackupTool.Common.Operational;
-using Final.BackupTool.Common.Strategy;
-using NLog;
 
 namespace Final.BackupTool.Mvc.Controllers
 {

@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
@@ -150,6 +152,36 @@ namespace Final.BackupTool.Common.Operational
             var table = OperationsTableReference(tableName);
             table.CreateIfNotExists();
             return table;
+        }
+
+        public void DownloadLatestBlob(string containerName)
+        {
+            var container = OperationsContainerReference(containerName);
+            var pathUser = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile, Environment.SpecialFolderOption.Create);
+            var pathDownload = Path.Combine(pathUser, "Downloads");
+            var download = new FileStream(pathDownload, FileMode.Open, FileAccess.ReadWrite);
+
+            var blob = container.ListBlobs().Cast<CloudAppendBlob>().FirstOrDefault(); 
+
+            using (var fileStream = download)
+            {
+                blob?.DownloadToStream(fileStream);
+            }
+        }
+
+        public string ReadLatestBlob(string containerName)
+        {
+            var container = OperationsContainerReference(containerName);
+
+            var blob = container.ListBlobs().Cast<CloudAppendBlob>().FirstOrDefault();
+
+            string readBlob;
+            using (var reader = new StreamReader(blob.OpenRead()))
+            {
+                readBlob = reader.ReadToEnd();
+            }
+
+            return readBlob;
         }
 
         public CloudStorageAccount GetOperationsStorageAccount()
