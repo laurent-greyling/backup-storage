@@ -1,4 +1,7 @@
 ﻿using System;
+using System.IO;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
@@ -152,15 +155,62 @@ namespace Final.BackupTool.Common.Operational
             return table;
         }
 
+        public void DownloadBlob(string containerName, DateTimeOffset? lastModified)
+        {
+            var container = OperationsContainerReference(containerName);
+            var blob = container.ListBlobs().Cast<CloudAppendBlob>().FirstOrDefault(x => x.Properties.LastModified.Value.Date == lastModified.Value.Date);
+
+            var pathUser = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile, Environment.SpecialFolderOption.Create);
+            var pathDownload = Path.Combine(pathUser, $@"Downloads\{blob?.Name}");
+
+            using (var fileStream = File.OpenWrite(pathDownload))
+            {
+                blob?.DownloadToStream(fileStream);
+            }
+        }
+
+        public string ReadLatestBlob(string containerName)
+        {
+            var container = OperationsContainerReference(containerName);
+
+            var blob = container.ListBlobs().Cast<CloudAppendBlob>().LastOrDefault();
+
+            var readLine = new StringBuilder();
+            using (var reader = new StreamReader(blob.OpenRead()))
+            {
+                string readBlob;
+                while (!string.IsNullOrEmpty(readBlob = reader.ReadLine()))
+                {
+                    readLine.AppendLine(readBlob);
+                }
+            }
+
+            return readLine.ToString();
+        }
+
+        public string ReadBlob(string containerName, DateTimeOffset? lastModified)
+        {
+            var container = OperationsContainerReference(containerName);
+
+            var blob = container.ListBlobs().Cast<CloudAppendBlob>().FirstOrDefault(x=>x.Properties.LastModified.Value.Date == lastModified.Value.Date);
+
+            var readLine = new StringBuilder();
+            using (var reader = new StreamReader(blob.OpenRead()))
+            {
+                string readBlob;
+                while (!string.IsNullOrEmpty(readBlob = reader.ReadLine()))
+                {
+                    readLine.Append(readBlob).AppendLine();
+                }
+            }
+
+            return readLine.ToString();
+        }
+
         public CloudStorageAccount GetOperationsStorageAccount()
         {
             return CloudStorageAccount.Parse(StorageConnection.OperationStorageConnectionString);
         }
-
         #endregion
-
-
-
-
     }
 }

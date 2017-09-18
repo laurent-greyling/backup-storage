@@ -20,7 +20,9 @@
                 @Html.ActionLink("Azure Storage Backup And Restore", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
             </div>
             <div class="navbar-collapse collapse">
-               
+                <ul class="nav navbar-nav">
+                    <li>@Html.ActionLink("View Log", "Index", "OperationalLogs")</li>
+                </ul>
             </div>
         </div>
     </div>
@@ -28,7 +30,7 @@
         @RenderBody()
         <hr />
         <footer>
-            <p>&copy; @DateTime.Now.Year - Azure Storage Backup And Restore : version @Assembly.GetExecutingAssembly().GetName().Version</p>
+            <p>&copy; @DateTime.Now.Year - Azure Storage Backup And Restore : version 0.9.1.0 : <a href="http://github.com/laurent-greyling/microsoft-azure-apps/tree/master/Final.Backup">Source Code</a></p>
         </footer>
     </div>
 
