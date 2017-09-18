@@ -3,10 +3,10 @@ using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
-using System.Web.Configuration;
-using Final.BackupTool.Mvc.Models;
 using System.Web.Mvc;
 using Final.BackupTool.Common.ConsoleCommand;
+using Final.BackupTool.Common.Helpers;
+using Final.BackupTool.Common.Models;
 using Final.BackupTool.Common.Operational;
 
 namespace Final.BackupTool.Mvc.Controllers
@@ -16,12 +16,16 @@ namespace Final.BackupTool.Mvc.Controllers
         // GET: Operational
         public ActionResult Execute(OperationalModel operationalParams)
         {
-            SetConnectionStrings(operationalParams);
             var operation = string.Empty;
             var operationDate = DateTimeOffset.UtcNow;
             var tableCount = 0;
             var containerCount = 0;
 
+
+            CookiesReadWrite.Write("production", "productionKey", operationalParams.ProductionStorageConnectionString);
+            CookiesReadWrite.Write("backup", "backupKey", operationalParams.BackupStorageConnectionString);
+            CookiesReadWrite.Write("operational", "operationalKey", operationalParams.OperationalStorageConnectionString);
+            
             if (operationalParams.Start == "backup")
             {
                 Task.Run(async () => await BackUpAsync(operationalParams));
@@ -135,25 +139,6 @@ namespace Final.BackupTool.Mvc.Controllers
                            !n.Contains(OperationalDictionary.StageArtifacts) &&
                            !n.StartsWith(OperationalDictionary.TableBackUpContainerName);
                 }).Count();
-        }
-
-        private static void SetConnectionStrings(OperationalModel operationalParams)
-        {
-            if (string.IsNullOrEmpty(WebConfigurationManager.AppSettings["ProductionStorageConnectionString"]))
-            {
-                WebConfigurationManager.AppSettings["ProductionStorageConnectionString"] =
-                operationalParams.ProductionStorageConnectionString;
-            }
-            if (string.IsNullOrEmpty(WebConfigurationManager.AppSettings["BackupStorageConnectionString"]))
-            {
-                WebConfigurationManager.AppSettings["BackupStorageConnectionString"] =
-                operationalParams.BackupStorageConnectionString;
-            }
-            if (string.IsNullOrEmpty(WebConfigurationManager.AppSettings["OperationalStorageConnectionString"]))
-            {
-                WebConfigurationManager.AppSettings["OperationalStorageConnectionString"] =
-                operationalParams.OperationalStorageConnectionString;
-            }
         }
 
         private async Task<HttpStatusCodeResult> BackUpAsync(OperationalModel operationalParams)

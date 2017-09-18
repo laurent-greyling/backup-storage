@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Web.Configuration;
 using System.Web.Mvc;
+using Final.BackupTool.Common.Helpers;
+using Final.BackupTool.Common.Models;
 using Final.BackupTool.Common.Operational;
-using Final.BackupTool.Mvc.Models;
 
 namespace Final.BackupTool.Mvc.Controllers
 {
@@ -13,16 +14,20 @@ namespace Final.BackupTool.Mvc.Controllers
         {
             var downloadLog = new AzureOperations();
 
-            if (!string.IsNullOrEmpty(WebConfigurationManager.AppSettings["OperationalStorageConnectionString"]))
+            if (!string.IsNullOrEmpty(WebConfigurationManager.AppSettings["OperationalStorageConnectionString"]) 
+                || !string.IsNullOrEmpty(CookiesReadWrite.Read("operational", "operationalKey")))
             {
                 ViewData["LogDetails"] = downloadLog.ReadLatestBlob(OperationalDictionary.Logs);
                 ViewData["ViewLog"] = "true";
             }
             else
             {
-                WebConfigurationManager.AppSettings["OperationalStorageConnectionString"] =
-                    operationalLog.OperationalStorageConnectionString;
+                CookiesReadWrite.Write("operational", "operationalKey", operationalLog.OperationalStorageConnectionString);
             }
+
+            ViewData["OperationalStorageConnectionString"] =
+                WebConfigurationManager.AppSettings["OperationalStorageConnectionString"] ??
+                CookiesReadWrite.Read("operational", "operationalKey");
 
             if (operationalLog.DownloadLog == "download log")
             {
