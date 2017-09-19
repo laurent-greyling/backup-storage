@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using System.Web;
 using System.Web.Mvc;
 using Final.BackupTool.Common.Entities;
 using Final.BackupTool.Common.Models;
@@ -13,6 +10,13 @@ namespace Final.BackupTool.Mvc.Controllers
 {
     public class StatusController : Controller
     {
+        private readonly AzureOperations _azureOperation;
+
+        public StatusController()
+        {
+            _azureOperation = new AzureOperations();
+        }
+
         // GET: Status
         public ActionResult Index(StatusModel statusModel)
         {
@@ -57,22 +61,14 @@ namespace Final.BackupTool.Mvc.Controllers
                 : blobFinishedTime == null
                     ? "Executing..."
                     : "Finished";
-
-            //TODO: figure out how to give a nice output, faster than this
-            //var operationDetails = GetOperationDetails().Result;
-            ViewData["Source"] = "";
-            ViewData["Status"] = "";
-            ViewData["ExtraInfo"] = "";
-
+            
             ModelState.Clear();
             return View();
         }
 
         private List<StatusModel> GetTableOperationStatus(StatusModel statusModel)
         {
-            var azureOperation = new AzureOperations();
-
-            var operationTableReference = azureOperation.OperationsTableReference(OperationalDictionary.OperationTableName);
+            var operationTableReference = _azureOperation.OperationsTableReference(OperationalDictionary.OperationTableName);
 
             var query = new TableQuery<StorageOperationEntity>();
             var results = new List<StorageOperationEntity>();
@@ -109,10 +105,7 @@ namespace Final.BackupTool.Mvc.Controllers
 
         private List<StatusModel> GetBlobOperationStatus(StatusModel statusModel)
         {
-            var azureOperation = new AzureOperations();
-
-            var operationTableReference = azureOperation.OperationsTableReference(OperationalDictionary.OperationTableName);
-            //var operationDetailsTableReference = azureOperation.OperationsTableReference(OperationalDictionary.OperationDetailsTableName);
+            var operationTableReference = _azureOperation.OperationsTableReference(OperationalDictionary.OperationTableName);
 
             var query = new TableQuery<StorageOperationEntity>();
             var results = new List<StorageOperationEntity>();
@@ -145,21 +138,6 @@ namespace Final.BackupTool.Mvc.Controllers
                 EndTime = result.EndTime,
                 StartTime = result.StartTime
             }).ToList();
-        }
-
-        private async Task<List<CopyStorageOperationEntity>> GetOperationDetails()
-        {
-            var azureOperation = new AzureOperations();
-            var backupOperationStore = new StartBackupTableOperationStore();
-            var backupOperation = await backupOperationStore.StartAsync();
-
-            var operationDetailsTableReference = azureOperation.OperationsTableReference(OperationalDictionary.OperationDetailsTableName);
-
-            var query = new TableQuery<CopyStorageOperationEntity>();
-            var xxx = operationDetailsTableReference.ExecuteQuery(query)
-                .Where(t => t.PartitionKey == backupOperationStore.GetOperationDetailPartitionKey(backupOperation.Date)).ToList();
-
-            return null;
         }
     }
 }

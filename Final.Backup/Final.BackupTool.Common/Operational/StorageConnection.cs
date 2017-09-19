@@ -9,18 +9,22 @@ namespace Final.BackupTool.Common.Operational
         public string BackupStorageConnectionString { get; set; }
         public string OperationStorageConnectionString { get; set; }
 
+        public string ProductionStorageCookie => CookiesReadWrite.Read("production", "productionKey");
+        public string BackupStorageCookie => CookiesReadWrite.Read("backup", "backupKey");
+        public string OperationStorageCookie => CookiesReadWrite.Read("operational", "operationalKey");
+
         public StorageConnection()
         {
             ProductionStorageConnectionString = string.IsNullOrEmpty(CloudConfigurationManager.GetSetting("ProductionStorageConnectionString"))
-                ? CookiesReadWrite.Read("production", "productionKey")
+                ? ProductionStorageCookie
                 : CloudConfigurationManager.GetSetting("ProductionStorageConnectionString");
 
             BackupStorageConnectionString = string.IsNullOrEmpty(CloudConfigurationManager.GetSetting("BackupStorageConnectionString"))
-                ? CookiesReadWrite.Read("backup", "backupKey")
+                ? BackupStorageCookie
                 : CloudConfigurationManager.GetSetting("BackupStorageConnectionString");
 
             OperationStorageConnectionString = string.IsNullOrEmpty(CloudConfigurationManager.GetSetting("OperationalStorageConnectionString"))
-                ? CookiesReadWrite.Read("operational", "operationalKey")
+                ? OperationStorageCookie
                 : CloudConfigurationManager.GetSetting("OperationalStorageConnectionString");
         }
     }
