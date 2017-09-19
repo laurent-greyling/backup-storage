@@ -7,9 +7,6 @@ namespace Final.BackupTool.Mvc.Controllers
     {
         public ActionResult Index()
         {
-            ViewData["ProductionStorageConnectionString"] = CookiesReadWrite.Read("production", "productionKey") ?? string.Empty;
-            ViewData["BackupStorageConnectionString"] = CookiesReadWrite.Read("backup", "backupKey") ?? string.Empty;
-            ViewData["OperationalStorageConnectionString"] = CookiesReadWrite.Read("operational", "operationalKey") ?? string.Empty;
             return View();
         }
     }

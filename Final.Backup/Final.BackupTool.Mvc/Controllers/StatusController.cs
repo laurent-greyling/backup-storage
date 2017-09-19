@@ -73,7 +73,6 @@ namespace Final.BackupTool.Mvc.Controllers
             var azureOperation = new AzureOperations();
 
             var operationTableReference = azureOperation.OperationsTableReference(OperationalDictionary.OperationTableName);
-            //var operationDetailsTableReference = azureOperation.OperationsTableReference(OperationalDictionary.OperationDetailsTableName);
 
             var query = new TableQuery<StorageOperationEntity>();
             var results = new List<StorageOperationEntity>();

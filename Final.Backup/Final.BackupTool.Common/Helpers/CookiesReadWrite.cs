@@ -11,10 +11,11 @@ namespace Final.BackupTool.Common.Helpers
             var setCookie =
                 new HttpCookie(cookie)
                 {
-                    [cookieKey] = cookieValue
+                    [cookieKey] = cookieValue,
+                    Expires = DateTime.Now.AddDays(5)
                 };
             HttpContext.Current.Response.Cookies.Add(setCookie);
-            WaitForCookieSet(cookie, cookieKey, cookieValue);
+            WaitForCookieSet(cookie, cookieKey);
         }
 
         public static string Read(string cookie, string cookieKey)
@@ -24,22 +25,22 @@ namespace Final.BackupTool.Common.Helpers
             return cookieValue;
         }
 
-        private static void WaitForCookieSet(string cookie, string cookieKey, string cookieValue)
+        public static void Delete(string cookie)
+        {
+            var cookieDel = new HttpCookie(cookie) {Expires = DateTime.Now.AddDays(-1)};
+            HttpContext.Current.Response.Cookies.Add(cookieDel);
+        }
+
+        private static void WaitForCookieSet(string cookie, string cookieKey)
         {
             var numberOfRetries = 10;
-            while (string.IsNullOrEmpty(Read(cookie, cookieKey)))
+            var readCookie = string.Empty;
+            while (string.IsNullOrEmpty(readCookie))
             {
-                try
-                {
-                    Write(cookie, cookieKey, cookieValue);
+                Thread.Sleep(1000);
+                readCookie = Read(cookie, cookieKey);
+                if (--numberOfRetries == 0)
                     break;
-                }
-                catch
-                {
-                    if (--numberOfRetries == 0)
-                        throw;
-                    Thread.Sleep(1000);
-                }
             }
         }
     }

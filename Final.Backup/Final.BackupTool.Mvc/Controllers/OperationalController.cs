@@ -20,8 +20,7 @@ namespace Final.BackupTool.Mvc.Controllers
             var operationDate = DateTimeOffset.UtcNow;
             var tableCount = 0;
             var containerCount = 0;
-
-
+            
             CookiesReadWrite.Write("production", "productionKey", operationalParams.ProductionStorageConnectionString);
             CookiesReadWrite.Write("backup", "backupKey", operationalParams.BackupStorageConnectionString);
             CookiesReadWrite.Write("operational", "operationalKey", operationalParams.OperationalStorageConnectionString);
