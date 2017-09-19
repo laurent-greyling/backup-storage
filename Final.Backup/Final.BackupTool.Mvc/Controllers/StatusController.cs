@@ -5,8 +5,8 @@ using System.Threading.Tasks;
 using System.Web;
 using System.Web.Mvc;
 using Final.BackupTool.Common.Entities;
+using Final.BackupTool.Common.Models;
 using Final.BackupTool.Common.Operational;
-using Final.BackupTool.Mvc.Models;
 using Microsoft.WindowsAzure.Storage.Table;
 
 namespace Final.BackupTool.Mvc.Controllers
@@ -16,7 +16,6 @@ namespace Final.BackupTool.Mvc.Controllers
         // GET: Status
         public ActionResult Index(StatusModel statusModel)
         {
-            //Backup Status   Restore Statu
             ViewData["operation"] = statusModel.Operation;
             ViewData["TableCount"] = $"{statusModel.TableCount}";
             ViewData["ContainerCount"] = $"{statusModel.ContainerCount}";
