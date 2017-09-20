@@ -73,18 +73,21 @@ namespace Final.BackupTool.Mvc.Controllers
             var query = new TableQuery<StorageOperationEntity>();
             var results = new List<StorageOperationEntity>();
 
-            if (statusModel.BackupTable && statusModel.Operation == "Backup Status")
+            if (operationTableReference.Exists())
             {
-                var backupTableOperationStore = new StartBackupTableOperationStore();
-                results = operationTableReference.ExecuteQuery(query)
-                .Where(t => t.PartitionKey == backupTableOperationStore.GetOperationPartitionKey()).ToList();
-            }
+                if (statusModel.BackupTable && statusModel.Operation == "Backup Status")
+                {
+                    var backupTableOperationStore = new StartBackupTableOperationStore();
+                    results = operationTableReference.ExecuteQuery(query)
+                        .Where(t => t.PartitionKey == backupTableOperationStore.GetOperationPartitionKey()).ToList();
+                }
 
-            if (statusModel.RestoreTable && statusModel.Operation == "Restore Status")
-            {
-                var restoreTableOperationStore = new StartRestoreTableOperationStore();
-                results = operationTableReference.ExecuteQuery(query)
-                .Where(t => t.PartitionKey == restoreTableOperationStore.GetOperationPartitionKey()).ToList();
+                if (statusModel.RestoreTable && statusModel.Operation == "Restore Status")
+                {
+                    var restoreTableOperationStore = new StartRestoreTableOperationStore();
+                    results = operationTableReference.ExecuteQuery(query)
+                        .Where(t => t.PartitionKey == restoreTableOperationStore.GetOperationPartitionKey()).ToList();
+                }
             }
 
             return results.Where(x=>x.OperationDate > statusModel.OperationDate).Select(result => new StatusModel
@@ -109,19 +112,22 @@ namespace Final.BackupTool.Mvc.Controllers
 
             var query = new TableQuery<StorageOperationEntity>();
             var results = new List<StorageOperationEntity>();
-            
-            if (statusModel.BackupBlobs && statusModel.Operation == "Backup Status")
+
+            if (operationTableReference.Exists())
             {
-                var backupBlobOperationStore = new StartBackUpBlobOperationStore();
-                results = operationTableReference.ExecuteQuery(query)
-                .Where(t => t.PartitionKey == backupBlobOperationStore.GetOperationPartitionKey()).ToList();
-            }
-            
-            if (statusModel.RestoreBlobs && statusModel.Operation == "Restore Status")
-            {
-                var restoreBlobOperationStore = new StartRestoreBlobOperationStore();
-                results = operationTableReference.ExecuteQuery(query)
-                .Where(t => t.PartitionKey == restoreBlobOperationStore.GetOperationPartitionKey()).ToList();
+                if (statusModel.BackupBlobs && statusModel.Operation == "Backup Status")
+                {
+                    var backupBlobOperationStore = new StartBackUpBlobOperationStore();
+                    results = operationTableReference.ExecuteQuery(query)
+                        .Where(t => t.PartitionKey == backupBlobOperationStore.GetOperationPartitionKey()).ToList();
+                }
+
+                if (statusModel.RestoreBlobs && statusModel.Operation == "Restore Status")
+                {
+                    var restoreBlobOperationStore = new StartRestoreBlobOperationStore();
+                    results = operationTableReference.ExecuteQuery(query)
+                        .Where(t => t.PartitionKey == restoreBlobOperationStore.GetOperationPartitionKey()).ToList();
+                }
             }
 
             return results.Where(x => x.OperationDate > statusModel.OperationDate).Select(result => new StatusModel

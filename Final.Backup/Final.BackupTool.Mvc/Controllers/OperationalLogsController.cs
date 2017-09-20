@@ -12,6 +12,8 @@ namespace Final.BackupTool.Mvc.Controllers
         // GET: Logs
         public ActionResult Index(OperationalLogModel operationalLog)
         {
+            CookiesReadWrite.Delete("production");
+            CookiesReadWrite.Delete("backup");
             var cookieValue = CookiesReadWrite.Read("operational", "operationalKey");
             var connectionString = operationalLog.OperationalStorageConnectionString;
             var webConfig = WebConfigurationManager.AppSettings["OperationalStorageConnectionString"];
@@ -31,8 +33,12 @@ namespace Final.BackupTool.Mvc.Controllers
             if (!string.IsNullOrEmpty(webConfig) 
                 || !string.IsNullOrEmpty(cookieValue))
             {
-                ViewData["LogDetails"] = downloadLog.ReadLatestBlob(OperationalDictionary.Logs);
-                ViewData["ViewLog"] = "true";
+                var latestLog = downloadLog.ReadLatestBlob(OperationalDictionary.Logs);
+                ViewData["LogDetails"] = latestLog;
+                if (!string.IsNullOrEmpty(latestLog))
+                {
+                    ViewData["ViewLog"] = "true";
+                }
             }
 
             if (operationalLog.DownloadLog == "download log")

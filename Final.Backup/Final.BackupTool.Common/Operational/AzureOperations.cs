@@ -173,6 +173,9 @@ namespace Final.BackupTool.Common.Operational
         {
             var container = OperationsContainerReference(containerName);
 
+            if (!container.Exists()) return string.Empty;
+            if (!container.ListBlobs().Any()) return string.Empty;
+
             var blob = container.ListBlobs().Cast<CloudAppendBlob>().LastOrDefault();
 
             var readLine = new StringBuilder();

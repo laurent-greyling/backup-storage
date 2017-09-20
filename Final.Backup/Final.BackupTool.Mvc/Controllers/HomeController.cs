@@ -7,6 +7,8 @@ namespace Final.BackupTool.Mvc.Controllers
     {
         public ActionResult Index()
         {
+            CookiesReadWrite.Delete("production");
+            CookiesReadWrite.Delete("backup");
             return View();
         }
     }
