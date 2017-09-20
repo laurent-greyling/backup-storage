@@ -18,34 +18,18 @@ namespace Final.BackupTool.Mvc.Controllers
             var operation = string.Empty;
             var operationDate = DateTimeOffset.UtcNow;
             
-            CookiesReadWrite.Write("production", "productionKey", operationalParams.ProductionStorageConnectionString);
-            CookiesReadWrite.Write("backup", "backupKey", operationalParams.BackupStorageConnectionString);
-            CookiesReadWrite.Write("operational", "operationalKey", operationalParams.OperationalStorageConnectionString);
-            var setOperations = new AzureOperations();
+            SetCookies(operationalParams);
 
             if (operationalParams.Start == "backup")
             {
-                Task.Run(async () => await BackUpAsync(operationalParams));
-                operation = "Backup Status";
+                Task.Run(() => BackUp(operationalParams));
+                operation = OperationalDictionary.BackupStatus;
             }
 
             if (operationalParams.Start == "restore")
             {
-                operationalParams.FromDate = DateTimeOffset.ParseExact(operationalParams.FromDate, "yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture)
-               .ToString(OperationalDictionary.DateFormat, CultureInfo.InvariantCulture);
-                operationalParams.ToDate = DateTimeOffset.ParseExact(operationalParams.ToDate, "yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture)
-                    .ToString(OperationalDictionary.DateFormat, CultureInfo.InvariantCulture);
-
-                if (operationalParams.RestoreBlobs && operationalParams.RestoreTables)
-                {
-                    operationalParams.ContainerName = "*";
-                    operationalParams.BlobName = "*";
-                    operationalParams.TableName = "*";
-                }
-
                 Task.Run(() => Restore(operationalParams));
-
-                operation = "Restore Status";
+                operation = OperationalDictionary.RestoreStatus;
             }
             
             var statusModel = new StatusModel
@@ -61,7 +45,18 @@ namespace Final.BackupTool.Mvc.Controllers
             return RedirectToAction("Index","Status", statusModel);
         }
 
-        private async Task<HttpStatusCodeResult> BackUpAsync(OperationalModel operationalParams)
+        private static void SetCookies(OperationalModel operationalParams)
+        {
+            CookiesReadWrite.Write(OperationalDictionary.ProductionCookie, OperationalDictionary.ProductionCookieKey,
+                operationalParams.ProductionStorageConnectionString);
+            CookiesReadWrite.Write(OperationalDictionary.BackupCookie, OperationalDictionary.BackupCookieKey,
+                operationalParams.BackupStorageConnectionString);
+            CookiesReadWrite.Write(OperationalDictionary.OperationalCookie, OperationalDictionary.OperationalCookieKey,
+                operationalParams.OperationalStorageConnectionString);
+            var setOperations = new AzureOperations();
+        }
+
+        private HttpStatusCodeResult BackUp(OperationalModel operationalParams)
         {
             try
             {
@@ -89,12 +84,19 @@ namespace Final.BackupTool.Mvc.Controllers
 
         private static HttpStatusCodeResult Restore(OperationalModel operationalParams)
         {
-            var fromDate = operationalParams.FromDate;
-            var toDate = operationalParams.ToDate;
             try
             {
+                var fromDate = DateTimeOffset.ParseExact(operationalParams.FromDate, "yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture)
+                    .ToString(OperationalDictionary.DateFormat, CultureInfo.InvariantCulture);
+                var toDate = DateTimeOffset.ParseExact(operationalParams.ToDate, "yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture)
+                    .ToString(OperationalDictionary.DateFormat, CultureInfo.InvariantCulture);
+
                 if (operationalParams.RestoreTables && operationalParams.RestoreBlobs)
                 {
+                    operationalParams.ContainerName = "*";
+                    operationalParams.BlobName = "*";
+                    operationalParams.TableName = "*";
+
                     var restoreCommand = new RestoreCommand
                     {
                         FromDate = fromDate,
@@ -107,7 +109,7 @@ namespace Final.BackupTool.Mvc.Controllers
                 {
                     var restoreTablesCommand = new RestoreTableCommand
                     {
-                        TableName = operationalParams.TableName,
+                        TableName = string.IsNullOrEmpty(operationalParams.TableName) ? "*" : operationalParams.TableName,
                         FromDate = fromDate,
                         ToDate = toDate
                     };
@@ -119,8 +121,10 @@ namespace Final.BackupTool.Mvc.Controllers
                 {
                     var restoreBlobsCommand = new RestoreBlobCommand
                     {
-                        ContainerName = operationalParams.ContainerName,
-                        BlobPath = operationalParams.BlobName,
+                        ContainerName = string.IsNullOrEmpty(operationalParams.ContainerName)
+                            ? "*"
+                            : operationalParams.ContainerName,
+                        BlobPath = string.IsNullOrEmpty(operationalParams.BlobName) ? "*" : operationalParams.BlobName,
                         FromDate = fromDate,
                         ToDate = toDate,
                         Force = operationalParams.Force

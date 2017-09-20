@@ -1,5 +1,6 @@
 ﻿using System.Web.Mvc;
 using Final.BackupTool.Common.Helpers;
+using Final.BackupTool.Common.Operational;
 
 namespace Final.BackupTool.Mvc.Controllers
 {
@@ -7,8 +8,8 @@ namespace Final.BackupTool.Mvc.Controllers
     {
         public ActionResult Index()
         {
-            CookiesReadWrite.Delete("production");
-            CookiesReadWrite.Delete("backup");
+            CookiesReadWrite.Delete(OperationalDictionary.ProductionCookie);
+            CookiesReadWrite.Delete(OperationalDictionary.BackupCookie);
             return View();
         }
     }

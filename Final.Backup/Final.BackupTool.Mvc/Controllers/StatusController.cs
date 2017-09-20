@@ -21,49 +21,61 @@ namespace Final.BackupTool.Mvc.Controllers
         public ActionResult Index(StatusModel statusModel)
         {
             ViewData["operation"] = statusModel.Operation;
-            ViewData["TableCount"] = $"{statusModel.TableCount}";
-            ViewData["ContainerCount"] = $"{statusModel.ContainerCount}";
 
+            TableStatusOverView(statusModel);
+
+            BlobStatusOverView(statusModel);
+
+            ModelState.Clear();
+            return View();
+        }
+
+        private void TableStatusOverView(StatusModel statusModel)
+        {
             var tableStatus = GetTableOperationStatus(statusModel);
             var tableFinishedTime = tableStatus.Count > 0 ? tableStatus[0].EndTime - tableStatus[0].StartTime : null;
             ViewData["TableOperationType"] = !statusModel.BackupTable && !statusModel.RestoreTable
-                ? ""
+                ? OperationalDictionary.Empty
                 : tableStatus.Count > 0
                     ? $"{tableStatus[0].OperationType}"
-                    : "Waiting to Execute";
-            ViewData["TablesCopied"] = tableStatus.Count > 0 ? $"{tableStatus[0].Copied}" : "0";
-            ViewData["TablesSkipped"] = tableStatus.Count > 0 ? $"{tableStatus[0].Skipped}" : "0";
-            ViewData["TablesFaulted"] = tableStatus.Count > 0 ? $"{tableStatus[0].Faulted}" : "0";
-            ViewData["TablesFinishedIn"] = tableStatus.Count > 0 ? tableFinishedTime != null
-                ? $"{tableFinishedTime.Value.Days}:{tableFinishedTime.Value.Hours}:{tableFinishedTime.Value.Minutes}:{tableFinishedTime.Value.Seconds}"
-                : "" : "";
+                    : OperationalDictionary.WaitingToExecute;
+            ViewData["TablesCopied"] = tableStatus.Count > 0 ? $"{tableStatus[0].Copied}" : OperationalDictionary.Zero;
+            ViewData["TablesSkipped"] = tableStatus.Count > 0 ? $"{tableStatus[0].Skipped}" : OperationalDictionary.Zero;
+            ViewData["TablesFaulted"] = tableStatus.Count > 0 ? $"{tableStatus[0].Faulted}" : OperationalDictionary.Zero;
+            ViewData["TablesFinishedIn"] = tableStatus.Count > 0
+                ? tableFinishedTime != null
+                    ? $"{tableFinishedTime.Value.Days}:{tableFinishedTime.Value.Hours}:{tableFinishedTime.Value.Minutes}:{tableFinishedTime.Value.Seconds}"
+                    : OperationalDictionary.Empty
+                : OperationalDictionary.Empty;
             ViewData["TableStatus"] = !statusModel.BackupTable && !statusModel.RestoreTable
-                ? "Skipped"
+                ? OperationalDictionary.Skipped
                 : tableFinishedTime == null
-                    ? "Executing..."
-                    : "Finished";
+                    ? OperationalDictionary.Executing
+                    : OperationalDictionary.Finished;
+        }
 
+        private void BlobStatusOverView(StatusModel statusModel)
+        {
             var blobStatus = GetBlobOperationStatus(statusModel);
             var blobFinishedTime = blobStatus.Count > 0 ? blobStatus[0].EndTime - blobStatus[0].StartTime : null;
             ViewData["BlobsOperationType"] = !statusModel.BackupBlobs && !statusModel.RestoreBlobs
-                ? ""
+                ? OperationalDictionary.Empty
                 : blobStatus.Count > 0
                     ? $"{blobStatus[0].OperationType}"
-                    : "Waiting to Execute";
-            ViewData["BlobsCopied"] = blobStatus.Count > 0 ? $"{blobStatus[0].Copied}" : "0";
-            ViewData["BlobsSkipped"] = blobStatus.Count > 0 ? $"{blobStatus[0].Skipped}" : "0";
-            ViewData["BlobsFaulted"] = blobStatus.Count > 0 ? $"{blobStatus[0].Faulted}" : "0";
-            ViewData["BlobsFinishedIn"] = blobStatus.Count > 0 ? blobFinishedTime != null
-                ? $"{blobFinishedTime.Value.Days}:{blobFinishedTime.Value.Hours}:{blobFinishedTime.Value.Minutes}:{blobFinishedTime.Value.Seconds}"
-                : "" : "";
+                    : OperationalDictionary.WaitingToExecute;
+            ViewData["BlobsCopied"] = blobStatus.Count > 0 ? $"{blobStatus[0].Copied}" : OperationalDictionary.Zero;
+            ViewData["BlobsSkipped"] = blobStatus.Count > 0 ? $"{blobStatus[0].Skipped}" : OperationalDictionary.Zero;
+            ViewData["BlobsFaulted"] = blobStatus.Count > 0 ? $"{blobStatus[0].Faulted}" : OperationalDictionary.Zero;
+            ViewData["BlobsFinishedIn"] = blobStatus.Count > 0
+                ? blobFinishedTime != null
+                    ? $"{blobFinishedTime.Value.Days}:{blobFinishedTime.Value.Hours}:{blobFinishedTime.Value.Minutes}:{blobFinishedTime.Value.Seconds}"
+                    : OperationalDictionary.Empty
+                : OperationalDictionary.Empty;
             ViewData["BlobStatus"] = !statusModel.BackupBlobs && !statusModel.RestoreBlobs
-                ? "Skipped"
+                ? OperationalDictionary.Skipped
                 : blobFinishedTime == null
-                    ? "Executing..."
-                    : "Finished";
-            
-            ModelState.Clear();
-            return View();
+                    ? OperationalDictionary.Executing
+                    : OperationalDictionary.Finished;
         }
 
         private List<StatusModel> GetTableOperationStatus(StatusModel statusModel)
@@ -75,14 +87,14 @@ namespace Final.BackupTool.Mvc.Controllers
 
             if (operationTableReference.Exists())
             {
-                if (statusModel.BackupTable && statusModel.Operation == "Backup Status")
+                if (statusModel.BackupTable && statusModel.Operation == OperationalDictionary.BackupStatus)
                 {
                     var backupTableOperationStore = new StartBackupTableOperationStore();
                     results = operationTableReference.ExecuteQuery(query)
                         .Where(t => t.PartitionKey == backupTableOperationStore.GetOperationPartitionKey()).ToList();
                 }
 
-                if (statusModel.RestoreTable && statusModel.Operation == "Restore Status")
+                if (statusModel.RestoreTable && statusModel.Operation == OperationalDictionary.RestoreStatus)
                 {
                     var restoreTableOperationStore = new StartRestoreTableOperationStore();
                     results = operationTableReference.ExecuteQuery(query)
@@ -115,14 +127,14 @@ namespace Final.BackupTool.Mvc.Controllers
 
             if (operationTableReference.Exists())
             {
-                if (statusModel.BackupBlobs && statusModel.Operation == "Backup Status")
+                if (statusModel.BackupBlobs && statusModel.Operation == OperationalDictionary.BackupStatus)
                 {
                     var backupBlobOperationStore = new StartBackUpBlobOperationStore();
                     results = operationTableReference.ExecuteQuery(query)
                         .Where(t => t.PartitionKey == backupBlobOperationStore.GetOperationPartitionKey()).ToList();
                 }
 
-                if (statusModel.RestoreBlobs && statusModel.Operation == "Restore Status")
+                if (statusModel.RestoreBlobs && statusModel.Operation == OperationalDictionary.RestoreStatus)
                 {
                     var restoreBlobOperationStore = new StartRestoreBlobOperationStore();
                     results = operationTableReference.ExecuteQuery(query)
