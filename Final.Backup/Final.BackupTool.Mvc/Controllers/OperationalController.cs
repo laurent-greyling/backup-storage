@@ -20,6 +20,8 @@ namespace Final.BackupTool.Mvc.Controllers
             
             SetCookies(operationalParams);
 
+            var setOperations = new AzureOperations();
+
             if (operationalParams.Start == "backup")
             {
                 Task.Run(() => BackUp(operationalParams));
@@ -53,7 +55,6 @@ namespace Final.BackupTool.Mvc.Controllers
                 operationalParams.BackupStorageConnectionString);
             CookiesReadWrite.Write(OperationalDictionary.OperationalCookie, OperationalDictionary.OperationalCookieKey,
                 operationalParams.OperationalStorageConnectionString);
-            var setOperations = new AzureOperations();
         }
 
         private HttpStatusCodeResult BackUp(OperationalModel operationalParams)
