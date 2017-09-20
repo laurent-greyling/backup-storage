@@ -1,0 +1,190 @@
+﻿@model dynamic
+
+@{
+    ViewBag.Title = "title";
+}
+
+<div class="card">
+    <div>
+        <h3>About Azure Backup And Restore</h3>
+        <p>The Backup tool can back up storage account blobs and tables on a periodic basis. A first run backs up all business-critical production data (domain blobs and tables) from the configured production account to the configured backup account. Each subsequent run is incremental for new and changed blobs, and performs full backups for tables. Note that backups of tables are stored as blobs in JSON format.</p>
+        <p>An operational account stores tables that log the backup and restore operations performed. The operational account should not be configured to use a production or backup storage account. However, one operational account to list operations for all regions.</p>
+    </div>
+</div>
+<div class="card">
+    <div>
+        <h3>How To Use</h3>
+        <p><b>NOTE</b>- Depending on the amount of data you have to restore or backup, this will be a long running process. 
+            Although this site will run blobs and tables in parallel, and was optimised with TPL-Dataflow parallism, it can still take some time to finish.
+        </p> 
+        <h4>Storage Connections</h4>
+        <p>The Connection Strings section is where you will provide the connection strings to:</p>
+        <p>
+            <ul>
+                <li>Production Storage account - The table and blobs which you would like to backup, or when you restore the account to which you want to restore to</li>
+                <li>Backup Storage account - Storage you would like to restore from or backup into</li>
+                <li>Operational Storage account - Storage account to where the logs and other status information about your backup and restore will be written to</li>
+            </ul>
+        </p>
+        <p>
+            These storage account connection strings need to be supplied everytime you want to run a backup or restore
+        </p>
+        <h4>Backup Section</h4>
+        <p>This section is to backup what you have chosen:</p>
+        <p>
+            <ul>
+                <li>Backup Table - This will run backing up of tables</li>
+                <li>Backup Blobs - This will run backing up of blobs</li>
+            </ul>
+        </p>
+        <p>
+            If both are set it will run both tables and blob backup.
+        </p>
+        <h4>Restore Section</h4>
+        <p>This section is to restore what you have chosen:</p>
+        <p>
+            <ul>
+                <li>Container Name - This is the name of the specified container you wish to restore. If left blank all containers will be restored</li>
+                <li>Blob Name - This is the name of the blob to be restored. If left blank all blobs within a container will be restored</li>
+                <li>Table Name - This is the name of the table to be restored. If left blank all tables will be restore</li>
+                <li>
+                    Restore From and To Date - although not forced, this is a required field for restore to work properly.
+                    This will make sure you retore the correct blobs or tables for the date you need.
+                    Even if you want to restore the most recent, you will need to supply these dates.
+                    If you are unsure to which dates and times, you can go to the <b>view log</b> section as the log for the date will contain the exact times you need
+                </li>
+                <li>Force option - this will allow you to force a blob restore. if this is not selected, only blobs that have been altered will be restored while others will be skipped</li>
+                <li>Restore Tables</li>
+                <li>Restore Blobs</li>
+                <li>If both Restore Tables and Restore Blobs are selected all tables and blobs will be restored, irrespective of values filled into other inputs. Dates are still required.</li>
+            </ul>
+        </p>
+        <p>
+            If both are set it will run both tables and blob backup.
+        </p>
+        <h4>Status Section</h4>
+        <p>When the backup or restore is started a status page will appear. This page will give the following information:</p>
+        <p>
+            <ul>
+                <li>Operation Type - Full(All was restored or backedup), Incremental(only changed storage was restored or backedup)</li>
+                <li>Copied - Number of blobs or tables copied. If zero, check if it was incremental</li>
+                <li>Skipped - Usually greater than zero if incremental operation was executed</li>
+                <li>Faulted - number of blobs or tables that did not backup or restore because of a fault, check logs</li>
+                <li>Finished in - time it took to finish as days:hours:minutes:seconds</li>
+                <li>Status - Finished, Skipped(if not selected), Executing(still busy with executing)</li>
+            </ul>
+        </p>
+        <p>
+            If both are set it will run both tables and blob backup.
+        </p>
+        <h4>View Log</h4>
+        <p>This will allow you to either view/download the latest log or a log from a specified date:</p>
+        <p>
+            <ul>
+                <li>Operational Storage - Connection string to the operational storage where log is stored</li>
+                <li>Date - Date you wish to view</li>
+                <li>The log file also contain the details for restore, such as the dates needed for from and to restore dates</li>
+            </ul>
+        </p>
+        <p>
+            If both are set it will run both tables and blob backup.
+        </p>
+    </div>
+</div>
+<div class="card">
+    <div>
+        <h3>Version History</h3>
+        <p>
+            <h4>v0.9.1</h4>
+            <ul>
+                <li>Fix row key issue, escape special characters</li>
+                <li>Some minor refactoring</li>
+            </ul>
+        </p>
+        <p>
+            <h4>v0.9.0</h4>
+            <ul>
+                <li>Restore all added, can now restore all tables and blobs in one go</li>
+                <li>Added info to error logging in order to understand exception messages and where they might happen</li>
+                <li>Added optional command to skip either tables or blobs when backing up</li>
+            </ul>
+        </p>
+        <p>
+            <h4>v0.8.1</h4>
+            <ul>
+                <li>Out of memory exception fixes</li>
+                <li>Lowered the amount of memory backup and restore of tables use</li>
+                <li>Release memory when finished</li>
+            </ul>
+        </p>
+        <p>
+            <h4>v0.8</h4>
+            <ul>
+                <li>Restore specified blobs</li>
+                <li>Added to log files the restore command lines needed to restore with actual dates</li>
+                <li>Some minor improvements and refactoring</li>
+            </ul>
+        </p>
+        <p>
+            <h4>v0.7</h4>
+            <ul>
+                <li>Restore from specified container(s)</li>
+                <li>Operation type is always full for restoring blobs and tables</li>
+                <li>Restore from point in time - snapshot - for blob restore</li>
+                <li>Force restore</li>
+                <li>isBackUp removed. Backup and restore split now</li>
+                <li>Have table storage have its own building blocks same as blob storage - backup/restore in own blocks</li>
+                <li>Fix duplicate partition key issue in operation tables</li>
+                <li>Other refactoring and fixes</li>
+            </ul>
+        </p>
+        <p>
+            <h4>v0.6</h4>
+            <ul>
+                <li>Operational storage account to keep track of backup / restore operations performed</li>
+                <li>Greatly improve backup and restore speed</li>
+                <li>Add option to restore multiple tables, or all tables at once</li>
+                <li>Set date range for point in time restore for tables</li>
+                <li>Automated tests</li>
+            </ul>
+        </p>
+        <p>
+            <h4>v0.5</h4>
+            <ul>
+                <li>Log Backup tool version at log start</li>
+                <li>Ignore transient file exceptions when cleaning journal folder rather than crash</li>
+            </ul>
+        </p>
+        <p>
+            <h4>v0.4</h4>
+            <ul>
+                <li>Fix restore table</li>
+                <li>Fix restore blob</li>
+            </ul>
+        </p>
+        <p>
+            <h4>v0.3</h4>
+            <ul>
+                <li>Fix logging bug that crashed the app</li>
+                <li>App no longer swallows errors during copy (it always said it was 'done' even if the copy failed)</li>
+                <li>Change configuration item names to make them more clear, removed unnecessary items</li>
+                <li>Skip copying non-vital blobs</li>
+                <li>Skip copying non-vital tables</li>
+                <li>Check that before cleaning a backup storage account, it does not accidentally point to a production account due to misconfiguration</li>
+                <li>Some code cleanup</li>
+            </ul>
+        </p>
+        <p>
+            <h4>v0.2</h4>
+            <ul>
+                <li>Back up table storages between configured storage accounts</li>
+            </ul>
+        </p>
+        <p>
+            <h4>v0.1</h4>
+            <ul>
+                <li>Back up blob storages between configured storage accounts</li>
+            </ul>
+        </p>
+    </div>
+</div>

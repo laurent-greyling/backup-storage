@@ -24,3 +24,4 @@ bld/
 
 # Visual Studio 2015 cache/options directory
 .vs/
+/Final.Backup/Final.BackupTool.Mvc/Properties/PublishProfiles/AzureStorageBackupRestore - Web Deploy.pubxml
