@@ -43,5 +43,6 @@
         public const string Empty = "";
         public const string Zero = "0";
         public const string WaitingToExecute = "Waiting to Execute";
+        public const string ViewRecentStatus = "ViewRecentStatus";
     }
 }

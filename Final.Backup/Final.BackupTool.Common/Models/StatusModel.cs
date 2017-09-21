@@ -4,6 +4,7 @@ namespace Final.BackupTool.Common.Models
 {
     public class StatusModel
     {
+        public string OperationalStorageConnectionString { get; set; }
         public string PartitionKey { get; set; }
         public string Operation { get; set; }
 

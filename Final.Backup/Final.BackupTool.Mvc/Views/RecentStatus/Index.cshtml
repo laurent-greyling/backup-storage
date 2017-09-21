@@ -1,0 +1,70 @@
+﻿@using Final.BackupTool.Common.Operational
+@model Final.BackupTool.Common.Models.StatusModel
+@{
+    ViewBag.Title = "Index";
+}
+
+@using (Html.BeginForm("Index", "RecentStatus"))
+{
+    <div id="ViewRecent" class="card">
+        <h4>Recent Operational Activities</h4>
+        <table>
+            <tr>
+                <td>
+                    <label>Operational Storage:</label>
+                </td>
+                <td>
+                    @Html.TextBoxFor(model => model.OperationalStorageConnectionString, new { Size = "100", Placeholder = "Operational Storage", Id = "operationalStorage", Class = "textinput", Required = "required" })
+                </td>
+            </tr>
+        </table>
+        <input id="viewStatus" type="submit" value="view" class="button" />
+    </div>
+
+     if((string) ViewData[OperationalDictionary.ViewRecentStatus] == "true")
+         {
+        <div id="RecentBackup" class="card">
+            <h4>Recent Backup Operations</h4>
+
+            <table class="table-fill">
+                <thead>
+                    <tr>
+                        <th class="text-left table-fill"></th>
+                        <th class="text-left table-fill">Operation Type</th>
+                        <th class="text-left table-fill">Copied</th>
+                        <th class="text-left table-fill">Skipped</th>
+                        <th class="text-left table-fill">Faulted</th>
+                        <th class="text-left table-fill">Finished In</th>
+                        <th class="text-left table-fill">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="table-hover table-fill">
+                    <tr></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="RecentRestore" class="card">
+            <h4>Recent Restore Operations</h4>
+
+            <table class="table-fill">
+                <thead>
+                <tr>
+                    <th class="text-left table-fill"></th>
+                    <th class="text-left table-fill">Operation Type</th>
+                    <th class="text-left table-fill">Copied</th>
+                    <th class="text-left table-fill">Skipped</th>
+                    <th class="text-left table-fill">Faulted</th>
+                    <th class="text-left table-fill">Finished In</th>
+                    <th class="text-left table-fill">Status</th>
+                </tr>
+                </thead>
+                <tbody class="table-hover table-fill">
+                <tr></tr>
+                </tbody>
+            </table>
+        </div>
+    }
+}
+    
+
