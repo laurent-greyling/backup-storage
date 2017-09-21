@@ -44,6 +44,9 @@ namespace Final.BackupTool.Mvc.Controllers
                 RestoreBlobs = operationalParams.RestoreBlobs
             };
 
+            CookiesReadWrite.Delete(OperationalDictionary.ProductionCookie);
+            CookiesReadWrite.Delete(OperationalDictionary.BackupCookie);
+
             return RedirectToAction("Index","Status", statusModel);
         }
 
