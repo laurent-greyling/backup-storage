@@ -1,9 +1,9 @@
-# Nfield Backup Tool v0.9.1
+# Final Backup Tool v0.9.1
 
 **NOTES:**
 - **A new (full) backup to a clean storage must be performed due to backup storage reorganization**
 
-The Nfield Backup tool can back up storage account blobs and tables on a periodic basis. It is intended to be run as a console application on a virtual machine. A first run backs up all business-critical production data (domain blobs and tables) from the configured production account to the configured backup account. Each subsequent run is incremental for new and changed blobs, and performs full backups for tables. Note that backups of tables are stored as blobs in JSON format.
+The Backup tool can back up storage account blobs and tables on a periodic basis. It is intended to be run as a console application on a virtual machine. A first run backs up all business-critical production data (domain blobs and tables) from the configured production account to the configured backup account. Each subsequent run is incremental for new and changed blobs, and performs full backups for tables. Note that backups of tables are stored as blobs in JSON format.
 
 An operational account stores tables that log the backup and restore operations performed. The operational account should not be configured to use a production or backup storage account. However, one operational account to list operations for all regions.   
 

@@ -7,6 +7,22 @@
     <title>@ViewBag.Title - Azure Storage Backup And Restore</title>
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/modernizr")
+    <link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.css" />
+    <script src="//cdnjs.cloudflare.com/ajax/libs/cookieconsent2/3.0.3/cookieconsent.min.js"></script>
+    <script>
+        window.addEventListener("load", function(){
+            window.cookieconsent.initialise({
+                "palette": {
+                    "popup": {
+                        "background": "#343a45"
+                    },
+                    "button": {
+                        "background": "#14a7d0"
+                    }
+                },
+                "theme": "edgeless"
+            })});
+    </script>
 </head>
 <body>
     <div class="navbar navbar-inverse navbar-fixed-top">
@@ -22,6 +38,7 @@
             <div class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
                     <li>@Html.ActionLink("View Log", "Index", "OperationalLogs")</li>
+                    <li>@Html.ActionLink("About", "Index", "About")</li>
                 </ul>
             </div>
         </div>
@@ -31,6 +48,7 @@
         <hr />
         <footer>
             <p>&copy; @DateTime.Now.Year - Azure Storage Backup And Restore : version 0.9.1.0 </p>
+            <p>@Html.ActionLink("Delete Cookies", "Index", "DeleteCookies") - This does not disable cookies, but will clear cookies</p>
         </footer>
     </div>
 

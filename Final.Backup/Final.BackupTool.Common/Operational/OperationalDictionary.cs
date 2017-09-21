@@ -27,5 +27,21 @@
         public const string WawsAppLogTable = "wawsapplogtable";
         public const string Activities = "activities";
         public const string DateFormat = "yyyy-MM-ddTHH:mm:ss";
+        public const string ProductionCookie = "production";
+        public const string BackupCookie = "backup";
+        public const string OperationalCookie = "operational";
+        public const string ProductionCookieKey = "productionKey";
+        public const string BackupCookieKey = "backupKey";
+        public const string OperationalCookieKey = "operationalKey";
+        public const string BackupStatus = "Backup Status";
+        public const string RestoreStatus = "Restore Status";
+        public const string LogDetails = "LogDetails";
+        public const string ViewLog = "ViewLog";
+        public const string Finished = "Finished";
+        public const string Executing = "Executing...";
+        public const string Skipped = "Skipped";
+        public const string Empty = "";
+        public const string Zero = "0";
+        public const string WaitingToExecute = "Waiting to Execute";
     }
 }

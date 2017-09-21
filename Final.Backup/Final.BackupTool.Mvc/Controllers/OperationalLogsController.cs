@@ -12,7 +12,9 @@ namespace Final.BackupTool.Mvc.Controllers
         // GET: Logs
         public ActionResult Index(OperationalLogModel operationalLog)
         {
-            var cookieValue = CookiesReadWrite.Read("operational", "operationalKey");
+            CookiesReadWrite.Delete(OperationalDictionary.ProductionCookie);
+            CookiesReadWrite.Delete(OperationalDictionary.BackupCookie);
+            var cookieValue = CookiesReadWrite.Read(OperationalDictionary.OperationalCookie, OperationalDictionary.OperationalCookieKey);
             var connectionString = operationalLog.OperationalStorageConnectionString;
             var webConfig = WebConfigurationManager.AppSettings["OperationalStorageConnectionString"];
 
@@ -23,7 +25,7 @@ namespace Final.BackupTool.Mvc.Controllers
             if (string.IsNullOrEmpty(cookieValue) &&
                 !string.IsNullOrEmpty(connectionString))
             {
-                CookiesReadWrite.Write("operational", "operationalKey", connectionString);
+                CookiesReadWrite.Write(OperationalDictionary.OperationalCookie, OperationalDictionary.OperationalCookieKey, connectionString);
             }
 
             var downloadLog = new AzureOperations();
@@ -31,19 +33,23 @@ namespace Final.BackupTool.Mvc.Controllers
             if (!string.IsNullOrEmpty(webConfig) 
                 || !string.IsNullOrEmpty(cookieValue))
             {
-                ViewData["LogDetails"] = downloadLog.ReadLatestBlob(OperationalDictionary.Logs);
-                ViewData["ViewLog"] = "true";
+                var latestLog = downloadLog.ReadLatestBlob(OperationalDictionary.Logs);
+                ViewData[OperationalDictionary.LogDetails] = latestLog;
+                if (!string.IsNullOrEmpty(latestLog))
+                {
+                    ViewData[OperationalDictionary.ViewLog] = "true";
+                }
             }
 
-            if (operationalLog.DownloadLog == "download log")
+            if (operationalLog.DownloadLog == "download")
             {
                 downloadLog.DownloadBlob(OperationalDictionary.Logs, operationalLog.LastModified);
             }
 
-            if (operationalLog.ViewLog != "view log") return View();
+            if (operationalLog.ViewLog != "view") return View();
 
-            ViewData["LogDetails"] = downloadLog.ReadBlob(OperationalDictionary.Logs, operationalLog.LastModified);
-            ViewData["ViewLog"] = "true";
+            ViewData[OperationalDictionary.LogDetails] = downloadLog.ReadBlob(OperationalDictionary.Logs, operationalLog.LastModified);
+            ViewData[OperationalDictionary.ViewLog] = "true";
 
             return View();
         }
