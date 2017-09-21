@@ -176,6 +176,7 @@
     <Compile Include="ConsoleCommand\BackupCommand.cs" />
     <Compile Include="ConsoleCommand\RestoreBlobCommand.cs" />
     <Compile Include="ConsoleCommand\RestoreTableCommand.cs" />
+    <Compile Include="Models\LatestStatusModel.cs" />
     <Compile Include="Models\OperationalLogModel.cs" />
     <Compile Include="Models\OperationalModel.cs" />
     <Compile Include="Models\StatusModel.cs" />

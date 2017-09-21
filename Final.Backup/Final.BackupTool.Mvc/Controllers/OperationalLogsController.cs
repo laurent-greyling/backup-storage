@@ -28,12 +28,12 @@ namespace Final.BackupTool.Mvc.Controllers
                 CookiesReadWrite.Write(OperationalDictionary.OperationalCookie, OperationalDictionary.OperationalCookieKey, connectionString);
             }
 
-            var downloadLog = new AzureOperations();
+            var azureOperations = new AzureOperations();
 
             if (!string.IsNullOrEmpty(webConfig) 
                 || !string.IsNullOrEmpty(cookieValue))
             {
-                var latestLog = downloadLog.ReadLatestBlob(OperationalDictionary.Logs);
+                var latestLog = azureOperations.ReadLatestBlob(OperationalDictionary.Logs);
                 ViewData[OperationalDictionary.LogDetails] = latestLog;
                 if (!string.IsNullOrEmpty(latestLog))
                 {
@@ -43,12 +43,12 @@ namespace Final.BackupTool.Mvc.Controllers
 
             if (operationalLog.DownloadLog == "download")
             {
-                downloadLog.DownloadBlob(OperationalDictionary.Logs, operationalLog.LastModified);
+                azureOperations.DownloadBlob(OperationalDictionary.Logs, operationalLog.LastModified);
             }
 
             if (operationalLog.ViewLog != "view") return View();
 
-            ViewData[OperationalDictionary.LogDetails] = downloadLog.ReadBlob(OperationalDictionary.Logs, operationalLog.LastModified);
+            ViewData[OperationalDictionary.LogDetails] = azureOperations.ReadBlob(OperationalDictionary.Logs, operationalLog.LastModified);
             ViewData[OperationalDictionary.ViewLog] = "true";
 
             return View();

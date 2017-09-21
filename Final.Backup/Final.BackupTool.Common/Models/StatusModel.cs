@@ -15,8 +15,6 @@ namespace Final.BackupTool.Common.Models
         public int ContainerCount { get; set; }
         public string OperationType { get; set; }
 
-        public string TimeTaken { get; set; }
-
         public int Copied { get; set; }
         public int Skipped { get; set; }
         public int Faulted { get; set; }
@@ -24,5 +22,7 @@ namespace Final.BackupTool.Common.Models
         public bool BackupBlobs { get; set; }
         public bool RestoreTable { get; set; }
         public bool RestoreBlobs { get; set; }
+        public string FinishedIn { get; set; }
+        public string FinalStatus { get; set; }
     }
 }
