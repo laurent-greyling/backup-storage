@@ -2,6 +2,7 @@
     ViewBag.Title = "Home Page";
 }
 
+@using System.Web.Mvc.Html
 @model Final.BackupTool.Common.Models.OperationalModel
 
 
@@ -13,6 +14,14 @@
             <colgroup>
                 <col span="2" />
             </colgroup>
+            <tr>
+                <td>
+                    <label>Storage Group:</label>
+                </td>
+                <td>
+                    @Html.DropDownListFor(model=>model.ProductionStorageConnectionString, Model.Groups)
+                </td>
+            </tr>
             <tr>
                 <td>
                     <label>Production Storage:</label>
