@@ -44,18 +44,12 @@ namespace Final.BackupTool.Mvc.Controllers
                 RestoreBlobs = operationalParams.RestoreBlobs
             };
 
-            CookiesReadWrite.Delete(OperationalDictionary.ProductionCookie);
-            CookiesReadWrite.Delete(OperationalDictionary.BackupCookie);
-
             return RedirectToAction("Index","Status", statusModel);
         }
 
         private static void SetCookies(OperationalModel operationalParams)
         {
-            CookiesReadWrite.Write(OperationalDictionary.ProductionCookie, OperationalDictionary.ProductionCookieKey,
-                operationalParams.ProductionStorageConnectionString);
-            CookiesReadWrite.Write(OperationalDictionary.BackupCookie, OperationalDictionary.BackupCookieKey,
-                operationalParams.BackupStorageConnectionString);
+            CookiesReadWrite.Write(OperationalDictionary.GroupsTable, OperationalDictionary.GroupsTable, operationalParams.SelectedConnectionGroup);
             CookiesReadWrite.Write(OperationalDictionary.OperationalCookie, OperationalDictionary.OperationalCookieKey,
                 operationalParams.OperationalStorageConnectionString);
         }

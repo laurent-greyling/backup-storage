@@ -7,10 +7,6 @@ namespace Final.BackupTool.Common.Models
     public class OperationalModel
     {
         [Required]
-        public string ProductionStorageConnectionString { get; set; }
-        [Required]
-        public string BackupStorageConnectionString { get; set; }
-        [Required]
         public string OperationalStorageConnectionString { get; set; }
 
         public SelectList Groups { get; set; }

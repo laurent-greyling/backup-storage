@@ -19,31 +19,7 @@
                     <label>Storage Group:</label>
                 </td>
                 <td>
-                    @Html.DropDownListFor(model=>model.ProductionStorageConnectionString, Model.Groups)
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <label>Production Storage:</label>
-                </td>
-                <td>
-                    @Html.TextBoxFor(model => model.ProductionStorageConnectionString, new { Size="100", Placeholder="Production Storage", Id="productionStorage", Class="textinput", Required="required" })
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <label>Backup Storage:</label>
-                </td>
-                <td>
-                    @Html.TextBoxFor(model => model.BackupStorageConnectionString, new { Size="100", Placeholder="Backup Storage", Id="backupStorage", Class="textinput", Required = "required" })
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <label>Operational Storage:</label>
-                </td>
-                <td>
-                    @Html.TextBoxFor(model => model.OperationalStorageConnectionString, new { Size="100", Placeholder="Operational Storage", Id="operationalStorage", Class="textinput", Required = "required" })
+                    @Html.DropDownListFor(model=>model.SelectedConnectionGroup, Model.Groups)
                 </td>
             </tr>
         </table>

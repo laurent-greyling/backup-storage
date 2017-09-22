@@ -11,14 +11,20 @@ namespace Final.BackupTool.Mvc.Controllers
     {
         public ActionResult Index()
         {
+            if (string.IsNullOrEmpty(CookiesReadWrite.Read(OperationalDictionary.OperationalCookie, OperationalDictionary.OperationalCookieKey)))
+            {
+                return RedirectToAction("Index","GetOperationalConnection");
+            }
             var azureOperations = new AzureOperations();
             var table = azureOperations.OperationsTableReference(OperationalDictionary.GroupsTable);
             var query = new TableQuery();
             var result = table.ExecuteQuery(query).Select(x=>x.PartitionKey).ToList();
+            if (!result.Any())
+            {
+                return RedirectToAction("Create", "ConnectionString");
+            }
             var groups = new SelectList(result);
-
-            CookiesReadWrite.Delete(OperationalDictionary.ProductionCookie);
-            CookiesReadWrite.Delete(OperationalDictionary.BackupCookie);
+            
             return View(new OperationalModel{Groups = groups});
         }
     }

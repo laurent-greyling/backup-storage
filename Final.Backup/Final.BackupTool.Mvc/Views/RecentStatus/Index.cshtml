@@ -8,26 +8,10 @@
 
 @using (Html.BeginForm("Index", "RecentStatus"))
 {
-
-    <div id="ViewRecent" class="card">
-        <h4>Recent Operational Activities</h4>
-        <table>
-            <tr>
-                <td>
-                    <label>Operational Storage:</label>
-                </td>
-                <td>
-                    @Html.TextBoxFor(model=> model.ConnectionString, new {Size = "100", Placeholder = "Operational Storage", Id = "operationalStorage", Class = "textinput", Required = "required"})
-                </td>
-            </tr>
-        </table>
-        <input id="viewStatus" type="submit" value="view" class="button"/>
-    </div>
-
     if ((string) ViewData[OperationalDictionary.ViewRecentStatus] == "true")
     {
         <div id="RecentTableActivity" class="card">
-            <h4>Recent Operations</h4>
+            <h4>Recent Operational Activities</h4>
 
             <table class="table-fill">
                 <thead>

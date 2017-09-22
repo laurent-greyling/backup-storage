@@ -25,11 +25,17 @@ namespace Final.BackupTool.Mvc.Controllers
         // GET: ConnectionString/Create
         public ActionResult Create(ConnectionStringsEntity connectionEntity)
         {
+            var cookieValue = CookiesReadWrite.Read(OperationalDictionary.OperationalCookie, OperationalDictionary.OperationalCookieKey);
+
+            if (string.IsNullOrEmpty(cookieValue))
+            {
+                return RedirectToAction("Index", "GetOperationalConnection");
+            }
+
             if (string.IsNullOrEmpty(connectionEntity.PartitionKey)) return View();
 
-            CookiesReadWrite.Write(OperationalDictionary.OperationalCookie,
-                OperationalDictionary.OperationalCookieKey,
-                connectionEntity.OperationStorageConnectionString);
+            connectionEntity.OperationStorageConnectionString = cookieValue;
+
             connectionEntity.RowKey = DateTimeOffset.MaxValue.Ticks.ToString("d19");
 
             var azureOperations = new AzureOperations();

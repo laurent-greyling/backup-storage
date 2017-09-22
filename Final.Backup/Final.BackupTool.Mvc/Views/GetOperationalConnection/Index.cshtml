@@ -1,0 +1,26 @@
+﻿@model Final.BackupTool.Common.Entities.ConnectionStringsEntity
+
+@{
+    ViewBag.Title = "title";
+}
+
+<form>
+    <div id="operationacon" class="card">
+        <h4>Set Operation Connection</h4>
+        <p>Sorry, we cannot remember your operational connection, can you please remind us</p>
+        <table>
+            <colgroup>
+                <col span="2" />
+            </colgroup>
+            <tr>
+                <td>
+                    <label>Operational Storage:</label>
+                </td>
+                <td>
+                    @Html.TextBoxFor(model => model.OperationStorageConnectionString, new { Size = "100", Placeholder = "Operational Storage", Id = "operationalStorage", Class = "textinput", Required = "required" })
+                </td>
+            </tr>
+        </table>
+        <input id="SetConnection" type="submit" value="Refresh" class="button" />
+    </div>
+</form> 
