@@ -44,7 +44,7 @@ namespace Final.BackupTool.Mvc.Controllers
             ViewData["TablesFaulted"] = tableStatus.Count > 0 ? $"{tableStatus[0].Faulted}" : OperationalDictionary.Zero;
             ViewData["TablesFinishedIn"] = tableStatus.Count > 0
                 ? tableFinishedTime != null
-                    ? $"{tableFinishedTime.Value.Days}:{tableFinishedTime.Value.Hours}:{tableFinishedTime.Value.Minutes}:{tableFinishedTime.Value.Seconds}"
+                    ? $"{tableFinishedTime.Value.Days} days, {tableFinishedTime.Value.Hours}h:{tableFinishedTime.Value.Minutes}m:{tableFinishedTime.Value.Seconds}s"
                     : OperationalDictionary.Empty
                 : OperationalDictionary.Empty;
             ViewData["TableStatus"] = !statusModel.BackupTable && !statusModel.RestoreTable
@@ -68,7 +68,7 @@ namespace Final.BackupTool.Mvc.Controllers
             ViewData["BlobsFaulted"] = blobStatus.Count > 0 ? $"{blobStatus[0].Faulted}" : OperationalDictionary.Zero;
             ViewData["BlobsFinishedIn"] = blobStatus.Count > 0
                 ? blobFinishedTime != null
-                    ? $"{blobFinishedTime.Value.Days}:{blobFinishedTime.Value.Hours}:{blobFinishedTime.Value.Minutes}:{blobFinishedTime.Value.Seconds}"
+                    ? $"{blobFinishedTime.Value.Days} days, {blobFinishedTime.Value.Hours}h:{blobFinishedTime.Value.Minutes}m:{blobFinishedTime.Value.Seconds}s"
                     : OperationalDictionary.Empty
                 : OperationalDictionary.Empty;
             ViewData["BlobStatus"] = !statusModel.BackupBlobs && !statusModel.RestoreBlobs

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Web;
 using System.Web.Configuration;
@@ -14,13 +15,13 @@ namespace Final.BackupTool.Mvc.Controllers
 {
     public class RecentStatusController : Controller
     {
-        public ActionResult Index(StatusModel status)
+        public ActionResult Index(LatestStatusModel status)
         {
             CookiesReadWrite.Delete(OperationalDictionary.ProductionCookie);
             CookiesReadWrite.Delete(OperationalDictionary.BackupCookie);
 
             var cookieValue = CookiesReadWrite.Read(OperationalDictionary.OperationalCookie, OperationalDictionary.OperationalCookieKey);
-            var connectionString = status.OperationalStorageConnectionString;
+            var connectionString = status.ConnectionString;
             var webConfig = WebConfigurationManager.AppSettings["OperationalStorageConnectionString"];
 
             if (string.IsNullOrEmpty(cookieValue) &&
@@ -31,6 +32,7 @@ namespace Final.BackupTool.Mvc.Controllers
                 !string.IsNullOrEmpty(connectionString))
             {
                 CookiesReadWrite.Write(OperationalDictionary.OperationalCookie, OperationalDictionary.OperationalCookieKey, connectionString);
+                cookieValue = CookiesReadWrite.Read(OperationalDictionary.OperationalCookie, OperationalDictionary.OperationalCookieKey);
             }
 
             var azureOperations = new AzureOperations();
@@ -50,12 +52,15 @@ namespace Final.BackupTool.Mvc.Controllers
                     var finished = x.EndTime - x.StartTime;
                     return new StatusModel
                     {
+                        PartitionKey = x.PartitionKey,
                         OperationType = x.OperationType,
                         Copied = x.Copied,
                         Skipped = x.Skipped,
                         Faulted = x.Faulted,
+                        Stime = x.StartTime?.LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.CurrentUICulture) ?? OperationalDictionary.Empty,
+                        Etime = x.EndTime?.LocalDateTime.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.CurrentUICulture) ?? OperationalDictionary.Empty,
                         FinishedIn = finished != null
-                            ? $"{finished.Value.Days}:{finished.Value.Hours}:{finished.Value.Minutes}:{finished.Value.Seconds}"
+                            ? $"{finished.Value.Days} days, {finished.Value.Hours}h:{finished.Value.Minutes}m:{finished.Value.Seconds}s"
                             : OperationalDictionary.Empty,
                         
                         FinalStatus = finished == null
@@ -66,8 +71,11 @@ namespace Final.BackupTool.Mvc.Controllers
 
                 if (recentStatus.Count > 0) ViewData[OperationalDictionary.ViewRecentStatus] = "true";
             }
-
-            return View(recentStatus);
+            return View(new LatestStatusModel
+            {
+                ConnectionString = connectionString,
+                Status = recentStatus
+            });
         }
     }
 }

@@ -11,6 +11,8 @@ namespace Final.BackupTool.Common.Models
         public DateTimeOffset? OperationDate { get; set; }
         public DateTimeOffset? EndTime { get; set; }
         public DateTimeOffset? StartTime { get; set; }
+        public string Etime { get; set; }
+        public string Stime { get; set; }
         public int TableCount { get; set; }
         public int ContainerCount { get; set; }
         public string OperationType { get; set; }

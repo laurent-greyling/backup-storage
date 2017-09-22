@@ -1,58 +1,68 @@
 ﻿@using Final.BackupTool.Common.Operational
-@model List<Final.BackupTool.Common.Models.StatusModel>
+@model Final.BackupTool.Common.Models.LatestStatusModel
 @{
     ViewBag.Title = "Index";
 }
 
+<meta http-equiv="refresh" content="10">
+
 @using (Html.BeginForm("Index", "RecentStatus"))
 {
-    foreach (var m in Model)
+
+    <div id="ViewRecent" class="card">
+        <h4>Recent Operational Activities</h4>
+        <table>
+            <tr>
+                <td>
+                    <label>Operational Storage:</label>
+                </td>
+                <td>
+                    @Html.TextBoxFor(model=> model.ConnectionString, new {Size = "100", Placeholder = "Operational Storage", Id = "operationalStorage", Class = "textinput", Required = "required"})
+                </td>
+            </tr>
+        </table>
+        <input id="viewStatus" type="submit" value="view" class="button"/>
+    </div>
+
+    if ((string) ViewData[OperationalDictionary.ViewRecentStatus] == "true")
     {
-        <div id="ViewRecent" class="card">
-            <h4>Recent Operational Activities</h4>
-            <table>
+        <div id="RecentTableActivity" class="card">
+            <h4>Recent Operations</h4>
+
+            <table class="table-fill">
+                <thead>
                 <tr>
-                    <td>
-                        <label>Operational Storage:</label>
-                    </td>
-                    <td>
-                        @Html.TextBoxFor(model => m.OperationalStorageConnectionString, new {Size = "100", Placeholder = "Operational Storage", Id = "operationalStorage", Class = "textinput", Required = "required"})
-                    </td>
+                    <th class="text-left table-fill">Activity</th>
+                    <th class="text-left table-fill">Operation Type</th>
+                    <th class="text-left table-fill">Copied</th>
+                    <th class="text-left table-fill">Skipped</th>
+                    <th class="text-left table-fill">Faulted</th>
+                    <th class="text-left table-fill">Started</th>
+                    <th class="text-left table-fill">Ended</th>
+                    <th class="text-left table-fill">Finished In</th>
+                    <th class="text-left table-fill">Status</th>
                 </tr>
-            </table>
-            <input id="viewStatus" type="submit" value="view" class="button"/>
-        </div>
-
-        if ((string) ViewData[OperationalDictionary.ViewRecentStatus] == "true")
-        {
-            <div id="RecentTableActivity" class="card">
-                <h4>Recent Operations</h4>
-
-                <table class="table-fill">
-                    <thead>
+                </thead>
+                <tbody class="table-hover table-fill">
+                @foreach (var m in Model.Status)
+                {
                     <tr>
-                        <th class="text-left table-fill">Operation Type</th>
-                        <th class="text-left table-fill">Copied</th>
-                        <th class="text-left table-fill">Skipped</th>
-                        <th class="text-left table-fill">Faulted</th>
-                        <th class="text-left table-fill">Finished In</th>
-                        <th class="text-left table-fill">Status</th>
-                    </tr>
-                    </thead>
-                    <tbody class="table-hover table-fill">
-                    <tr>
+                        <td class="text-left table-fill">@m.PartitionKey</td>
                         <td class="text-left table-fill">@m.OperationType</td>
                         <td class="text-left table-fill">@m.Copied</td>
                         <td class="text-left table-fill">@m.Skipped</td>
                         <td class="text-left table-fill">@m.Faulted</td>
+                        <td class="text-left table-fill">@m.Stime</td>
+                        <td class="text-left table-fill">@m.Etime</td>
                         <td class="text-left table-fill">@m.FinishedIn</td>
                         <td class="text-left table-fill">@m.FinalStatus</td>
                     </tr>
-                    </tbody>
-                </table>
-            </div>
-        }
+                }
+                </tbody>
+            </table>
+        </div>
     }
+
 }
     
 

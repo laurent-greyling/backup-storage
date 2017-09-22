@@ -186,7 +186,8 @@ namespace Final.BackupTool.Common.Operational
                 string readBlob;
                 while (!string.IsNullOrEmpty(readBlob = reader.ReadLine()))
                 {
-                    readLine.AppendLine(readBlob);
+                    var logFile = $"{readBlob}<br />";
+                    readLine.Append(logFile);
                 }
             }
 
@@ -205,7 +206,8 @@ namespace Final.BackupTool.Common.Operational
                 string readBlob;
                 while (!string.IsNullOrEmpty(readBlob = reader.ReadLine()))
                 {
-                    readLine.Append(readBlob).AppendLine();
+                    var logFile = $"{readBlob}<br />";
+                    readLine.Append(logFile);
                 }
             }
 

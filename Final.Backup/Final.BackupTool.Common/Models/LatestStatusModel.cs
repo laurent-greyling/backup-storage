@@ -1,13 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace Final.BackupTool.Common.Models
 {
     public class LatestStatusModel
     {
+        public string ConnectionString { get; set; }
         public List<StatusModel> Status { get; set; }
     }
 }
