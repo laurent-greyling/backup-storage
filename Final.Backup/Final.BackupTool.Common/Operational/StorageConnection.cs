@@ -14,7 +14,8 @@ namespace Final.BackupTool.Common.Operational
         public string BackupStorageConnectionString { get; set; }
         public string OperationStorageConnectionString { get; set; }
 
-        private IEnumerable<ConnectionStringsEntity> Group => GetGroup();
+
+        public IEnumerable<ConnectionStringsEntity> Group => GetGroup();
         public StorageConnection()
         {
             ProductionStorageConnectionString =
@@ -33,12 +34,12 @@ namespace Final.BackupTool.Common.Operational
             OperationStorageConnectionString = string.IsNullOrEmpty(CloudConfigurationManager.GetSetting("OperationalStorageConnectionString"))
                 ? !Group.Any()
                     ? CookiesReadWrite.Read(OperationalDictionary.OperationalCookie,
-                            OperationalDictionary.OperationalCookieKey)
+                        OperationalDictionary.OperationalCookieKey)
                     : Group.Select(x => x.OperationStorageConnectionString).ToList()[0]
                 : CloudConfigurationManager.GetSetting("OperationalStorageConnectionString");
         }
 
-        private static IEnumerable<ConnectionStringsEntity> GetGroup()
+        private static List<ConnectionStringsEntity> GetGroup()
         {
             var groupValue = CookiesReadWrite.Read(OperationalDictionary.GroupsTable, OperationalDictionary.GroupsTable);
             var operationalStorage = CookiesReadWrite.Read(OperationalDictionary.OperationalCookie,
@@ -52,10 +53,10 @@ namespace Final.BackupTool.Common.Operational
             var storageAccount = CloudStorageAccount.Parse(operationalStorage);
             var tableClient = storageAccount.CreateCloudTableClient();
 
-            var table = tableClient.GetTableReference(OperationalDictionary.OperationTableName);
+            var table = tableClient.GetTableReference(OperationalDictionary.ConnectionTable);
 
             var operation = new TableQuery<ConnectionStringsEntity>();
-            return table.ExecuteQuery(operation).Where(x => x.PartitionKey == groupValue);
+            return table.ExecuteQuery(operation).Where(x => x.PartitionKey == groupValue).ToList();
         }
     }
 }

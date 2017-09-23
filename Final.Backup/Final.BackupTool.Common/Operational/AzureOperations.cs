@@ -1,8 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Final.BackupTool.Common.Entities;
+using Final.BackupTool.Common.Helpers;
+using Microsoft.Azure;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.RetryPolicies;
@@ -13,7 +17,7 @@ namespace Final.BackupTool.Common.Operational
     public class AzureOperations
     {
         private static readonly StorageConnection StorageConnection = new StorageConnection();
-        
+
         #region backup
         public CloudBlobContainer BackUpContainerReference(string containerName)
         {

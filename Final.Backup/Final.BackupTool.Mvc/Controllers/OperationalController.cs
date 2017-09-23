@@ -50,8 +50,6 @@ namespace Final.BackupTool.Mvc.Controllers
         private static void SetCookies(OperationalModel operationalParams)
         {
             CookiesReadWrite.Write(OperationalDictionary.GroupsTable, OperationalDictionary.GroupsTable, operationalParams.SelectedConnectionGroup);
-            CookiesReadWrite.Write(OperationalDictionary.OperationalCookie, OperationalDictionary.OperationalCookieKey,
-                operationalParams.OperationalStorageConnectionString);
         }
 
         private HttpStatusCodeResult BackUp(OperationalModel operationalParams)
