@@ -20,6 +20,7 @@ namespace Final.BackupTool.Mvc.Controllers
             
             SetCookies(operationalParams);
 
+            var connections = new StorageConnection();
             var setOperations = new AzureOperations();
 
             if (operationalParams.Start == "backup")

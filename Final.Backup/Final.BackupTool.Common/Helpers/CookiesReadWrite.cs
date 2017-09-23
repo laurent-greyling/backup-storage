@@ -20,6 +20,7 @@ namespace Final.BackupTool.Common.Helpers
 
         public static string Read(string cookie, string cookieKey)
         {
+            if (HttpContext.Current == null) return string.Empty;
             if (HttpContext.Current.Request.Cookies[cookie] == null) return string.Empty;
             var cookieValue = HttpUtility.UrlDecode(HttpContext.Current.Request.Cookies[cookie][cookieKey]) ?? string.Empty;
             return cookieValue;

@@ -16,6 +16,8 @@ namespace Final.BackupTool.Mvc.Controllers
             {
                 return RedirectToAction("Index","GetOperationalConnection");
             }
+
+            var connections = new StorageConnection();
             var azureOperations = new AzureOperations();
             azureOperations.CreateOperationsTable(OperationalDictionary.GroupsTable);
             var table = azureOperations.OperationsTableReference(OperationalDictionary.GroupsTable);

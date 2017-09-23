@@ -222,12 +222,16 @@
     <Content Include="Scripts\modernizr-2.6.2.js" />
     <Content Include="Scripts\respond.js" />
     <Content Include="Scripts\respond.min.js" />
-    <Content Include="Web.config" />
+    <Content Include="Web.config">
+      <SubType>Designer</SubType>
+    </Content>
     <Content Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="Web.Release.config">
       <DependentUpon>Web.config</DependentUpon>
+      <SubType>Designer</SubType>
     </Content>
     <Content Include="Views\Web.config">
       <SubType>Designer</SubType>
@@ -258,13 +262,19 @@
     <Content Include="fonts\glyphicons-halflings-regular.eot" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
     <Content Include="Scripts\jquery-1.10.2.min.map" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Final.BackupTool.Common\Final.BackupTool.Common.csproj">
       <Project>{1b6817c0-a0d4-461d-a4ce-7db72814188c}</Project>
       <Name>Final.BackupTool.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Final.BackupTool.Console\Final.BackupTool.Console.csproj">
+      <Project>{9d65ee64-2e82-4952-872a-70b8f044b0e7}</Project>
+      <Name>Final.BackupTool.Console</Name>
     </ProjectReference>
   </ItemGroup>
   <PropertyGroup>

@@ -10,47 +10,76 @@ namespace Final.BackupTool.Common.Operational
 {
     public class StorageConnection
     {
-        public string ProductionStorageConnectionString { get; set; }
-        public string BackupStorageConnectionString { get; set; }
-        public string OperationStorageConnectionString { get; set; }
+        public static string ProductionStorageConnectionString { get; set; }
+        public static string BackupStorageConnectionString { get; set; }
+        public static string OperationStorageConnectionString { get; set; }
 
 
-        public IEnumerable<ConnectionStringsEntity> Group => GetGroup();
+        private static string p => ProductionConnection();
+        private static string b => BackupConnection();
+
+        private static string o => OperationalConnection();
+        private static List<ConnectionStringsEntity> Group => GetGroup();
+        private static string GroupValue => CookiesReadWrite.Read(OperationalDictionary.GroupsTable, OperationalDictionary.GroupsTable);
+        public static string OperationalCookie => CookiesReadWrite.Read(OperationalDictionary.OperationalCookie,
+            OperationalDictionary.OperationalCookieKey);
+
         public StorageConnection()
         {
-            ProductionStorageConnectionString =
-                string.IsNullOrEmpty(CloudConfigurationManager.GetSetting("ProductionStorageConnectionString"))
-                    ? !Group.Any()
-                        ? ""
-                        : Group.Select(x => x.ProductionStorageConnectionString).ToList()[0]
-                    : CloudConfigurationManager.GetSetting("ProductionStorageConnectionString");
+            ProductionStorageConnectionString = p;
 
-            BackupStorageConnectionString = string.IsNullOrEmpty(CloudConfigurationManager.GetSetting("BackupStorageConnectionString"))
-                ? !Group.Any()
-                    ? ""
-                    : Group.Select(x => x.BackupStorageConnectionString).ToList()[0]
-                : CloudConfigurationManager.GetSetting("BackupStorageConnectionString");
+            BackupStorageConnectionString = b;
 
-            OperationStorageConnectionString = string.IsNullOrEmpty(CloudConfigurationManager.GetSetting("OperationalStorageConnectionString"))
-                ? !Group.Any()
-                    ? CookiesReadWrite.Read(OperationalDictionary.OperationalCookie,
-                        OperationalDictionary.OperationalCookieKey)
-                    : Group.Select(x => x.OperationStorageConnectionString).ToList()[0]
-                : CloudConfigurationManager.GetSetting("OperationalStorageConnectionString");
+            OperationStorageConnectionString = o;
         }
 
-        private static List<ConnectionStringsEntity> GetGroup()
+        private static string ProductionConnection()
         {
-            var groupValue = CookiesReadWrite.Read(OperationalDictionary.GroupsTable, OperationalDictionary.GroupsTable);
-            var operationalStorage = CookiesReadWrite.Read(OperationalDictionary.OperationalCookie,
-                OperationalDictionary.OperationalCookieKey);
+            var webConfig = CloudConfigurationManager.GetSetting("ProductionStorageConnectionString");
+            if (!string.IsNullOrEmpty(webConfig)) return webConfig;
 
-            if (string.IsNullOrEmpty(groupValue) || string.IsNullOrEmpty(operationalStorage))
+            if (Group==null) return OperationalDictionary.Empty;
+            if (!Group.Any()) return OperationalDictionary.Empty;
+            
+            var productionList = Group.Select(x => x.ProductionStorageConnectionString).ToList();
+
+            return productionList.FirstOrDefault();
+        }
+
+        private static string BackupConnection()
+        {
+            var webConfig = CloudConfigurationManager.GetSetting("BackupStorageConnectionString");
+            if (!string.IsNullOrEmpty(webConfig)) return webConfig;
+
+            if (Group == null) return OperationalDictionary.Empty;
+            if (!Group.Any()) return OperationalDictionary.Empty;
+            
+            var backupList = Group.Select(x => x.BackupStorageConnectionString).ToList();
+
+            return backupList.FirstOrDefault();
+        }
+
+        private static string OperationalConnection()
+        {
+            var webConfig = CloudConfigurationManager.GetSetting("OperationalStorageConnectionString");
+            if (!string.IsNullOrEmpty(webConfig)) return webConfig;
+
+            if (Group == null) return OperationalCookie;
+            if (!Group.Any()) return OperationalCookie;
+
+            var productionList = Group.Select(x => x.OperationStorageConnectionString).ToList();
+
+            return productionList.FirstOrDefault();
+        }
+
+        public static List<ConnectionStringsEntity> GetGroup()
+        {
+            if (string.IsNullOrEmpty(GroupValue) || string.IsNullOrEmpty(OperationalCookie))
             {
                 return new List<ConnectionStringsEntity>();
             }
 
-            var storageAccount = CloudStorageAccount.Parse(operationalStorage);
+            var storageAccount = CloudStorageAccount.Parse(OperationalCookie);
             var tableClient = storageAccount.CreateCloudTableClient();
 
             var table = tableClient.GetTableReference(OperationalDictionary.ConnectionTable);
@@ -60,7 +89,7 @@ namespace Final.BackupTool.Common.Operational
                 return new List<ConnectionStringsEntity>();
             }
             var operation = new TableQuery<ConnectionStringsEntity>();
-            return table.ExecuteQuery(operation).Where(x => x.PartitionKey == groupValue).ToList();
+            return table.ExecuteQuery(operation).Where(x => x.PartitionKey == GroupValue).ToList();
         }
     }
 }

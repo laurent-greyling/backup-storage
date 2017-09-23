@@ -12,9 +12,7 @@ namespace Final.BackupTool.Common.Operational
 {
     public class AzureOperations
     {
-        private static readonly StorageConnection StorageConnection = new StorageConnection();
         
-
         #region backup
         public CloudBlobContainer BackUpContainerReference(string containerName)
         {
