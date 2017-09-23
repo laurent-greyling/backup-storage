@@ -38,6 +38,7 @@ namespace Final.BackupTool.Mvc.Controllers
             if (!string.IsNullOrEmpty(webConfig)
                 || !string.IsNullOrEmpty(cookieValue))
             {
+                azureOperations.CreateOperationsTable(OperationalDictionary.OperationTableName);
                 var table = azureOperations.OperationsTableReference(OperationalDictionary.OperationTableName);
                 var query = new TableQuery<StorageOperationEntity>();
                 var data = table.ExecuteQuery(query)

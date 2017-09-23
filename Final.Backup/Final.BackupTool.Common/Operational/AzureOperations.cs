@@ -17,6 +17,7 @@ namespace Final.BackupTool.Common.Operational
     public class AzureOperations
     {
         private static readonly StorageConnection StorageConnection = new StorageConnection();
+        
 
         #region backup
         public CloudBlobContainer BackUpContainerReference(string containerName)
@@ -199,6 +200,9 @@ namespace Final.BackupTool.Common.Operational
         public string ReadBlob(string containerName, DateTimeOffset? lastModified)
         {
             var container = OperationsContainerReference(containerName);
+
+            if (!container.Exists()) return string.Empty;
+            if (!container.ListBlobs().Any()) return string.Empty;
 
             var blob = container.ListBlobs().Cast<CloudAppendBlob>().FirstOrDefault(x=>x.Properties.LastModified.Value.Date == lastModified.Value.Date);
 

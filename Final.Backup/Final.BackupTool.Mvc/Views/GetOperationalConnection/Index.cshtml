@@ -4,23 +4,28 @@
     ViewBag.Title = "title";
 }
 
+<h4>Set Operation Connection</h4>
+
 <form>
     <div id="operationacon" class="card">
-        <h4>Set Operation Connection</h4>
-        <p>Sorry, we cannot remember your operational connection, can you please remind us</p>
+        <p>Sorry, I cannot remember your operational connection, can you please remind me</p>        
         <table>
             <colgroup>
-                <col span="2" />
+                <col span="2"/>
             </colgroup>
             <tr>
                 <td>
                     <label>Operational Storage:</label>
                 </td>
                 <td>
-                    @Html.TextBoxFor(model => model.OperationStorageConnectionString, new { Size = "100", Placeholder = "Operational Storage", Id = "operationalStorage", Class = "textinput", Required = "required" })
+                    @Html.TextBoxFor(model => model.OperationStorageConnectionString, new {Size = "100", Placeholder = "Operational Storage", Id = "operationalStorage", Class = "textinput", Required = "required"})
                 </td>
             </tr>
         </table>
-        <input id="SetConnection" type="submit" value="Refresh" class="button" />
+        <input id="SetConnection" type="submit" value="Refresh" class="button"/>
     </div>
 </form> 
+<div class="card">
+    <p>The operational storage should not be the same as your Production or Backup Storage. The Operational storage is used to store status info on your backup and restore operations.</p>
+    <p>The operational storage will be used to store your group connections for Backup and Restore. To make this application work optimally, your operational info will be stored in a cookie. This allows the application to retrieve all necessary info needed to backup and restore</p>
+</div>

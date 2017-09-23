@@ -48,8 +48,9 @@ namespace Final.BackupTool.Mvc.Controllers
 
             if (operationalLog.ViewLog != "view") return View();
 
-            ViewData[OperationalDictionary.LogDetails] = azureOperations.ReadBlob(OperationalDictionary.Logs, operationalLog.LastModified);
-            ViewData[OperationalDictionary.ViewLog] = "true";
+            var details = azureOperations.ReadBlob(OperationalDictionary.Logs, operationalLog.LastModified);
+            ViewData[OperationalDictionary.LogDetails] = details;
+            ViewData[OperationalDictionary.ViewLog] = string.IsNullOrEmpty(details) ? OperationalDictionary.Empty : "true";
 
             return View();
         }
