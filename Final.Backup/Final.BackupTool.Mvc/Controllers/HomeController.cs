@@ -11,6 +11,7 @@ namespace Final.BackupTool.Mvc.Controllers
     {
         public ActionResult Index()
         {
+            CookiesReadWrite.Delete(OperationalDictionary.GroupsTable);
             if (string.IsNullOrEmpty(CookiesReadWrite.Read(OperationalDictionary.OperationalCookie, OperationalDictionary.OperationalCookieKey)))
             {
                 return RedirectToAction("Index","GetOperationalConnection");

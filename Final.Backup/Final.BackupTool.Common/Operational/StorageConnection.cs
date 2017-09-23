@@ -55,6 +55,10 @@ namespace Final.BackupTool.Common.Operational
 
             var table = tableClient.GetTableReference(OperationalDictionary.ConnectionTable);
 
+            if (!table.Exists())
+            {
+                return new List<ConnectionStringsEntity>();
+            }
             var operation = new TableQuery<ConnectionStringsEntity>();
             return table.ExecuteQuery(operation).Where(x => x.PartitionKey == groupValue).ToList();
         }
