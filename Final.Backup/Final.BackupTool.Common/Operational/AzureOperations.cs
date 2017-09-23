@@ -1,10 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Final.BackupTool.Common.Entities;
-using Final.BackupTool.Common.Models;
+using Final.BackupTool.Common.Helpers;
+using Microsoft.Azure;
 using Microsoft.WindowsAzure.Storage;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.RetryPolicies;
@@ -15,6 +17,7 @@ namespace Final.BackupTool.Common.Operational
     public class AzureOperations
     {
         private static readonly StorageConnection StorageConnection = new StorageConnection();
+        
 
         #region backup
         public CloudBlobContainer BackUpContainerReference(string containerName)
@@ -197,6 +200,9 @@ namespace Final.BackupTool.Common.Operational
         public string ReadBlob(string containerName, DateTimeOffset? lastModified)
         {
             var container = OperationsContainerReference(containerName);
+
+            if (!container.Exists()) return string.Empty;
+            if (!container.ListBlobs().Any()) return string.Empty;
 
             var blob = container.ListBlobs().Cast<CloudAppendBlob>().FirstOrDefault(x=>x.Properties.LastModified.Value.Date == lastModified.Value.Date);
 

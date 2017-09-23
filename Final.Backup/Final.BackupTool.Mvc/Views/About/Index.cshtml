@@ -17,18 +17,36 @@
         <p><b>NOTE</b>- Depending on the amount of data you have to restore or backup, this will be a long running process. 
             Although this site will run blobs and tables in parallel, and was optimised with TPL-Dataflow parallism, it can still take some time to finish.
         </p> 
-        <h4>Storage Connections</h4>
+        <h4>First Run</h4>
+        <p>
+            When you run this application the first time, you will be asked to supply an operational storage connection string. The connection string will be stored as a cookie to have the site run optimally.
+        </p>
+        <p>
+            Some points to take not of
+            <ul>
+                <li>The operational account should not be the same as your production or backup account.</li>
+                <li>This account is used to store status information on your backup and restore process</li>
+                <li>This connection is needed to recover your production and backup information</li>
+                <li>This storage should not be used to store business critical information</li>
+                <li>The cookie is only valid for 5 days, there after the site will request you to remind him what it was</li>
+            </ul>
+        </p>
+        <p>After you have set the connection the first time, you will be directed to where you can create your connection to storage groups</p>
+        <h4>Add Group</h4>
         <p>The Connection Strings section is where you will provide the connection strings to:</p>
         <p>
             <ul>
+                <li>Group Name - name of your connection string group. For example Asia storage can be called AsiaGroup</li>
                 <li>Production Storage account - The table and blobs which you would like to backup, or when you restore the account to which you want to restore to</li>
                 <li>Backup Storage account - Storage you would like to restore from or backup into</li>
-                <li>Operational Storage account - Storage account to where the logs and other status information about your backup and restore will be written to</li>
             </ul>
         </p>
         <p>
-            These storage account connection strings need to be supplied everytime you want to run a backup or restore
+            Once you have supplied these connections and save then, they will be stored in the operational storage account and can be recovered by selecting the group you need to backup or restore.
         </p>
+        <h4>Selecting your group</h4>
+        <p>After you have succesfuly created a group you can now easily backup or restore</p>
+        <p>In the backup and restore section, select your group that need to be backed up or restored. All groups will be shown in the dropdown list</p>
         <h4>Backup Section</h4>
         <p>This section is to backup what you have chosen:</p>
         <p>
@@ -77,11 +95,25 @@
         <p>
             If both are set it will run both tables and blob backup.
         </p>
+        <h4>Activities</h4>
+        <p>This section will show the last 20 most recent activities recorded. Information contained in this section is as follows:</p>
+        <p>
+            <ul>
+                <li>Activity - table or blob and accounts that were associated with the table or blob</li>
+                <li>Operation Type - Full(All was restored or backedup), Incremental(only changed storage was restored or backedup)</li>
+                <li>Copied - Number of blobs or tables copied. If zero, check if it was incremental</li>
+                <li>Skipped - Usually greater than zero if incremental operation was executed</li>
+                <li>Faulted - number of blobs or tables that did not backup or restore because of a fault, check logs</li>
+                <li>Start Time - Date and time the operation was started</li>
+                <li>End Time - Date and time the operation finished</li>
+                <li>Finished in - time it took to finish as days:hours:minutes:seconds</li>
+                <li>Status - Finished, Skipped(if not selected), Executing(still busy with executing)</li>
+            </ul>
+        </p>
         <h4>View Log</h4>
         <p>This will allow you to either view/download the latest log or a log from a specified date:</p>
         <p>
             <ul>
-                <li>Operational Storage - Connection string to the operational storage where log is stored</li>
                 <li>Date - Date you wish to view</li>
                 <li>The log file also contain the details for restore, such as the dates needed for from and to restore dates</li>
             </ul>

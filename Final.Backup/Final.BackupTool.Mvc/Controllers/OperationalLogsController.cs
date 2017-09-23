@@ -12,16 +12,16 @@ namespace Final.BackupTool.Mvc.Controllers
         // GET: Logs
         public ActionResult Index(OperationalLogModel operationalLog)
         {
-            CookiesReadWrite.Delete(OperationalDictionary.ProductionCookie);
-            CookiesReadWrite.Delete(OperationalDictionary.BackupCookie);
             var cookieValue = CookiesReadWrite.Read(OperationalDictionary.OperationalCookie, OperationalDictionary.OperationalCookieKey);
+
+            if (string.IsNullOrEmpty(cookieValue))
+            {
+                return RedirectToAction("Index", "GetOperationalConnection");
+            }
+            
             var connectionString = operationalLog.OperationalStorageConnectionString;
             var webConfig = WebConfigurationManager.AppSettings["OperationalStorageConnectionString"];
-
-            if (string.IsNullOrEmpty(cookieValue) &&
-                string.IsNullOrEmpty(connectionString) &&
-                string.IsNullOrEmpty(webConfig)) return View();
-
+            
             if (string.IsNullOrEmpty(cookieValue) &&
                 !string.IsNullOrEmpty(connectionString))
             {
@@ -48,8 +48,9 @@ namespace Final.BackupTool.Mvc.Controllers
 
             if (operationalLog.ViewLog != "view") return View();
 
-            ViewData[OperationalDictionary.LogDetails] = azureOperations.ReadBlob(OperationalDictionary.Logs, operationalLog.LastModified);
-            ViewData[OperationalDictionary.ViewLog] = "true";
+            var details = azureOperations.ReadBlob(OperationalDictionary.Logs, operationalLog.LastModified);
+            ViewData[OperationalDictionary.LogDetails] = details;
+            ViewData[OperationalDictionary.ViewLog] = string.IsNullOrEmpty(details) ? OperationalDictionary.Empty : "true";
 
             return View();
         }

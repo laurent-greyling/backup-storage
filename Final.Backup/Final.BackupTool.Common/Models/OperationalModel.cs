@@ -1,16 +1,16 @@
-﻿using Microsoft.Build.Framework;
+﻿using System.Collections.Generic;
+using System.Web.Mvc;
+using Microsoft.Build.Framework;
 
 namespace Final.BackupTool.Common.Models
 {
     public class OperationalModel
     {
         [Required]
-        public string ProductionStorageConnectionString { get; set; }
-        [Required]
-        public string BackupStorageConnectionString { get; set; }
-        [Required]
         public string OperationalStorageConnectionString { get; set; }
 
+        public SelectList Groups { get; set; }
+        public string SelectedConnectionGroup { get; set; }
         public bool BackupTables { get; set; }
         public bool BackupBlobs { get; set; }
         public bool RestoreTables { get; set; }

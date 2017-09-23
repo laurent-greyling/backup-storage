@@ -33,19 +33,19 @@ namespace Final.BackupTool.Common.Strategy
         {
             // Both these commands are already heavily parallel, so we just run them in order here
             // so they don't fight over bandwidth amongst themselves
-            var tableBackUpFromDate = DateTimeOffset.UtcNow.ToString(OperationalDictionary.DateFormat, CultureInfo.InvariantCulture);
+            var tableBackUpFromDate = DateTimeOffset.UtcNow.AddMinutes(-1).ToString(OperationalDictionary.DateFormat, CultureInfo.InvariantCulture);
             if (string.IsNullOrEmpty(command.Skip) || command.Skip.ToLowerInvariant() != "tables")
             {
                 await _backupTablePipeline.BackupAsync();
             }
-            var tableBackUpToDate = DateTimeOffset.UtcNow.AddSeconds(3).ToString(OperationalDictionary.DateFormat, CultureInfo.InvariantCulture);
+            var tableBackUpToDate = DateTimeOffset.UtcNow.AddMinutes(1).ToString(OperationalDictionary.DateFormat, CultureInfo.InvariantCulture);
 
-            var blobBackUpFromDate = DateTimeOffset.UtcNow.ToString(OperationalDictionary.DateFormat, CultureInfo.InvariantCulture);
+            var blobBackUpFromDate = DateTimeOffset.UtcNow.AddMinutes(-1).ToString(OperationalDictionary.DateFormat, CultureInfo.InvariantCulture);
             if (string.IsNullOrEmpty(command.Skip) || command.Skip.ToLowerInvariant() != "blobs")
             {
                 await _backUpBlobPipeline.BackupAsync();
             }
-            var blobBackUpToDate = DateTimeOffset.UtcNow.AddSeconds(3).ToString(OperationalDictionary.DateFormat, CultureInfo.InvariantCulture);
+            var blobBackUpToDate = DateTimeOffset.UtcNow.AddMinutes(1).ToString(OperationalDictionary.DateFormat, CultureInfo.InvariantCulture);
 
             Logger.Info("===>USE FOR RESTORING<===");
             Logger.Info($"restore-table -t=\"*\" -d=\"{tableBackUpFromDate}\" -e=\"{tableBackUpToDate}\"");

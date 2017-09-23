@@ -149,6 +149,10 @@
       <HintPath>..\..\packages\System.Threading.Tasks.Dataflow.4.8.0\lib\portable-net45+win8+wpa81\System.Threading.Tasks.Dataflow.dll</HintPath>
     </Reference>
     <Reference Include="System.Web" />
+    <Reference Include="System.Web.Mvc, Version=5.2.3.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\packages\Microsoft.AspNet.Mvc.5.2.3\lib\net45\System.Web.Mvc.dll</HintPath>
+    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -171,6 +175,7 @@
     <Compile Include="Blocks\BackupLogOperationDetailsBlock.cs" />
     <Compile Include="Blocks\RestoreTableBlock.cs" />
     <Compile Include="Blocks\SummaryBlock.cs" />
+    <Compile Include="Entities\ConnectionStringsEntity.cs" />
     <Compile Include="Helpers\CookiesReadWrite.cs" />
     <Compile Include="Initialization\Bootstrap.cs" />
     <Compile Include="ConsoleCommand\BackupCommand.cs" />

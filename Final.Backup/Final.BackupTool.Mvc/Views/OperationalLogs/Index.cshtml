@@ -6,22 +6,16 @@
     ViewBag.Titel = "title";
 }
 
+<h4>Operational Log</h4>
+
 @using (Html.BeginForm("Index", "OperationalLogs"))
 {
     <div id="downloadLogs" class="card">
-        <h4>Operational Log</h4>
+        
         <table>
             <colgroup>
                 <col span="3" />
-            </colgroup>
-            <tr>
-                <td>
-                    <label>Operational Storage:</label>
-                </td>
-                <td>
-                    @Html.TextBoxFor(model => model.OperationalStorageConnectionString, new { Size="100", Placeholder="Operational Storage", Id="operationalStorage", Class="textinput", Required = "required" })
-                </td>
-            </tr>
+            </colgroup> 
             <tr>
                 <td>
                     <label>Date:</label>
@@ -35,8 +29,15 @@
         <input id="viewLog" type="submit" value="view" class="button" name="ViewLog"/>
     </div>
 
+    if ((string) ViewData[OperationalDictionary.ViewLog] != "true")
+    {
+        <div class="card">
+            <p>No Logs have been recorded for this date</p>
+        </div>
+    }
+
     if ((string) ViewData[OperationalDictionary.ViewLog] == "true")
-     {
+    {
          <div id="viewLogs" class="card">
              <div class="myBox">
                  @Html.Raw(ViewData[OperationalDictionary.LogDetails])

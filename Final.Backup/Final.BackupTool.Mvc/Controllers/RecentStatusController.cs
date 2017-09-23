@@ -17,17 +17,15 @@ namespace Final.BackupTool.Mvc.Controllers
     {
         public ActionResult Index(LatestStatusModel status)
         {
-            CookiesReadWrite.Delete(OperationalDictionary.ProductionCookie);
-            CookiesReadWrite.Delete(OperationalDictionary.BackupCookie);
-
             var cookieValue = CookiesReadWrite.Read(OperationalDictionary.OperationalCookie, OperationalDictionary.OperationalCookieKey);
+            if (string.IsNullOrEmpty(cookieValue))
+            {
+                return RedirectToAction("Index", "GetOperationalConnection");
+            }
+            
             var connectionString = status.ConnectionString;
             var webConfig = WebConfigurationManager.AppSettings["OperationalStorageConnectionString"];
-
-            if (string.IsNullOrEmpty(cookieValue) &&
-                string.IsNullOrEmpty(connectionString) &&
-                string.IsNullOrEmpty(webConfig)) return View();
-
+            
             if (string.IsNullOrEmpty(cookieValue) &&
                 !string.IsNullOrEmpty(connectionString))
             {
@@ -40,6 +38,7 @@ namespace Final.BackupTool.Mvc.Controllers
             if (!string.IsNullOrEmpty(webConfig)
                 || !string.IsNullOrEmpty(cookieValue))
             {
+                azureOperations.CreateOperationsTable(OperationalDictionary.OperationTableName);
                 var table = azureOperations.OperationsTableReference(OperationalDictionary.OperationTableName);
                 var query = new TableQuery<StorageOperationEntity>();
                 var data = table.ExecuteQuery(query)

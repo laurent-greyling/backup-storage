@@ -9,7 +9,8 @@ namespace Final.BackupTool.Mvc.Controllers
         public ActionResult Index()
         {
             CookiesReadWrite.Delete(OperationalDictionary.OperationalCookie);
-            return RedirectToAction("Index","Home");
+            CookiesReadWrite.Delete(OperationalDictionary.GroupsTable);
+            return RedirectToAction("Index","GetOperationalConnection");
         }
         
     }

@@ -1,0 +1,43 @@
+﻿
+@{
+    ViewBag.Title = "Create";
+}
+
+@model Final.BackupTool.Common.Entities.ConnectionStringsEntity
+
+<h4>Connection Strings</h4>
+<form>
+    <div id="connectionStrings" class="card">
+        <p>Create your connection groups. Each group can be set to point to different production and backup storage accounts.</p>
+        <table>
+            <colgroup>
+                <col span="2"/>
+            </colgroup>
+            <tr>
+                <td>
+                    <label>Group Name:</label>
+                </td>
+                <td>
+                    @Html.TextBoxFor(model => model.PartitionKey, new {Size = "100", Placeholder = "Name Of Group", Id = "productionStorage", Class = "textinput", Required = "required"})
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Production Storage:</label>
+                </td>
+                <td>
+                    @Html.TextBoxFor(model => model.ProductionStorageConnectionString, new {Size = "100", Placeholder = "Production Storage", Id = "productionStorage", Class = "textinput", Required = "required"})
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label>Backup Storage:</label>
+                </td>
+                <td>
+                    @Html.TextBoxFor(model => model.BackupStorageConnectionString, new {Size = "100", Placeholder = "Backup Storage", Id = "backupStorage", Class = "textinput", Required = "required"})
+                </td>
+            </tr>
+        </table>
+        <input id="CreateGroup" type="submit" value="Create" class="button"/>
+    </div>
+</form>   

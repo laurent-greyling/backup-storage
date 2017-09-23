@@ -11,7 +11,12 @@ namespace Final.BackupTool.Common.Strategy
 {
     public class InitializeOperation
     {
-        private static readonly AzureOperations AzureOperations = new AzureOperations();
+        private static AzureOperations _azureOperations;
+
+        public InitializeOperation()
+        {
+            _azureOperations = new AzureOperations();
+        }
 
         public void Execute(ILogger logger)
         {
@@ -30,11 +35,11 @@ namespace Final.BackupTool.Common.Strategy
 
         private static void SetRequestOptions()
         {
-            AzureOperations.CreateProductionBlobClient().DefaultRequestOptions = new BlobRequestOptions
+            _azureOperations.CreateProductionBlobClient().DefaultRequestOptions = new BlobRequestOptions
             {
                 RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(10), 50)
             };
-            AzureOperations.CreateBackupBlobClient().DefaultRequestOptions = new BlobRequestOptions
+            _azureOperations.CreateBackupBlobClient().DefaultRequestOptions = new BlobRequestOptions
             {
                 RetryPolicy = new ExponentialRetry(TimeSpan.FromSeconds(10), 50)
             };
@@ -42,13 +47,13 @@ namespace Final.BackupTool.Common.Strategy
 
         private static void CreateOperationalLogTables()
         {
-            AzureOperations.CreateOperationsTable(OperationalDictionary.OperationTableName);
-            AzureOperations.CreateOperationsTable(OperationalDictionary.OperationDetailsTableName);
+            _azureOperations.CreateOperationsTable(OperationalDictionary.OperationTableName);
+            _azureOperations.CreateOperationsTable(OperationalDictionary.OperationDetailsTableName);
         }
 
         private static void BackupStorageLooksLikeProductionStorage()
         {
-            var backupBlobClientToVerify = AzureOperations.CreateBackupBlobClient();
+            var backupBlobClientToVerify = _azureOperations.CreateBackupBlobClient();
             var containers = backupBlobClientToVerify.ListContainers();
             var matchCount = containers.Select(container =>
                 container.Name.ToLowerInvariant()).Count(n =>
