@@ -3,6 +3,7 @@ using System.Configuration;
 using System.Linq;
 using System.Reflection;
 using Final.BackupTool.Common.Operational;
+using Microsoft.Azure;
 using Microsoft.WindowsAzure.Storage.Blob;
 using Microsoft.WindowsAzure.Storage.RetryPolicies;
 using NLog;
@@ -12,9 +13,16 @@ namespace Final.BackupTool.Common.Strategy
     public class InitializeOperation
     {
         private static AzureOperations _azureOperations;
+        private static StorageConnection _storageConnection;
 
         public InitializeOperation()
         {
+            if (!string.IsNullOrEmpty(CloudConfigurationManager.GetSetting("ProductionStorageConnectionString")) &&
+                !string.IsNullOrEmpty(CloudConfigurationManager.GetSetting("BackupStorageConnectionString")) &&
+                !string.IsNullOrEmpty(CloudConfigurationManager.GetSetting("OperationalStorageConnectionString")))
+            {
+                _storageConnection = new StorageConnection();
+            }
             _azureOperations = new AzureOperations();
         }
 
