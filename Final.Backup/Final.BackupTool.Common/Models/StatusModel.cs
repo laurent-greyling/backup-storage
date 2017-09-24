@@ -26,5 +26,6 @@ namespace Final.BackupTool.Common.Models
         public bool RestoreBlobs { get; set; }
         public string FinishedIn { get; set; }
         public string FinalStatus { get; set; }
+        public string ActivityType { get; set; }
     }
 }

@@ -52,6 +52,7 @@ namespace Final.BackupTool.Mvc.Controllers
                     return new StatusModel
                     {
                         PartitionKey = x.PartitionKey,
+                        ActivityType = x.ActivityType,
                         OperationType = x.OperationType,
                         Copied = x.Copied,
                         Skipped = x.Skipped,

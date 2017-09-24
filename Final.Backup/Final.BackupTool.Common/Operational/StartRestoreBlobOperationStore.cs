@@ -37,6 +37,7 @@ namespace Final.BackupTool.Common.Operational
                 var operationEntity = new StorageOperationEntity
                 {
                     PartitionKey = GetOperationPartitionKey(),
+                    ActivityType = OperationalDictionary.ActivityRestore,
                     RowKey = GetOperationRowKey(now),
                     SourceAccount = _backupAccountName,
                     DestinationAccount = _productionAccountName,
@@ -68,7 +69,7 @@ namespace Final.BackupTool.Common.Operational
 
         public async Task WriteCopyOutcomeAsync(DateTimeOffset date, CopyStorageOperation[] copies)
         {
-            var table = AzureOperations.OperationsTableReference(OperationalDictionary.OperationTableName);
+            var table = AzureOperations.OperationsTableReference(OperationalDictionary.OperationDetailsTableName);
 
             var blobOperationEntities = copies.Select(copy => new CopyStorageOperationEntity
             {

@@ -14,5 +14,6 @@ namespace Final.BackupTool.Common.Entities
         public int Copied { get; set; }
         public int Skipped { get; set; }
         public int Faulted { get; set; }
+        public string ActivityType { get; set; }
     }
 }

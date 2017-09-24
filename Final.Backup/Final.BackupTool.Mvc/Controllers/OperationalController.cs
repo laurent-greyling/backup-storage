@@ -38,6 +38,7 @@ namespace Final.BackupTool.Mvc.Controllers
             var statusModel = new StatusModel
             {
                 Operation = operation,
+                ActivityType = operationalParams.Start,
                 OperationDate = operationDate,
                 BackupTable = operationalParams.BackupTables,
                 BackupBlobs = operationalParams.BackupBlobs,

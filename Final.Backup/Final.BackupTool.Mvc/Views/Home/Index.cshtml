@@ -19,7 +19,7 @@
                     <label>Storage Group:</label>
                 </td>
                 <td>
-                            @Html.DropDownListFor(model => model.SelectedConnectionGroup, Model.Groups, "Select Group", new { @class = "form-control" })
+                            @Html.DropDownListFor(model => model.SelectedConnectionGroup, Model.Groups, "Select Group", new { @class = "form-control", Required="Required" })
                 </td>
             </tr>
         </table>

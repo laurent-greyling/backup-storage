@@ -46,5 +46,7 @@
         public const string ViewRecentStatus = "ViewRecentStatus";
         public const string ConnectionTable = "connections";
         public const string GroupsTable = "groups";
+        public const string ActivityRestore = "Restore";
+        public const string ActivityBackup = "Backup";
     }
 }

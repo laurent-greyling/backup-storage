@@ -17,13 +17,14 @@
     }
     if ((string) ViewData[OperationalDictionary.ViewRecentStatus] == "true")
     {
-        <div id="RecentTableActivity" class="card">
+        <div id="RecentTableActivity">
             
 
             <table class="table-fill">
                 <thead>
                 <tr>
                     <th class="text-left table-fill">Activity</th>
+                    <th class="text-left table-fill">Activity Type</th>
                     <th class="text-left table-fill">Operation Type</th>
                     <th class="text-left table-fill">Copied</th>
                     <th class="text-left table-fill">Skipped</th>
@@ -39,6 +40,7 @@
                 {
                     <tr>
                         <td class="text-left table-fill">@m.PartitionKey</td>
+                        <td class="text-left table-fill">@m.ActivityType</td>
                         <td class="text-left table-fill">@m.OperationType</td>
                         <td class="text-left table-fill">@m.Copied</td>
                         <td class="text-left table-fill">@m.Skipped</td>

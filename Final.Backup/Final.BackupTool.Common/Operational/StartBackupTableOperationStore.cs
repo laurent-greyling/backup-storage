@@ -37,6 +37,7 @@ namespace Final.BackupTool.Common.Operational
                 var operationEntity = new StorageOperationEntity
                 {
                     PartitionKey = GetOperationPartitionKey(),
+                    ActivityType = OperationalDictionary.ActivityBackup,
                     RowKey = GetOperationRowKey(now),
                     SourceAccount = _productionAccountName,
                     DestinationAccount = _backupAccountName,
